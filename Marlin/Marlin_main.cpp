@@ -2139,11 +2139,6 @@ void clean_up_after_endstop_or_probe_move() {
     }
 
     bool set_bltouch_deployed(const bool deploy) {
-      #if ENABLED(BLTOUCH_FORCE_5V_MODE)
-        bltouch_command(BLTOUCH_5V_MODE);
-      #else
-        bltouch_command(BLTOUCH_OD_MODE);
-      #endif
       if (deploy && TEST_BLTOUCH()) {      // If BL-Touch says it's triggered
         bltouch_command(BLTOUCH_RESET);    //  try to reset it.
         bltouch_command(BLTOUCH_DEPLOY);   // Also needs to deploy and stow to
@@ -2159,17 +2154,9 @@ void clean_up_after_endstop_or_probe_move() {
         }
       }
 
-      #if ENABLED(BLTOUCH_FORCE_5V_MODE)
-        bltouch_command(BLTOUCH_5V_MODE);
-      #else
-        bltouch_command(BLTOUCH_OD_MODE);
-      #endif
-
-      if(deploy)
-        bltouch_command(BLTOUCH_SW_MODE);
-        
+      if (deploy) bltouch_command(BLTOUCH_5V_MODE);
       bltouch_command(deploy ? BLTOUCH_DEPLOY : BLTOUCH_STOW);
-      
+
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
         if (DEBUGGING(LEVELING)) {
