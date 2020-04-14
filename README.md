@@ -19,6 +19,7 @@ Screen files are archived with [7-Zip](https://www.7-zip.org/) simply because it
 Now that we have configured an auto build, we are able to provide quite a few HEX file configurations. There is an issue with Windows systems limiting path depth however so the file names need to be shorter than we would prefer. Therefore, here is a legend to decoding what they are :
 
 - BLT = BLTouch
+- TM = TouchMi
 - BIL = Bilinear Leveling
 - UBL - Unified Bed Leveling
 - DZ = Dual Z Steppers

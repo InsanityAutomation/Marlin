@@ -34,7 +34,6 @@
  * Verbose version identifier which should contain a reference to the location
  * from where the binary was downloaded or the source code was compiled.
  */
-
 #if(ENABLED(MachineMini))
 #define VerChar1 "M"
 #elif(ENABLED(MachineEnder2))
@@ -77,7 +76,6 @@
 #define VerChar3 "S"
 #endif
 
-
 #if(ENABLED(BedAC))
 #define VerChar4 "A"
 #elif(ENABLED(BedDC))
@@ -90,6 +88,8 @@
 #define VerChar5 "A"
 #elif(ENABLED(ABL_BLTOUCH))
 #define VerChar5 "B"
+#elif(ENABLED(ABL_TOUCH_MI))
+#define VerChar5 "T"
 #else
 #define VerChar5 "N"
 #endif
