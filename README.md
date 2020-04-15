@@ -28,6 +28,7 @@ Now that we have configured an auto build, we are able to provide quite a few HE
 - H = E3D Hemera Extruder
 - MC = Mosquito Creality mount
 - ME = Mosquito E3D mount
+- SC = Stock Creality mount
 - Melzi Host option disables local SD card to allow more features and buffer for Octoprint control
 - NF = Noise filtering for machines with cable extensions - reduces homing accuracy!
 
