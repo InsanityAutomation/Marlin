@@ -110,11 +110,14 @@ namespace ExtUI {
   #define StatusMessageString 0x20E8
 #endif
 
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+#if defined(MCU_LPC1769) || defined(MCU_LPC1768)
   #define DWIN_SERIAL DGUS_SERIAL
+#elif defined(TARGET_STM32F4)
+  #define DWIN_SERIAL Serial1
 #else
   #define DWIN_SERIAL Serial2
 #endif
+
 /************struct**************/
 
 typedef struct DataBuf

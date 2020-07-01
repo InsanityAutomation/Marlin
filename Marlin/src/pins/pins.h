@@ -258,6 +258,8 @@
   #include "mega/pins_PICA.h"                   // ATmega2560                             env:mega2560
 #elif MB(PICA_REVB)
   #include "mega/pins_PICAOLD.h"                // ATmega2560                             env:mega2560
+#elif MB(INTAMSYS40)
+  #include "mega/pins_INTAMSYS40.h"             // ATmega2560                             env:mega2560
 
 //
 // ATmega1281, ATmega2561
@@ -452,7 +454,7 @@
 #elif MB(ARCHIM1)
   #include "sam/pins_ARCHIM1.h"                 // SAM3X8E                                env:DUE env:DUE_debug
 #elif MB(ARCHIM2)
-  #include "sam/pins_ARCHIM2.h"                 // SAM3X8E                                env:DUE env:DUE_debug
+  #include "sam/pins_ARCHIM2.h"                 // SAM3X8E                                env:DUE_archim env:DUE_archim_debug
 #elif MB(ALLIGATOR)
   #include "sam/pins_ALLIGATOR_R2.h"            // SAM3X8E                                env:DUE env:DUE_debug
 #elif MB(ADSK)

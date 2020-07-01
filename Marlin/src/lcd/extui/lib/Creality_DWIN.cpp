@@ -297,9 +297,11 @@ void onIdle()
         rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kp(E0) * 10), HotendPID_P);
         rtscheck.RTS_SndData((unsigned int)(getPIDValues_Ki(E0) * 10), HotendPID_I);
         rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kd(E0) * 10), HotendPID_D);
-        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
-        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
-        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+        #if ENABLED(PIDTEMPBED)
+          rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
+          rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
+          rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+        #endif
       #endif
 
 			if (NozzleTempStatus[0] || NozzleTempStatus[2]) //statuse of loadfilement and unloadfinement when temperature is less than
@@ -1081,15 +1083,17 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
           else if (recdat.addr == HotendPID_D) {
             setPIDValues(getPIDValues_Kp(getActiveTool()), getPIDValues_Ki(getActiveTool()), tmp_float_handling*10, getActiveTool());
           }
-          else if (recdat.addr == BedPID_P) {
-            setBedPIDValues(tmp_float_handling*10, getBedPIDValues_Ki(), getBedPIDValues_Kd());
-          }
-          else if (recdat.addr == BedPID_I) {
-            setBedPIDValues(getBedPIDValues_Kp(), tmp_float_handling*10, getBedPIDValues_Kd());
-          }
-          else if (recdat.addr == BedPID_D) {
-            setBedPIDValues(getBedPIDValues_Kp(), getBedPIDValues_Ki(), tmp_float_handling*10);
-          }
+          #if ENABLED(PIDTEMPBED)
+            else if (recdat.addr == BedPID_P) {
+              setBedPIDValues(tmp_float_handling*10, getBedPIDValues_Ki(), getBedPIDValues_Kd());
+            }
+            else if (recdat.addr == BedPID_I) {
+              setBedPIDValues(getBedPIDValues_Kp(), tmp_float_handling*10, getBedPIDValues_Kd());
+            }
+            else if (recdat.addr == BedPID_D) {
+              setBedPIDValues(getBedPIDValues_Kp(), getBedPIDValues_Ki(), tmp_float_handling*10);
+            }
+          #endif
         #endif
       }
       break;
@@ -1482,8 +1486,11 @@ SERIAL_ECHOLN(PSTR("BeginSwitch"));
         }
         #if HAS_PID_HEATING
           case 5: {
-            SERIAL_ECHOLN("Bed PID");
-            startBedPIDTune(pid_bedAutoTemp);
+            #if ENABLED(PIDTEMPBED)
+              startBedPIDTune(pid_bedAutoTemp);
+            #else
+              SERIAL_ECHOLN("Bed PID Disabled");
+            #endif
             break;
           }
         #endif
@@ -1806,6 +1813,10 @@ void onFactoryReset()
 	SERIAL_ECHOLN("==onFactoryReset==");
 }
 
+void onMeshUpdate(const int8_t xpos, const int8_t ypos, const ExtUI::probe_state_t state) {
+    onMeshUpdate(xpos, ypos, 0.0f);
+  }
+
 void onMeshUpdate(const int8_t xpos, const int8_t ypos, const float zval)
 {
   if(waitway==3)
@@ -1895,7 +1906,7 @@ void onConfigurationStoreRead(bool success)
 }
 
 #if ENABLED(POWER_LOSS_RECOVERY)
-  void OnPowerLossResume() {
+  void onPowerLossResume() {
     SERIAL_ECHOLN("==OnPowerLossResume==");
     startprogress = 254;
     InforShowStatus = true;
@@ -1906,16 +1917,18 @@ void onConfigurationStoreRead(bool success)
 #endif
 
 #if HAS_PID_HEATING
-  void OnPidTuning(const result_t rst) {
+  void onPidTuning(const result_t rst) {
     // Called for temperature PID tuning result
     rtscheck.RTS_SndData(pid_hotendAutoTemp, HotendPID_AutoTmp);
         rtscheck.RTS_SndData(pid_bedAutoTemp, BedPID_AutoTmp);
         rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kp(E0) * 10), HotendPID_P);
         rtscheck.RTS_SndData((unsigned int)(getPIDValues_Ki(E0) * 10), HotendPID_I);
         rtscheck.RTS_SndData((unsigned int)(getPIDValues_Kd(E0) * 10), HotendPID_D);
-        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
-        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
-        rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+        #if ENABLED(PIDTEMPBED)
+          rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kp() * 10), BedPID_P);
+          rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Ki() * 10), BedPID_I);
+          rtscheck.RTS_SndData((unsigned int)(getBedPIDValues_Kd() * 10), BedPID_D);
+        #endif
   }
 #endif
 

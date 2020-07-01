@@ -15,6 +15,7 @@
 //#define MachineCR10SPro // Graphics LCD Requires soldering R64 and R66
 //#define MachineCR10SProV2 // Second Gen 10S Pro with BLTouch wired to Z Max
 //#define MachineCRX
+//#define MachineCRXPro
 //#define MachineCR10Max
 //#define MachineS4
 //#define MachineS5
@@ -63,6 +64,7 @@
  //#define E3DHemera
  //#define CrealityTitan
 
+ //#define MicroswissDirectDrive
  //#define DirectDrive // Any direct drive extruder, reduces filament change lengths
 
 /*
@@ -100,11 +102,12 @@
 //#define ForceCRXDisplay
 //#define Force10SProDisplay
 
-//#define AddonFilSensor //Adds a filamnt runout sensor to the CR20 or Ender 4
+//#define AddonFilSensor //Adds a filament runout sensor to the CR20 or Ender 4
 //#define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock
 //#define DualFilSensors //Using dual filament sensors on XMax and YMAX
 //#define FilamentEncoder //Using filamet jam sensor such as the Bigtreetech Encoder wheel
 
+//#define PurgeBucket //Adds automatic wiping on tool change if purge bucket is installed
 
 // Advanced options - Not for most users
 
@@ -134,6 +137,7 @@
  * Advanced motherboard replacement options
  */
 
+//#define OriginalCrealitySquareBoard
 //#define MachineCR10Orig // Forces Melzi board
 //#define Melzi_To_SBoardUpgrade // Upgrade Melzi board to 10S board
 //#define CrealitySilentBoard // Creality board with TMC2208 Standalone drivers. Disables Linear Advance
@@ -165,6 +169,8 @@
 //Add filtering to endstops when long extensions are used. Makes homing more reliable but less accurate.
 //#define CableExtensionNoiseFilter
 
+//Disabled Bed PID to prevent lights flickering on AC beds
+
 /*
    Choose a probe grid density below. Faster probes less points, but is less accurate.
    Extreme is for extremely uneven or tilted bed surfaces.
@@ -191,7 +197,7 @@
 //#define EnclosureTempSensor // Uses PT100 Probe hooked to A12, only partially implemented upstream
 //#define EnclosureHeater //Planned to use A11 to control heater upstream, and repurpose the unused y max as the fan output. Not yet fully implemented upstream
 
-
+//#define UnstableTemps // define if temps are unstable and you need a temporary workaround
 
 /**
  * Marlin 3D Printer Firmware
@@ -289,11 +295,19 @@
 #endif
 
 #if ENABLED(CrealityTitan)
-#define DirectDrive
-#define E3DTitan
+  #define DirectDrive
+  #define E3DTitan
 #endif
 
-#if(ENABLED(MachineCR10SPro))
+#if ENABLED(OriginalCrealitySquareBoard)
+  #define SD_DETECT_PIN -1
+#endif
+
+#if ENABLED(MicroswissDirectDrive)
+  #define DirectDrive
+#endif
+
+#if ENABLED(MachineCR10SPro)
   #define MachineCR10Std
   #if DISABLED(ABL_BLTOUCH, ABL_EZABL, ABL_TOUCH_MI)
     #define ABL_NCSW
@@ -301,8 +315,12 @@
   #if DISABLED(ABL_UBL)
     #define ABL_BI
   #endif
-  #define MeshStd
   #define lerdgeFilSensor
+  #if DISABLED(BedAC)
+    #ifndef BedDC
+      #define BedDC
+    #endif
+  #endif
 #endif
 
 #if ENABLED(MachineCR10Max)
@@ -312,8 +330,12 @@
   #if DISABLED(ABL_UBL)
     #define ABL_BI
   #endif
-  #define MeshStd
   #define lerdgeFilSensor
+  #if DISABLED(BedAC)
+    #ifndef BedDC
+      #define BedDC
+    #endif
+  #endif
 #endif
 
 #if ENABLED(MachineEnder5Plus)
@@ -328,11 +350,20 @@
   #if DISABLED(ABL_UBL)
     #define ABL_BI
   #endif
-  #define MeshStd
+  #if DISABLED(BedAC)
+    #ifndef BedDC
+      #define BedDC
+    #endif
+  #endif
 #endif
 
 #if ENABLED(MachineCR10SV2)
   #define lerdgeFilSensor
+  #if DISABLED(BedAC)
+    #ifndef BedDC
+      #define BedDC
+    #endif
+  #endif
 #endif
 
 #if ANY(MachineCR10SV2, MachineCR10Max, MachineCR10SProV2) && ANY(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH, ABL_TOUCH_MI) && NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11)
@@ -359,6 +390,7 @@
   #define SUICIDE_PIN_INVERTING true
   #define DirectDrive
 #endif
+
 #if ENABLED(PLUS)
   #if DISABLED(MachineCR10Orig)
     #define lerdgeFilSensor //Using lerdge filament sensor, which is opposite polarity to stock)
@@ -370,6 +402,24 @@
   #endif
   #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
+  #endif
+#endif
+
+#if ENABLED(MachineCRXPro)
+  #define MachineCRX
+  #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
+    #define ABL_BLTOUCH
+  #endif
+  #define Force10SProDisplay
+#endif
+
+#if ENABLED(MachineCRX)
+  #define MachineCR10Std
+  #define Dual_BowdenSplitterY
+  #if DISABLED(BedAC)
+    #ifndef BedDC
+      #define BedDC
+    #endif
   #endif
 #endif
 
@@ -385,11 +435,6 @@
   #define MeshStd
 #endif
 
-#if(ENABLED(MachineCRX))
-  #define MachineCR10Std
-  #define Dual_BowdenSplitterY
-#endif
-
 #if ENABLED(MachineCR20Pro)
   #define LCD_CONTRAST_INIT 165
   #define MachineCR20
@@ -401,6 +446,11 @@
     #define ABL_BI
   #endif
   #define SolidBedMounts
+  #if DISABLED(BedAC)
+    #ifndef BedDC
+      #define BedDC
+    #endif
+  #endif
 #endif
 
 #if ENABLED(SKRPRO11)
@@ -418,6 +468,9 @@
   #define LowMemoryBoard
 #endif
 //Show the Marlin bootscreen on startup. ** ENABLE FOR PRODUCTION **
+#if NONE(MachineEnder4, MachineCR10SPro, MachineCRX, MachineCR10Max, MachineEnder5Plus) || ENABLED(GraphicLCD)
+  #undef SolidBedMounts
+#endif
 
 #if NONE(MachineCR10Orig, MachineEnder4, MachineCR10SPro, MachineCRX, MachineCR10Max, MachineEnder5Plus) || ENABLED(GraphicLCD)
   #define SHOW_BOOTSCREEN
@@ -431,6 +484,7 @@
 /**
  * Select the serial port on the board to use for communication with the host.
  * This allows the connection of wireless adapters (for instance) to non-default port pins.
+ * Serial port -1 is the USB emulated serial port, if available.
  * Note: The first serial port (-1 or 0) will always be used by the Arduino bootloader.
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
@@ -443,24 +497,14 @@
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
- * This allows the connection of wireless adapters (for instance) to non-default port pins.
- * Serial port -1 is the USB emulated serial port, if available.
- *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
 
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11) && NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) || (ENABLED(GraphicLCD) && NONE(Force10SProDisplay, ForceCRXDisplay))
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11) && (NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) || (ENABLED(GraphicLCD) && NONE(Force10SProDisplay, ForceCRXDisplay)))
   #define SERIAL_PORT_2 0
 #elif ANY(SKR13, SKR14, SKR14Turbo)
   #define DGUS_SERIAL_PORT 0
-#elif ENABLED(SKR11PRO)
-  #define DGUS_SERIAL_PORT 1
-#elif ANY(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max) && DISABLED(GraphicLCD)
-  //#define DGUS_SERIAL_PORT 2
 #endif
-
-
-#define bDGUS_SERIAL_STATS_RX_BUFFER_OVERRUNS false
 
 /**
  * This setting determines the communication speed of the printer.
@@ -732,6 +776,7 @@
  *   331 : (3.3V scaled thermistor 1 table for MEGA)
  *   332 : (3.3V scaled thermistor 1 table for DUE)
  *     2 : 200k thermistor - ATC Semitec 204GT-2 (4.7k pullup)
+ *   202 : 200k thermistor - Copymaster 3D
  *     3 : Mendel-parts thermistor (4.7k pullup)
  *     4 : 10k thermistor !! do not use it for a hotend. It gives bad resolution at high temp. !!
  *     5 : 100K thermistor - ATC Semitec 104GT-2/104NT-4-R025H42G (Used in ParCan & J-Head) (4.7k pullup)
@@ -778,28 +823,19 @@
  */
 #if ENABLED(ConfigurableThermistors)
   #define TEMP_SENSOR_0 1000
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 1000
-  #endif
-#elif ANY(HotendStock, CrealityThermistor)
-  #define TEMP_SENSOR_0 1
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 1
-  #endif
-#elif ENABLED(HotendE3D)
-  #define TEMP_SENSOR_0 5
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 5
-  #endif
 #elif ENABLED(HotendMosquito)
   #define TEMP_SENSOR_0 67
-  #if(ENABLED(Dual_ChimeraDualNozzle))
-    #define TEMP_SENSOR_1 67
-  #endif
+#elif ENABLED(HotendE3D)
+  #define TEMP_SENSOR_0 5
+#elif ANY(HotendStock, CrealityThermistor)
+  #define TEMP_SENSOR_0 1
 #endif
-#if(DISABLED(Dual_ChimeraDualNozzle))
+#if DISABLED(Dual_ChimeraDualNozzle)
   #define TEMP_SENSOR_1 0
+#else
+  #define TEMP_SENSOR_1 TEMP_SENSOR_0
 #endif
+
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
 #define TEMP_SENSOR_4 0
@@ -829,8 +865,13 @@
 #define MAX_REDUNDANT_TEMP_SENSOR_DIFF 10
 
 #define TEMP_RESIDENCY_TIME     2  // (seconds) Time to wait for hotend to "settle" in M109
-#define TEMP_WINDOW              1  // (°C) Temperature proximity for the "temperature reached" timer
-#define TEMP_HYSTERESIS          3  // (°C) Temperature proximity considered "close enough" to the target
+#if ENABLED(UnstableTemps)
+  #define TEMP_WINDOW              5  // (°C) Temperature proximity for the "temperature reached" timer
+  #define TEMP_HYSTERESIS          7  // (°C) Temperature proximity considered "close enough" to the target
+#else
+  #define TEMP_WINDOW              1  // (°C) Temperature proximity for the "temperature reached" timer
+  #define TEMP_HYSTERESIS          3  // (°C) Temperature proximity considered "close enough" to the target
+#endif
 
 #define TEMP_BED_RESIDENCY_TIME 5  // (seconds) Time to wait for bed to "settle" in M190
 #define TEMP_BED_WINDOW          1  // (°C) Temperature proximity for the "temperature reached" timer
@@ -890,40 +931,42 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
-#if ENABLED(HotendStock)
-  #if ANY(MachineCR10SPro, MachineCR10Max)
-    #define DEFAULT_Kp 25.25
-    #define DEFAULT_Ki 2.17
-    #define DEFAULT_Kd 73.44
-  #elif ENABLED(MachineEnder5Plus)
-    #define  DEFAULT_Kp 14.72
-    #define  DEFAULT_Ki 0.89
-    #define  DEFAULT_Kd 61.22
-  #elif ENABLED(MachineCRX)
-    #define DEFAULT_Kp 19.00
-    #define DEFAULT_Ki 1.40
-    #define DEFAULT_Kd 66.00
-  #elif ENABLED(MachineCR10SV2)
-    #define  DEFAULT_Kp 19.47
-    #define  DEFAULT_Ki 1.59
-    #define  DEFAULT_Kd 59.40
-  #elif ENABLED(MachineCR2020)
-    #define  DEFAULT_Kp 22.2
-    #define  DEFAULT_Ki 1.08
-    #define  DEFAULT_Kd 114
-  #else
-    #define  DEFAULT_Kp 17.42
-    #define  DEFAULT_Ki 1.27
-    #define  DEFAULT_Kd 59.93
+  #if ENABLED(HotendMosquito)
+    #define DEFAULT_Kp 25.95
+    #define DEFAULT_Ki 3.08
+    #define DEFAULT_Kd 54.74
+  #elif ENABLED(HotendStock)
+    #if ANY(MachineCR10SPro, MachineCR10Max)
+      #define DEFAULT_Kp 25.25
+      #define DEFAULT_Ki 2.17
+      #define DEFAULT_Kd 73.44
+    #elif ENABLED(MachineEnder5Plus)
+      #define  DEFAULT_Kp 14.72
+      #define  DEFAULT_Ki 0.89
+      #define  DEFAULT_Kd 61.22
+    #elif ENABLED(MachineCRX)
+      #define DEFAULT_Kp 19.00
+      #define DEFAULT_Ki 1.40
+      #define DEFAULT_Kd 66.00
+    #elif ENABLED(MachineCR10SV2)
+      #define  DEFAULT_Kp 19.47
+      #define  DEFAULT_Ki 1.59
+      #define  DEFAULT_Kd 59.40
+    #elif ENABLED(MachineCR2020)
+      #define  DEFAULT_Kp 22.2
+      #define  DEFAULT_Ki 1.08
+      #define  DEFAULT_Kd 114
+    #else
+      #define  DEFAULT_Kp 17.42
+      #define  DEFAULT_Ki 1.27
+      #define  DEFAULT_Kd 59.93
+    #endif
+  #elif ENABLED(HotendE3D)
+    //E3D v6 Clone with 5050 fan wing at 100% set to 235
+    #define  DEFAULT_Kp 23.36
+    #define  DEFAULT_Ki 1.99
+    #define  DEFAULT_Kd 87.46
   #endif
-#endif
-
-#if ENABLED(HotendE3D)
-//E3D v6 Clone with 5050 fan wing at 100% set to 235
-#define  DEFAULT_Kp 23.36
-#define  DEFAULT_Ki 1.99
-#define  DEFAULT_Kd 87.46
-#endif
 
   // Ultimaker
   //#define DEFAULT_Kp 22.2
@@ -959,7 +1002,7 @@
  * heater. If your configuration is significantly different than this and you don't understand
  * the issues involved, don't use bed PID until someone else verifies that your hardware works.
  */
-#if NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)
+#if (NONE(MachineCR10Orig, LowMemoryBoard) || ENABLED(MelziHostOnly)) && DISABLED(NoBedPID)
   #define PIDTEMPBED
 #endif
 //#define BED_LIMIT_SWITCHING
@@ -1254,13 +1297,15 @@
 
 #if ENABLED(CrealityTitan)
   #define EStepsmm 382.14
+#elif ENABLED(MicroswissDirectDrive)
+  #define EStepsmm 130
 #elif(ENABLED(Bondtech) || ENABLED(E3DTitan))
   #define EStepsmm 415
 #elif ENABLED(E3DHemera)
   #define EStepsmm 409
 #elif ANY(EZRstruder, MachineCR10SV2)
   #define EStepsmm 93
-#elif ANY(MachineCR10SPro, MachineCR10Max)
+#elif ANY(MachineCR10SPro, MachineCR10Max, MachineCRXPro)
   #define EStepsmm 140
 #elif ENABLED(MachineCR2020)
   #define EStepsmm 113
@@ -1364,6 +1409,8 @@
   #define DEFAULT_XJERK 10.0
   #define DEFAULT_YJERK 10.0
   #define DEFAULT_ZJERK  0.3
+
+  //#define TRAVEL_EXTRA_XYJERK 0.0     // Additional jerk allowance for all travel moves
 
   //#define LIMITED_JERK_EDITING        // Limit edit via M205 or LCD to DEFAULT_aJERK * 2
   #if ENABLED(LIMITED_JERK_EDITING)
@@ -1522,6 +1569,14 @@
   #define SMART_EFFECTOR_MOD_PIN  -1  // Connect a GPIO pin to the Smart Effector MOD pin
 #endif
 
+/**
+ * Use StallGuard2 to probe the bed with the nozzle.
+ * Requires stallGuard-capable Trinamic stepper drivers.
+ * CAUTION: This can damage machines with Z lead screws.
+ *          Take extreme care when setting up this feature.
+ */
+//#define SENSORLESS_PROBING
+
 //
 // For Z_PROBE_ALLEN_KEY see the Delta example configurations.
 //
@@ -1546,14 +1601,16 @@
  *
  * Specify a Probe position as { X, Y, Z }
  */
-#if ENABLED(MachineCRX, HotendStock)
+#if ENABLED(MachineCRXPro, HotendStock, ABL_BLTOUCH)
+  #define NOZZLE_TO_PROBE_OFFSET { 48, 3, 0 }
+#elif ENABLED(MachineCRX, HotendStock)
    #if ENABLED(ABL_BLTOUCH)
      #define NOZZLE_TO_PROBE_OFFSET { -22, -45, 0 }
    #elif ANY(ABL_EZABL, ABL_NCSW)
      #define NOZZLE_TO_PROBE_OFFSET { -44, -10, 0 }
    #endif
-#elif ANY(MachineCR10SPro, MachineCR10Max) && ENABLED(HotendStock)
-  #define NOZZLE_TO_PROBE_OFFSET { -27, -5, 0 }
+#elif ANY(MachineCR10SPro, MachineCR10Max) && ENABLED(HotendStock) && DISABLED(MicroswissDirectDrive)
+  #define NOZZLE_TO_PROBE_OFFSET { -27, 0, 0 }
 #elif (ANY(ABL_BLTOUCH, ABL_EZABL,ABL_NCSW) && ENABLED(E3DHemera))
     #define NOZZLE_TO_PROBE_OFFSET { -40, 0, 0 }
 #elif ENABLED(MachineCR10SV2)
@@ -1562,9 +1619,11 @@
   #elif ENABLED(ABL_EZABL) || ENABLED(ABL_NCSW)
     #define NOZZLE_TO_PROBE_OFFSET { 45, 7, 0 }
   #endif
+#elif ENABLED(MicroswissDirectDrive) && ENABLED(ABL_BLTOUCH)
+  #define NOZZLE_TO_PROBE_OFFSET { -45, -5, 0 }
 #elif (ENABLED(ABL_BLTOUCH) && ENABLED(HotendStock))
   #define NOZZLE_TO_PROBE_OFFSET { -41, -8, 0 }
-#elif ((ENABLED(ABL_EZABL) || ENABLED(ABL_NCSW)) && ENABLED(HotendStock))
+#elif ((ANY(ABL_EZABL, ABL_NCSW)) && ENABLED(HotendStock))
   #if ENABLED(CREALITY_ABL_MOUNT)
     #define NOZZLE_TO_PROBE_OFFSET { -55, -15, 0 }
   #else
@@ -1836,13 +1895,6 @@
     #define X_MAX_POS 315
     #define Y_MAX_POS 308
     #define ClipClearance 15
-  #elif ENABLED(MachineCR10SPro)
-    #define X_BED_SIZE 300
-    #define Y_BED_SIZE 300
-    #define Z_MAX_POS 400
-    #define X_MAX_POS 315
-    #define Y_MAX_POS 310
-    #define ClipClearance 10
   #elif ENABLED(MachineCR10SProV2)
     #define X_BED_SIZE 300
     #define Y_BED_SIZE 300
@@ -1850,6 +1902,13 @@
     #define X_MAX_POS 315
     #define Y_MAX_POS 310
     #define ClipClearance 5
+  #elif ENABLED(MachineCR10SPro)
+    #define X_BED_SIZE 300
+    #define Y_BED_SIZE 300
+    #define Z_MAX_POS 400
+    #define X_MAX_POS 315
+    #define Y_MAX_POS 310
+    #define ClipClearance 10
   #elif ENABLED(MachineCR10Std)
     #define X_BED_SIZE 300
     #define Y_BED_SIZE 300
@@ -1893,7 +1952,10 @@
 
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
-#if ENABLED(TOUCH_MI_PROBE)
+#if ENABLED(MicroswissDirectDrive)
+  #define X_MIN_POS -15
+  #define Y_MIN_POS -10
+#elif ENABLED(TOUCH_MI_PROBE)
   #define X_MIN_POS -4
   #define Y_MIN_POS -10
 #else
@@ -1933,7 +1995,7 @@
   #define MAX_SOFTWARE_ENDSTOP_Z
 #endif
 #if(NONE(MachineCR10Orig, LowMemoryBoard))
-  #if ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS)
+  #if EITHER(MIN_SOFTWARE_ENDSTOPS, MAX_SOFTWARE_ENDSTOPS)
     #define SOFT_ENDSTOPS_MENU_ITEM  // Enable/Disable software endstops from the LCD
   #endif
 #endif
@@ -1946,7 +2008,7 @@
  * For other boards you may need to define FIL_RUNOUT_PIN, FIL_RUNOUT2_PIN, etc.
  * By default the firmware assumes HIGH=FILAMENT PRESENT.
  */
-#if (NONE(MachineCR10Orig, MachineCR20, MachineEnder4, MachineEnder5, MachineCRX) || ANY(AddonFilSensor, lerdgeFilSensor, DualFilSensors  ))
+#if (NONE(MachineCR10Orig, MachineCR20, MachineEnder4, MachineEnder5, MachineCRX, Melzi_To_SBoardUpgrade) || ANY(AddonFilSensor, lerdgeFilSensor, DualFilSensors  ))
   #define FILAMENT_RUNOUT_SENSOR
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
@@ -2309,6 +2371,7 @@
 #else
   #define DISABLE_M503        // Saves ~2700 bytes of PROGMEM. Disable for release!
 #endif
+#define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
 #if ENABLED(EEPROM_SETTINGS)
   #define EEPROM_AUTO_INIT  // Init EEPROM automatically on any errors.
 #endif
@@ -2408,12 +2471,12 @@
  * Attention: EXPERIMENTAL. G-code arguments may change.
  *
  */
-#if ENABLED(MachineCRX)
+#if ANY(MachineCRX, PurgeBucket)
   #define NOZZLE_CLEAN_FEATURE
 #endif
 #if ENABLED(NOZZLE_CLEAN_FEATURE)
   // Default number of pattern repetitions
-  #define NOZZLE_CLEAN_STROKES  12
+  #define NOZZLE_CLEAN_STROKES  3
 
   // Default number of triangles
   #define NOZZLE_CLEAN_TRIANGLES  3
@@ -2421,8 +2484,8 @@
   // Specify positions for each tool as { { X, Y, Z }, { X, Y, Z } }
   // Dual hotend system may use { {  -20, (Y_BED_SIZE / 2), (Z_MIN_POS + 1) },  {  420, (Y_BED_SIZE / 2), (Z_MIN_POS + 1) }}
 
-  #define NOZZLE_CLEAN_START_POINT { 320, 40, (Z_MIN_POS + 1)}
-  #define NOZZLE_CLEAN_END_POINT   { 300, 40, (Z_MIN_POS + 1) }
+  #define NOZZLE_CLEAN_START_POINT { X_MAX_POS, 40, (Z_MIN_POS + 1)}
+  #define NOZZLE_CLEAN_END_POINT   { (X_MAX_POS - 10), 40, (Z_MIN_POS + 1) }
 
   // Circular pattern radius
   #define NOZZLE_CLEAN_CIRCLE_RADIUS 6.5
@@ -2707,16 +2770,16 @@
 //======================== LCD / Controller Selection =========================
 //=====================   (I2C and Shift-Register LCDs)   =====================
 //=============================================================================
-#if(ENABLED(MachineEnder4) && DISABLED(GraphicLCD))
+#if ENABLED(MachineEnder4) && DISABLED(GraphicLCD)
   #define REPRAP_DISCOUNT_SMART_CONTROLLER
 #elif ENABLED(MachineEnder2)
   #define ENDER2_STOCKDISPLAY
 #elif ANY(MachineCR20, MachineCR2020)
   #define MKS_MINI_12864
+#elif ANY(OrigLCD, MachineCR10Orig) && DISABLED(GraphicLCD)
+  #define CR10_STOCKDISPLAY
 #elif NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max, OrigLCD, MachineCR10Orig) || ENABLED(GraphicLCD)
   #define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
-#elif ANY(OrigLCD, MachineCR10Orig)
-  #define CR10_STOCKDISPLAY
 #endif
 //
 // CONTROLLER TYPE: I2C

@@ -159,6 +159,12 @@ Nozzle nozzle;
   void Nozzle::clean(const uint8_t &pattern, const uint8_t &strokes, const float &radius, const uint8_t &objects, const uint8_t cleans) {
     xyz_pos_t start[HOTENDS] = NOZZLE_CLEAN_START_POINT, end[HOTENDS] = NOZZLE_CLEAN_END_POINT, middle[HOTENDS] = NOZZLE_CLEAN_CIRCLE_MIDDLE;
 
+    #if ANY(SINGLENOZZLE, MIXING_EXTRUDER)
+      const uint8_t arrPos = 0;
+    #else
+      const uint8_t arrPos = active_extruder;
+    #endif
+
     if (pattern == 2) {
       if (!(cleans & (_BV(X_AXIS) | _BV(Y_AXIS)))) {
         SERIAL_ECHOLNPGM("Warning : Clean Circle requires XY");
@@ -166,15 +172,15 @@ Nozzle nozzle;
       }
     }
     else {
-      if (!TEST(cleans, X_AXIS)) start[active_extruder].x = end[active_extruder].x = current_position.x;
-      if (!TEST(cleans, Y_AXIS)) start[active_extruder].y = end[active_extruder].y = current_position.y;
+      if (!TEST(cleans, X_AXIS)) start[arrPos].x = end[arrPos].x = current_position.x;
+      if (!TEST(cleans, Y_AXIS)) start[arrPos].y = end[arrPos].y = current_position.y;
     }
-    if (!TEST(cleans, Z_AXIS)) start[active_extruder].z = end[active_extruder].z = current_position.z;
+    if (!TEST(cleans, Z_AXIS)) start[arrPos].z = end[arrPos].z = current_position.z;
 
     switch (pattern) {
-       case 1: zigzag(start[active_extruder], end[active_extruder], strokes, objects); break;
-       case 2: circle(start[active_extruder], middle[active_extruder], strokes, radius);  break;
-      default: stroke(start[active_extruder], end[active_extruder], strokes);
+       case 1: zigzag(start[arrPos], end[arrPos], strokes, objects); break;
+       case 2: circle(start[arrPos], middle[arrPos], strokes, radius);  break;
+      default: stroke(start[arrPos], end[arrPos], strokes);
     }
   }
 
