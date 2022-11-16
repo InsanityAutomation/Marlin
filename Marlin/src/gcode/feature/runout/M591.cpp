@@ -78,7 +78,7 @@ void GcodeSuite::M591() {
 
 void GcodeSuite::M591_report(const bool forReplay/*=true*/) {
   report_heading_etc(forReplay, F(STR_FILAMENT_RUNOUT_SENSOR));
-  LOOP_S_L_N(e, 1, NUM_RUNOUT_SENSORS)
+  LOOP_S_L_N(e, 0, NUM_RUNOUT_SENSORS)
     SERIAL_ECHOLNPGM(
       "  M591"
       #if MULTI_FILAMENT_SENSOR
