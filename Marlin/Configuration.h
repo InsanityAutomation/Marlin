@@ -104,6 +104,7 @@
 //Stepper09Deg // 0.9 degree per step motor on the extruder - doubles ESteps
 
  //#define MicroswissDirectDrive
+ //#define MicroswissDirectDriveNG // Different E steps.
  //#define DirectDrive // Any direct drive extruder, reduces filament change lengths
 
 /*
@@ -204,6 +205,7 @@
 //#define SKRE3Turbo
 //#define SKR_CR6 // Specialty SKR board for CR6
 //#define SKR_Switch_Extruder_1 // Switch pins in PINS file for SKRE3Turbo
+//#define SKR3
 
 // This board is NOT recommended and is HIGHLY advised against utilizing the expanded builds for.
 // The MCU is rated for 256kb and stability problems, including hangs with heaters on, have been reported.
@@ -378,6 +380,15 @@
   #define OrigLCD
 #endif
 
+#if ENABLED(SKR3)
+  #define SKR_2209
+  #define SKR_UART
+  #define DIAG_JUMPERS_REMOVED
+  #define NO_AUTO_ASSIGN_WARNING
+  // This card has tons of memory, so...
+  #define SDCARD_SORT_ALPHA
+#endif
+
 #if ENABLED(CrealityTitan)
   #define E3DTitan
 #endif
@@ -432,7 +443,7 @@
   #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
-  #if NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, Creality422, Creality427)
+  #if NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, Creality422, Creality427, SKR3)
     #define Y_STOP_PIN 14
     #define X_STOP_PIN 3
   #endif
@@ -610,7 +621,7 @@
   #endif
 #endif
 
-#if ANY(MicroswissDirectDrive, DDXExtruderKit, CrealityTitan, E3DHemera, SpriteExtruder)
+#if ANY(MicroswissDirectDrive, MicroswissDirectDriveNG, DDXExtruderKit, CrealityTitan, E3DHemera, SpriteExtruder)
   #define DirectDrive
 #endif
 
@@ -636,7 +647,7 @@
   #define BedDC
 #endif
 
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, MachineEnder3V2, MachineEnder3S1, Creality422, Creality427, MachineEnder6, MachineSermoonD1, MachineCR30, MachineCR6, MachineCR6Max, MachineEnder7, MachineCR10Smart, MachineCR10SmartPro)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKR3, MachineEnder3V2, MachineEnder3S1, Creality422, Creality427, MachineEnder6, MachineSermoonD1, MachineCR30, MachineCR6, MachineCR6Max, MachineEnder7, MachineCR10Smart, MachineCR10SmartPro)
   #define MachineLargeROM
 #endif
 
@@ -662,7 +673,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRE3Turbo, SKR_CR6)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRE3Turbo, SKR_CR6, SKR3)
   #define SERIAL_PORT -1
 #elif ANY(MachineCR10Smart, MachineCR10SmartPro, MachineEnder2Pro)
   #define SERIAL_PORT 1
@@ -685,6 +696,10 @@
   #define SERIAL_PORT_2 0
 #elif ENABLED(SKRMiniE3V2)
   #define SERIAL_PORT_2 2
+#elif ENABLED(SKR3)
+  #define LCD_SERIAL_PORT 1
+  #define LCD_BAUDRATE 115200
+  #define SERIAL_CATCHALL -1
 #elif ANY(MachineEnder3V2, MachineEnder3S1) && ANY(FORCEV2DISPLAY, SKRE3Turbo)
   #define LCD_SERIAL_PORT 1
   #define LCD_BAUDRATE 115200
@@ -761,6 +776,8 @@
     #define MOTHERBOARD BOARD_BTT_SKR_MINI_E3_V2_0
   #elif ENABLED(SKRE3Turbo)
     #define MOTHERBOARD BOARD_BTT_SKR_E3_TURBO
+  #elif ENABLED(SKR3)
+    #define MOTHERBOARD BOARD_BTT_SKR_V3_0
   #elif ENABLED(MachineEnder6)
     #define MOTHERBOARD BOARD_CREALITY_V431
   #elif ENABLED(MachineEnder7)
@@ -1764,7 +1781,7 @@
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'L6474', 'POWERSTEP01', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
 
-#if (ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, CrealitySilentBoard) || ANY(MachineCR10SV2, MachineEnder3S1, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max, MachineCR5, SKRMiniE3V2, MachineCR6, MachineCR6Max, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR10Smart, MachineCR10SmartPro)) && DISABLED(SKR_UART)
+#if (ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, CrealitySilentBoard, SKR3) || ANY(MachineCR10SV2, MachineEnder3S1, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max, MachineCR5, SKRMiniE3V2, MachineCR6, MachineCR6Max, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR10Smart, MachineCR10SmartPro)) && DISABLED(SKR_UART)
   #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209_STANDALONE
     #define Y_DRIVER_TYPE  TMC2209_STANDALONE
@@ -1796,7 +1813,7 @@
       #define E1_DRIVER_TYPE TMC2208_STANDALONE
     #endif
   #endif
-#elif ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRE3Turbo) && ENABLED(SKR_UART)
+#elif ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRE3Turbo, SKR3) && ENABLED(SKR_UART)
   #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209
     #define Y_DRIVER_TYPE  TMC2209
@@ -1915,6 +1932,8 @@
   #define EStepsmm 382.14
 #elif ENABLED(MicroswissDirectDrive)
   #define EStepsmm 130
+#elif ENABLED(MicroswissDirectDriveNG)
+  #define EStepsmm 400
 #elif ENABLED(BondtechLGX)
   #define EStepsmm 400
 #elif(ENABLED(BondtechBMG) || ENABLED(E3DTitan))
@@ -2337,6 +2356,8 @@
   #endif
 #elif ENABLED(MicroswissDirectDrive) && ENABLED(ABL_BLTOUCH)
   #define NOZZLE_TO_PROBE_OFFSET { -45, -5, 0 }
+#elif ENABLED(MicroswissDirectDriveNG) && ENABLED(ABL_BLTOUCH)
+  #define NOZZLE_TO_PROBE_OFFSET { -44, -5, -3.7 }
 #elif ENABLED(MachineEnder3S1)
   #define NOZZLE_TO_PROBE_OFFSET { -37, -39, -2.0 }
 #elif ENABLED(MachineCR10SmartPro)
@@ -2450,7 +2471,7 @@
 #if ENABLED(MachineEnder5)
   #define Z_CLEARANCE_DEPLOY_PROBE   0 // Z Clearance for Deploy/Stow
 #else
-  #define Z_CLEARANCE_DEPLOY_PROBE   10 // Z Clearance for Deploy/Stow
+  #define Z_CLEARANCE_DEPLOY_PROBE   15 // Z Clearance for Deploy/Stow
 #endif
 #if ANY(MachineCR6, MachineCR6Max, MachineCR10Smart)
   #define Z_CLEARANCE_BETWEEN_PROBES  3 // Z Clearance between probe points
@@ -2574,7 +2595,7 @@
   #define INVERT_Z_DIR true
   #define INVERT_E0_DIR true
   #define INVERT_E1_DIR false
-#elif ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKRMiniE3V2, SKRE3Turbo) && DISABLED(SKR_ReverseSteppers)
+#elif ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKRMiniE3V2, SKRE3Turbo, SKR3) && DISABLED(SKR_ReverseSteppers)
   #define INVERT_X_DIR true
   #define INVERT_Y_DIR true
   #if ANY(MachineEnder5Plus, MachineCR2020)
@@ -2590,7 +2611,7 @@
     #define INVERT_E1_DIR false
   #endif
 #else
-  #if ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKRMiniE3V2, SKRE3Turbo) && ENABLED(SKR_ReverseSteppers) && ENABLED(MachineEnder6)
+  #if ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKRMiniE3V2, SKRE3Turbo, SKR3) && ENABLED(SKR_ReverseSteppers) && ENABLED(MachineEnder6)
     #define INVERT_X_DIR true
     #define INVERT_Y_DIR false
   #else

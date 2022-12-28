@@ -31,6 +31,8 @@
 #include "../shared/Delay.h"
 
 #ifdef USBCON
+  #include <USBSerial.h>
+  #include "../../core/serial_hook.h"
   DefaultSerial1 MSerial0(false, SerialUSB);
 #endif
 

@@ -2125,7 +2125,7 @@
  *
  * See https://marlinfw.org/docs/features/lin_advance.html for full instructions.
  */
-#if NONE(MachineCR10Orig, SKRMiniE3V2, LowMemoryBoard, MachineCR10SPro, MachineCR10Max, SKR13, SKR14, SKR14Turbo, MachineCR10SV2, CrealitySilentBoard, MachineCR5) || ENABLED(OrigLA) || (ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11) && ENABLED(SKR_UART))
+#if NONE(MachineCR10Orig, SKRMiniE3V2, LowMemoryBoard, MachineCR10SPro, MachineCR10Max, SKR13, SKR14, SKR14Turbo, MachineCR10SV2, CrealitySilentBoard, MachineCR5) || ENABLED(OrigLA) || (ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKR3) && ENABLED(SKR_UART))
   #define LIN_ADVANCE
 #endif
 #if ENABLED(LIN_ADVANCE)
@@ -2429,7 +2429,7 @@
 // For debug-echo: 128 bytes for the optimal speed.
 // Other output doesn't need to be that speedy.
 // :[0, 2, 4, 8, 16, 32, 64, 128, 256]
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKR3)
   #define TX_BUFFER_SIZE 32
 #else
   #define TX_BUFFER_SIZE 0
@@ -4146,7 +4146,7 @@
  * Add G-codes M810-M819 to define and run G-code macros.
  * Macros are not saved to EEPROM.
  */
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKR3)
   #define GCODE_MACROS
 #endif
 #if ENABLED(GCODE_MACROS)
@@ -4648,7 +4648,9 @@
   //
   // M43 - display pin status, toggle pins, watch pins, watch endstops & toggle LED, test servo probe
   //
-  #define PINS_DEBUGGING
+  #if DISABLED(SKR3) // Does not compile on SKR3
+    #define PINS_DEBUGGING
+  #endif
 //#endif
 
 // Enable Marlin dev mode which adds some special commands
