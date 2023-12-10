@@ -99,8 +99,8 @@
  //#define E3DHemera
  //#define CrealityTitan
  //#define DDXExtruderKit
- //#define SpriteExtruder
-
+ //#define 
+SpriteExtruder
 //Stepper09Deg // 0.9 degree per step motor on the extruder - doubles ESteps
 
  //#define MicroswissDirectDrive
@@ -456,7 +456,7 @@
   #endif
 #endif
 
-#if ANY(MachineEnder3S1, MachineCR10SmartPro)
+#if ANY(MachineEnder3S1, MachineCR10SmartPro, Creality427) //Eduardo habilita Sprite para ender 3
   #define SpriteExtruder
 #endif
 
@@ -2321,7 +2321,7 @@
   #define NOZZLE_TO_PROBE_OFFSET { 0, 0, 0.2 }
 #elif ENABLED(MachineCRX, HotendStock)
    #if ENABLED(ABL_BLTOUCH)
-     #define NOZZLE_TO_PROBE_OFFSET { -22, -45, 0 }
+     #define NOZZLE_TO_PROBE_OFFSET { -37, -39, -2.0 }
    #elif ANY(ABL_EZABL, ABL_NCSW)
      #define NOZZLE_TO_PROBE_OFFSET { -44, -10, 0 }
    #endif
