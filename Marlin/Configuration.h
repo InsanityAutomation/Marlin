@@ -432,7 +432,7 @@
     #define ABL_BLTOUCH
   #endif
   #if NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, Creality422, Creality427)
-    #define Y_STOP_PIN 14
+    #define Y_STOP_PIN 14 //Eduardo Revisar
     #define X_STOP_PIN 3
   #endif
   #define lerdgeFilSensor
