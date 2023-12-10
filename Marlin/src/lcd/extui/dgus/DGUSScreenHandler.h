@@ -43,19 +43,20 @@
 #endif
 
 // endianness swap
-inline uint16_t swap16(const uint16_t value) { return (value & 0xFFU) << 8U | (value >> 8U); }
+#define BE16_P(V) ( ((uint8_t*)(V))[0] << 8U | ((uint8_t*)(V))[1] )
+#define BE32_P(V) ( ((uint8_t*)(V))[0] << 24U | ((uint8_t*)(V))[1] << 16U | ((uint8_t*)(V))[2] << 8U | ((uint8_t*)(V))[3] )
 
-#if ENABLED(DGUS_LCD_UI_ORIGIN)
+#if DGUS_LCD_UI_ORIGIN
   #include "origin/DGUSScreenHandler.h"
-#elif ENABLED(DGUS_LCD_UI_MKS)
+#elif DGUS_LCD_UI_MKS
   #include "mks/DGUSScreenHandler.h"
-#elif ENABLED(DGUS_LCD_UI_FYSETC)
+#elif DGUS_LCD_UI_FYSETC
   #include "fysetc/DGUSScreenHandler.h"
-#elif ENABLED(DGUS_LCD_UI_HIPRECY)
+#elif DGUS_LCD_UI_HIPRECY
   #include "hiprecy/DGUSScreenHandler.h"
 #endif
 
-extern DGUSScreenHandler ScreenHandler;
+extern DGUSScreenHandlerClass screen;
 
 // Helper to define a DGUS_VP_Variable for common use-cases.
 #define VPHELPER(VPADR, VPADRVAR, RXFPTR, TXFPTR) { \

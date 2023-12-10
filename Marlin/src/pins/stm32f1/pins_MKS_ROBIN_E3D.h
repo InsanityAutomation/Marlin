@@ -26,7 +26,7 @@
  */
 
 #if HAS_MULTI_HOTEND || E_STEPPERS > 1
-  #error "MKS Robin E3D only supports one hotend / E-stepper. Comment out this line to continue."
+  #error "MKS Robin E3D only supports 1 hotend / E stepper."
 #endif
 
 #ifndef BOARD_INFO_NAME
@@ -50,18 +50,16 @@
 #endif
 
 //
-// Software SPI pins for TMC2130 stepper drivers
+// SPI pins for TMC2130 stepper drivers
 //
-#if ENABLED(TMC_USE_SW_SPI)
-  #ifndef TMC_SW_MOSI
-    #define TMC_SW_MOSI                     PB15
-  #endif
-  #ifndef TMC_SW_MISO
-    #define TMC_SW_MISO                     PB14
-  #endif
-  #ifndef TMC_SW_SCK
-    #define TMC_SW_SCK                      PB13
-  #endif
+#ifndef TMC_SPI_MOSI
+  #define TMC_SPI_MOSI                      PB15
+#endif
+#ifndef TMC_SPI_MISO
+  #define TMC_SPI_MISO                      PB14
+#endif
+#ifndef TMC_SPI_SCK
+  #define TMC_SPI_SCK                       PB13
 #endif
 
 #include "pins_MKS_ROBIN_E3_common.h"

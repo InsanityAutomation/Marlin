@@ -29,7 +29,7 @@
 BLTouch bltouch;
 
 bool BLTouch::od_5v_mode;         // Initialized by settings.load, 0 = Open Drain; 1 = 5V Drain
-#ifdef BLTOUCH_HS_MODE
+#if HAS_BLTOUCH_HS_MODE
   bool BLTouch::high_speed_mode;  // Initialized by settings.load, 0 = Low Speed; 1 = High Speed
 #else
   constexpr bool BLTouch::high_speed_mode;
@@ -38,15 +38,18 @@ bool BLTouch::od_5v_mode;         // Initialized by settings.load, 0 = Open Drai
 #include "../module/servo.h"
 #include "../module/probe.h"
 
-void stop();
-
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../core/debug_out.h"
 
 bool BLTouch::command(const BLTCommand cmd, const millis_t &ms) {
-  if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("BLTouch Command :", cmd);
-  MOVE_SERVO(Z_PROBE_SERVO_NR, cmd);
-  safe_delay(_MAX(ms, (uint32_t)BLTOUCH_DELAY)); // BLTOUCH_DELAY is also the *minimum* delay
+  const BLTCommand current = servo[Z_PROBE_SERVO_NR].read();
+  if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("BLTouch from ", current, " to ", cmd);
+  // If the new command is the same, skip it (and the delay).
+  // The previous write should've already delayed to detect the alarm.
+  if (cmd != current) {
+    servo[Z_PROBE_SERVO_NR].move(cmd);
+    safe_delay(_MAX(ms, (uint32_t)BLTOUCH_DELAY)); // BLTOUCH_DELAY is also the *minimum* delay
+  }
   return triggered();
 }
 
@@ -111,11 +114,8 @@ bool BLTouch::deploy_proc() {
     // Last attempt to DEPLOY
     if (_deploy_query_alarm()) {
       // The deploy might have failed or the probe is actually triggered (nozzle too low?) again
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("BLTouch Recovery Failed");
-
-      SERIAL_ERROR_MSG(STR_STOP_BLTOUCH);  // Tell the user something is wrong, needs action
-      stop();                              // but it's not too bad, no need to kill, allow restart
-
+      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("BLTouch Deploy Failed");
+      probe.probe_error_stop();            // Something is wrong, needs action, but not too bad, allow restart
       return true;                         // Tell our caller we goofed in case he cares to know
     }
   }
@@ -153,12 +153,8 @@ bool BLTouch::stow_proc() {
                                            // But one more STOW will catch that
     // Last attempt to STOW
     if (_stow_query_alarm()) {             // so if there is now STILL an ALARM condition:
-
-      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("BLTouch Recovery Failed");
-
-      SERIAL_ERROR_MSG(STR_STOP_BLTOUCH);  // Tell the user something is wrong, needs action
-      stop();                              // but it's not too bad, no need to kill, allow restart
-
+      if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("BLTouch Stow Failed");
+      probe.probe_error_stop();            // Something is wrong, needs action, but not too bad, allow restart
       return true;                         // Tell our caller we goofed in case he cares to know
     }
   }

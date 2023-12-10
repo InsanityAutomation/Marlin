@@ -33,7 +33,7 @@
 #include "env_validate.h"
 
 #if HAS_MULTI_HOTEND || E_STEPPERS > 1
-  #error "JGAurora A5S A1 only supports one hotend / E-stepper. Comment out this line to continue."
+  #error "JGAurora A5S A1 only supports 1 hotend / E stepper."
 #endif
 
 #define BOARD_INFO_NAME "JGAurora A5S A1"
@@ -53,9 +53,9 @@
 #endif
 
 #if ENABLED(I2C_EEPROM)
-  //#define MARLIN_EEPROM_SIZE          0x8000UL  // 32KB
+  //#define MARLIN_EEPROM_SIZE          0x8000UL  // 32K
 #elif ENABLED(FLASH_EEPROM_EMULATION)
-  //#define MARLIN_EEPROM_SIZE          0x1000UL  // 4KB
+  //#define MARLIN_EEPROM_SIZE          0x1000UL  // 4K
   //#define MARLIN_EEPROM_SIZE (EEPROM_START_ADDRESS + (EEPROM_PAGE_SIZE) * 2UL)
 #endif
 
@@ -104,7 +104,7 @@
 #define HEATER_0_PIN                        PA2
 #define HEATER_BED_PIN                      PA3
 
-#define FAN_PIN                             PA1
+#define FAN0_PIN                            PA1
 
 #define FIL_RUNOUT_PIN                      PC7
 
@@ -117,8 +117,6 @@
   #define FSMC_RS_PIN                       PG0
 
   #define LCD_USE_DMA_FSMC                        // Use DMA transfers to send data to the TFT
-  #define FSMC_DMA_DEV                      DMA2
-  #define FSMC_DMA_CHANNEL               DMA_CH5
 
   #define TFT_CS_PIN                 FSMC_CS_PIN
   #define TFT_RS_PIN                 FSMC_RS_PIN

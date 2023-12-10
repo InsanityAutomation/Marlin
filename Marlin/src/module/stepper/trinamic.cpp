@@ -46,7 +46,7 @@ enum StealthIndex : uint8_t {
 //   AI = Axis Enum Index
 // SWHW = SW/SH UART selection
 #if ENABLED(TMC_USE_SW_SPI)
-  #define __TMC_SPI_DEFINE(IC, ST, L, AI) TMCMarlin<IC##Stepper, L, AI> stepper##ST(ST##_CS_PIN, float(ST##_RSENSE), TMC_SW_MOSI, TMC_SW_MISO, TMC_SW_SCK, ST##_CHAIN_POS)
+  #define __TMC_SPI_DEFINE(IC, ST, L, AI) TMCMarlin<IC##Stepper, L, AI> stepper##ST(ST##_CS_PIN, float(ST##_RSENSE), TMC_SPI_MOSI, TMC_SPI_MISO, TMC_SPI_SCK, ST##_CHAIN_POS)
 #else
   #define __TMC_SPI_DEFINE(IC, ST, L, AI) TMCMarlin<IC##Stepper, L, AI> stepper##ST(ST##_CS_PIN, float(ST##_RSENSE), ST##_CHAIN_POS)
 #endif
@@ -227,7 +227,7 @@ enum StealthIndex : uint8_t {
     chopconf.intpol = interpolate;
     chopconf.hend = chop_init.hend + 3;
     chopconf.hstrt = chop_init.hstrt - 1;
-    TERN_(SQUARE_WAVE_STEPPING, chopconf.dedge = true);
+    TERN_(EDGE_STEPPING, chopconf.dedge = true);
     st.CHOPCONF(chopconf.sr);
 
     st.rms_current(mA, hold_multiplier);
@@ -262,7 +262,7 @@ enum StealthIndex : uint8_t {
     chopconf.intpol = interpolate;
     chopconf.hend = chop_init.hend + 3;
     chopconf.hstrt = chop_init.hstrt - 1;
-    TERN_(SQUARE_WAVE_STEPPING, chopconf.dedge = true);
+    TERN_(EDGE_STEPPING, chopconf.dedge = true);
     st.CHOPCONF(chopconf.sr);
 
     st.rms_current(mA, hold_multiplier);
@@ -493,7 +493,7 @@ enum StealthIndex : uint8_t {
   #endif
 
   #define _EN_ITEM(N) , E##N
-  enum TMCAxis : uint8_t { NUM_AXIS_LIST(X, Y, Z, I, J, K, U, V, W), X2, Y2, Z2, Z3, Z4 REPEAT(EXTRUDERS, _EN_ITEM), TOTAL };
+  enum TMCAxis : uint8_t { MAIN_AXIS_NAMES_ X2, Y2, Z2, Z3, Z4 REPEAT(EXTRUDERS, _EN_ITEM), TOTAL };
   #undef _EN_ITEM
 
   void tmc_serial_begin() {
@@ -501,7 +501,7 @@ enum StealthIndex : uint8_t {
       struct {
         const void *ptr[TMCAxis::TOTAL];
         bool began(const TMCAxis a, const void * const p) {
-          LOOP_L_N(i, a) if (p == ptr[i]) return true;
+          for (uint8_t i = 0; i < a; ++i) if (p == ptr[i]) return true;
           ptr[a] = p; return false;
         };
       } sp_helper;
@@ -514,154 +514,154 @@ enum StealthIndex : uint8_t {
       #ifdef X_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(X);
       #else
-        stepperX.beginSerial(TMC_BAUD_RATE);
+        stepperX.beginSerial(TMC_X_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(X2)
       #ifdef X2_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(X2);
       #else
-        stepperX2.beginSerial(TMC_BAUD_RATE);
+        stepperX2.beginSerial(TMC_X2_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(Y)
       #ifdef Y_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(Y);
       #else
-        stepperY.beginSerial(TMC_BAUD_RATE);
+        stepperY.beginSerial(TMC_Y_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(Y2)
       #ifdef Y2_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(Y2);
       #else
-        stepperY2.beginSerial(TMC_BAUD_RATE);
+        stepperY2.beginSerial(TMC_Y2_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(Z)
       #ifdef Z_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(Z);
       #else
-        stepperZ.beginSerial(TMC_BAUD_RATE);
+        stepperZ.beginSerial(TMC_Z_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(Z2)
       #ifdef Z2_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(Z2);
       #else
-        stepperZ2.beginSerial(TMC_BAUD_RATE);
+        stepperZ2.beginSerial(TMC_Z2_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(Z3)
       #ifdef Z3_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(Z3);
       #else
-        stepperZ3.beginSerial(TMC_BAUD_RATE);
+        stepperZ3.beginSerial(TMC_Z3_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(Z4)
       #ifdef Z4_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(Z4);
       #else
-        stepperZ4.beginSerial(TMC_BAUD_RATE);
+        stepperZ4.beginSerial(TMC_Z4_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(I)
       #ifdef I_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(I);
       #else
-        stepperI.beginSerial(TMC_BAUD_RATE);
+        stepperI.beginSerial(TMC_I_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(J)
       #ifdef J_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(J);
       #else
-        stepperJ.beginSerial(TMC_BAUD_RATE);
+        stepperJ.beginSerial(TMC_J_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(K)
       #ifdef K_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(K);
       #else
-        stepperK.beginSerial(TMC_BAUD_RATE);
+        stepperK.beginSerial(TMC_K_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(U)
       #ifdef U_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(U);
       #else
-        stepperU.beginSerial(TMC_BAUD_RATE);
+        stepperU.beginSerial(TMC_U_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(V)
       #ifdef V_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(V);
       #else
-        stepperV.beginSerial(TMC_BAUD_RATE);
+        stepperV.beginSerial(TMC_V_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(W)
       #ifdef W_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(W);
       #else
-        stepperW.beginSerial(TMC_BAUD_RATE);
+        stepperW.beginSerial(TMC_W_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E0)
       #ifdef E0_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E0);
       #else
-        stepperE0.beginSerial(TMC_BAUD_RATE);
+        stepperE0.beginSerial(TMC_E0_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E1)
       #ifdef E1_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E1);
       #else
-        stepperE1.beginSerial(TMC_BAUD_RATE);
+        stepperE1.beginSerial(TMC_E1_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E2)
       #ifdef E2_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E2);
       #else
-        stepperE2.beginSerial(TMC_BAUD_RATE);
+        stepperE2.beginSerial(TMC_E2_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E3)
       #ifdef E3_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E3);
       #else
-        stepperE3.beginSerial(TMC_BAUD_RATE);
+        stepperE3.beginSerial(TMC_E3_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E4)
       #ifdef E4_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E4);
       #else
-        stepperE4.beginSerial(TMC_BAUD_RATE);
+        stepperE4.beginSerial(TMC_E4_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E5)
       #ifdef E5_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E5);
       #else
-        stepperE5.beginSerial(TMC_BAUD_RATE);
+        stepperE5.beginSerial(TMC_E5_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E6)
       #ifdef E6_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E6);
       #else
-        stepperE6.beginSerial(TMC_BAUD_RATE);
+        stepperE6.beginSerial(TMC_E6_BAUD_RATE);
       #endif
     #endif
     #if AXIS_HAS_UART(E7)
       #ifdef E7_HARDWARE_SERIAL
         HW_SERIAL_BEGIN(E7);
       #else
-        stepperE7.beginSerial(TMC_BAUD_RATE);
+        stepperE7.beginSerial(TMC_E7_BAUD_RATE);
       #endif
     #endif
   }
@@ -684,7 +684,7 @@ enum StealthIndex : uint8_t {
     chopconf.intpol = interpolate;
     chopconf.hend = chop_init.hend + 3;
     chopconf.hstrt = chop_init.hstrt - 1;
-    TERN_(SQUARE_WAVE_STEPPING, chopconf.dedge = true);
+    TERN_(EDGE_STEPPING, chopconf.dedge = true);
     st.CHOPCONF(chopconf.sr);
 
     st.rms_current(mA, hold_multiplier);
@@ -726,7 +726,7 @@ enum StealthIndex : uint8_t {
     chopconf.intpol = interpolate;
     chopconf.hend = chop_init.hend + 3;
     chopconf.hstrt = chop_init.hstrt - 1;
-    TERN_(SQUARE_WAVE_STEPPING, chopconf.dedge = true);
+    TERN_(EDGE_STEPPING, chopconf.dedge = true);
     st.CHOPCONF(chopconf.sr);
 
     st.rms_current(mA, hold_multiplier);
@@ -766,7 +766,7 @@ enum StealthIndex : uint8_t {
     st.sdoff(0);
     st.rms_current(mA);
     st.microsteps(microsteps);
-    TERN_(SQUARE_WAVE_STEPPING, st.dedge(true));
+    TERN_(EDGE_STEPPING, st.dedge(true));
     st.intpol(interpolate);
     st.diss2g(true); // Disable short to ground protection. Too many false readings?
     TERN_(TMC_DEBUG, st.rdsel(0b01));
@@ -784,7 +784,7 @@ enum StealthIndex : uint8_t {
     chopconf.intpol = interpolate;
     chopconf.hend = chop_init.hend + 3;
     chopconf.hstrt = chop_init.hstrt - 1;
-    TERN_(SQUARE_WAVE_STEPPING, chopconf.dedge = true);
+    TERN_(EDGE_STEPPING, chopconf.dedge = true);
     st.CHOPCONF(chopconf.sr);
 
     st.rms_current(mA, hold_multiplier);
@@ -819,7 +819,7 @@ enum StealthIndex : uint8_t {
     chopconf.intpol = interpolate;
     chopconf.hend = chop_init.hend + 3;
     chopconf.hstrt = chop_init.hstrt - 1;
-    TERN_(SQUARE_WAVE_STEPPING, chopconf.dedge = true);
+    TERN_(EDGE_STEPPING, chopconf.dedge = true);
     st.CHOPCONF(chopconf.sr);
 
     st.rms_current(mA, hold_multiplier);
@@ -991,13 +991,13 @@ void reset_trinamic_drivers() {
 
   #if USE_SENSORLESS
     TERN_(X_SENSORLESS, stepperX.homing_threshold(X_STALL_SENSITIVITY));
-    TERN_(X2_SENSORLESS, stepperX2.homing_threshold(CAT(TERN(X2_SENSORLESS, X2, X), _STALL_SENSITIVITY)));
+    TERN_(X2_SENSORLESS, stepperX2.homing_threshold(X2_STALL_SENSITIVITY));
     TERN_(Y_SENSORLESS, stepperY.homing_threshold(Y_STALL_SENSITIVITY));
-    TERN_(Y2_SENSORLESS, stepperY2.homing_threshold(CAT(TERN(Y2_SENSORLESS, Y2, Y), _STALL_SENSITIVITY)));
+    TERN_(Y2_SENSORLESS, stepperY2.homing_threshold(Y2_STALL_SENSITIVITY));
     TERN_(Z_SENSORLESS, stepperZ.homing_threshold(Z_STALL_SENSITIVITY));
-    TERN_(Z2_SENSORLESS, stepperZ2.homing_threshold(CAT(TERN(Z2_SENSORLESS, Z2, Z), _STALL_SENSITIVITY)));
-    TERN_(Z3_SENSORLESS, stepperZ3.homing_threshold(CAT(TERN(Z3_SENSORLESS, Z3, Z), _STALL_SENSITIVITY)));
-    TERN_(Z4_SENSORLESS, stepperZ4.homing_threshold(CAT(TERN(Z4_SENSORLESS, Z4, Z), _STALL_SENSITIVITY)));
+    TERN_(Z2_SENSORLESS, stepperZ2.homing_threshold(Z2_STALL_SENSITIVITY));
+    TERN_(Z3_SENSORLESS, stepperZ3.homing_threshold(Z3_STALL_SENSITIVITY));
+    TERN_(Z4_SENSORLESS, stepperZ4.homing_threshold(Z4_STALL_SENSITIVITY));
     TERN_(I_SENSORLESS, stepperI.homing_threshold(I_STALL_SENSITIVITY));
     TERN_(J_SENSORLESS, stepperJ.homing_threshold(J_STALL_SENSITIVITY));
     TERN_(K_SENSORLESS, stepperK.homing_threshold(K_STALL_SENSITIVITY));
@@ -1010,7 +1010,7 @@ void reset_trinamic_drivers() {
     TMC_ADV()
   #endif
 
-  stepper.set_directions();
+  stepper.apply_directions();
 }
 
 // TMC Slave Address Conflict Detection
@@ -1029,13 +1029,7 @@ void reset_trinamic_drivers() {
   struct SanityHwSerialDetails { const char port[20]; uint32_t address; };
   #define TMC_HW_DETAIL_ARGS(A) TERN(A##_HAS_HW_SERIAL, STRINGIFY(A##_HARDWARE_SERIAL), ""), TERN0(A##_HAS_HW_SERIAL, A##_SLAVE_ADDRESS)
   #define TMC_HW_DETAIL(A) { TMC_HW_DETAIL_ARGS(A) }
-  constexpr SanityHwSerialDetails sanity_tmc_hw_details[] = {
-    TMC_HW_DETAIL(X), TMC_HW_DETAIL(X2),
-    TMC_HW_DETAIL(Y), TMC_HW_DETAIL(Y2),
-    TMC_HW_DETAIL(Z), TMC_HW_DETAIL(Z2), TMC_HW_DETAIL(Z3), TMC_HW_DETAIL(Z4),
-    TMC_HW_DETAIL(I), TMC_HW_DETAIL(J), TMC_HW_DETAIL(K), TMC_HW_DETAIL(U), TMC_HW_DETAIL(V), TMC_HW_DETAIL(W),
-    TMC_HW_DETAIL(E0), TMC_HW_DETAIL(E1), TMC_HW_DETAIL(E2), TMC_HW_DETAIL(E3), TMC_HW_DETAIL(E4), TMC_HW_DETAIL(E5), TMC_HW_DETAIL(E6), TMC_HW_DETAIL(E7)
-  };
+  constexpr SanityHwSerialDetails sanity_tmc_hw_details[] = { MAPLIST(TMC_HW_DETAIL, ALL_AXIS_NAMES) };
 
   // constexpr compatible string comparison
   constexpr bool str_eq_ce(const char * a, const char * b) {
@@ -1053,24 +1047,14 @@ void reset_trinamic_drivers() {
 
   #define TMC_HWSERIAL_CONFLICT_MSG(A) STRINGIFY(A) "_SLAVE_ADDRESS conflicts with another driver using the same " STRINGIFY(A) "_HARDWARE_SERIAL"
   #define SA_NO_TMC_HW_C(A) static_assert(1 >= count_tmc_hw_serial_matches(TMC_HW_DETAIL_ARGS(A), 0, COUNT(sanity_tmc_hw_details)), TMC_HWSERIAL_CONFLICT_MSG(A));
-  SA_NO_TMC_HW_C(X); SA_NO_TMC_HW_C(X2);
-  SA_NO_TMC_HW_C(Y); SA_NO_TMC_HW_C(Y2);
-  SA_NO_TMC_HW_C(Z); SA_NO_TMC_HW_C(Z2); SA_NO_TMC_HW_C(Z3); SA_NO_TMC_HW_C(Z4);
-  SA_NO_TMC_HW_C(I); SA_NO_TMC_HW_C(J); SA_NO_TMC_HW_C(K); SA_NO_TMC_HW_C(U); SA_NO_TMC_HW_C(V); SA_NO_TMC_HW_C(W);
-  SA_NO_TMC_HW_C(E0); SA_NO_TMC_HW_C(E1); SA_NO_TMC_HW_C(E2); SA_NO_TMC_HW_C(E3); SA_NO_TMC_HW_C(E4); SA_NO_TMC_HW_C(E5); SA_NO_TMC_HW_C(E6); SA_NO_TMC_HW_C(E7);
+  MAP(SA_NO_TMC_HW_C, ALL_AXIS_NAMES)
 #endif
 
 #if ANY_AXIS_HAS(SW_SERIAL)
   struct SanitySwSerialDetails { int32_t txpin; int32_t rxpin; uint32_t address; };
   #define TMC_SW_DETAIL_ARGS(A) TERN(A##_HAS_SW_SERIAL, A##_SERIAL_TX_PIN, -1), TERN(A##_HAS_SW_SERIAL, A##_SERIAL_RX_PIN, -1), TERN0(A##_HAS_SW_SERIAL, A##_SLAVE_ADDRESS)
-  #define TMC_SW_DETAIL(A) TMC_SW_DETAIL_ARGS(A)
-  constexpr SanitySwSerialDetails sanity_tmc_sw_details[] = {
-    TMC_SW_DETAIL(X), TMC_SW_DETAIL(X2),
-    TMC_SW_DETAIL(Y), TMC_SW_DETAIL(Y2),
-    TMC_SW_DETAIL(Z), TMC_SW_DETAIL(Z2), TMC_SW_DETAIL(Z3), TMC_SW_DETAIL(Z4),
-    TMC_SW_DETAIL(I), TMC_SW_DETAIL(J), TMC_SW_DETAIL(K), TMC_SW_DETAIL(U), TMC_SW_DETAIL(V), TMC_SW_DETAIL(W),
-    TMC_SW_DETAIL(E0), TMC_SW_DETAIL(E1), TMC_SW_DETAIL(E2), TMC_SW_DETAIL(E3), TMC_SW_DETAIL(E4), TMC_SW_DETAIL(E5), TMC_SW_DETAIL(E6), TMC_SW_DETAIL(E7)
-  };
+  #define TMC_SW_DETAIL(A) { TMC_SW_DETAIL_ARGS(A) }
+  constexpr SanitySwSerialDetails sanity_tmc_sw_details[] = { MAPLIST(TMC_SW_DETAIL, ALL_AXIS_NAMES) };
 
   constexpr bool sc_sw_done(size_t start, size_t end) { return start == end; }
   constexpr bool sc_sw_skip(int32_t txpin) { return txpin < 0; }
@@ -1083,11 +1067,7 @@ void reset_trinamic_drivers() {
 
   #define TMC_SWSERIAL_CONFLICT_MSG(A) STRINGIFY(A) "_SLAVE_ADDRESS conflicts with another driver using the same " STRINGIFY(A) "_SERIAL_RX_PIN or " STRINGIFY(A) "_SERIAL_TX_PIN"
   #define SA_NO_TMC_SW_C(A) static_assert(1 >= count_tmc_sw_serial_matches(TMC_SW_DETAIL_ARGS(A), 0, COUNT(sanity_tmc_sw_details)), TMC_SWSERIAL_CONFLICT_MSG(A));
-  SA_NO_TMC_SW_C(X); SA_NO_TMC_SW_C(X2);
-  SA_NO_TMC_SW_C(Y); SA_NO_TMC_SW_C(Y2);
-  SA_NO_TMC_SW_C(Z); SA_NO_TMC_SW_C(Z2); SA_NO_TMC_SW_C(Z3); SA_NO_TMC_SW_C(Z4);
-  SA_NO_TMC_SW_C(I); SA_NO_TMC_SW_C(J); SA_NO_TMC_SW_C(K); SA_NO_TMC_SW_C(U); SA_NO_TMC_SW_C(V); SA_NO_TMC_SW_C(W);
-  SA_NO_TMC_SW_C(E0); SA_NO_TMC_SW_C(E1); SA_NO_TMC_SW_C(E2); SA_NO_TMC_SW_C(E3); SA_NO_TMC_SW_C(E4); SA_NO_TMC_SW_C(E5); SA_NO_TMC_SW_C(E6); SA_NO_TMC_SW_C(E7);
+  MAP(SA_NO_TMC_SW_C, ALL_AXIS_NAMES)
 #endif
 
 #endif // HAS_TRINAMIC_CONFIG

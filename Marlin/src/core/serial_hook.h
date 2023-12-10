@@ -43,7 +43,9 @@ public:
   }
 
   constexpr SerialMask(const uint8_t mask) : mask(mask) {}
-  constexpr SerialMask(const SerialMask & other) : mask(other.mask) {} // Can't use = default here since not all framework support this
+  constexpr SerialMask(const SerialMask &rs) : mask(rs.mask) {} // Can't use = default here since not all frameworks support this
+
+  SerialMask& operator=(const SerialMask &rs) { mask = rs.mask; return *this; }
 
   static constexpr uint8_t All = 0xFF;
 };
@@ -177,7 +179,7 @@ struct RuntimeSerial : public SerialBase< RuntimeSerial<SerialT> >, public Seria
   // Append Hookable for this class
   SerialFeature features(serial_index_t index) const  { return SerialFeature::Hookable | CALL_IF_EXISTS(SerialFeature, static_cast<const SerialT*>(this), features, index);  }
 
-  void setHook(WriteHook writeHook = 0, EndOfMessageHook eofHook = 0, void * userPointer = 0) {
+  void setHook(WriteHook writeHook=0, EndOfMessageHook eofHook=0, void * userPointer=0) {
     // Order is important here as serial code can be called inside interrupts
     // When setting a hook, the user pointer must be set first so if writeHook is called as soon as it's set, it'll be valid
     if (userPointer) this->userPointer = userPointer;
@@ -290,7 +292,7 @@ struct MultiSerial : public SerialBase< MultiSerial< REPEAT(NUM_SERIAL, _S_NAME)
   #define _S_REFS(N) Serial##N##T & serial##N,
   #define _S_INIT(N) ,serial##N (serial##N)
 
-  MultiSerial(REPEAT(NUM_SERIAL, _S_REFS) const SerialMask mask = ALL, const bool e = false)
+  MultiSerial(REPEAT(NUM_SERIAL, _S_REFS) const SerialMask mask=ALL, const bool e=false)
     : BaseClassT(e), portMask(mask) REPEAT(NUM_SERIAL, _S_INIT) {}
 
 };
@@ -298,7 +300,7 @@ struct MultiSerial : public SerialBase< MultiSerial< REPEAT(NUM_SERIAL, _S_NAME)
 // Build the actual serial object depending on current configuration
 #define Serial1Class TERN(SERIAL_RUNTIME_HOOK, RuntimeSerial, BaseSerial)
 #define ForwardSerial1Class TERN(SERIAL_RUNTIME_HOOK, RuntimeSerial, ForwardSerial)
-#ifdef HAS_MULTI_SERIAL
+#if HAS_MULTI_SERIAL
   #define Serial2Class ConditionalSerial
   #if NUM_SERIAL >= 3
     #define Serial3Class ConditionalSerial

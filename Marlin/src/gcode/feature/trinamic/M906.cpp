@@ -66,7 +66,7 @@ void GcodeSuite::M906() {
     constexpr int8_t index = -1;
   #endif
 
-  LOOP_LOGICAL_AXES(i) if (uint16_t value = parser.intval(axis_codes[i])) {
+  LOOP_LOGICAL_AXES(i) if (uint16_t value = parser.intval(AXIS_CHAR(i))) {
     report = false;
     switch (i) {
       #if AXIS_IS_TMC(X) || AXIS_IS_TMC(X2)
@@ -328,7 +328,6 @@ void GcodeSuite::M906_report(const bool forReplay/*=true*/) {
     say_M906(forReplay);
     SERIAL_ECHOLNPGM(" T7 E", stepperE7.getMilliamps());
   #endif
-  SERIAL_EOL();
 }
 
 #endif // HAS_TRINAMIC_CONFIG

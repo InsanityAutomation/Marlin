@@ -34,7 +34,6 @@
 #include "../../module/probe.h"
 #include "../../feature/bedlevel/bedlevel.h"
 #include "../../module/temperature.h"
-#include "../../module/probe.h"
 #include "../../feature/probe_temp_comp.h"
 #include "../../lcd/marlinui.h"
 
@@ -82,12 +81,12 @@
  *  - `P` - Run probe temperature calibration.
  */
 
-static void say_waiting_for()               { SERIAL_ECHOPGM("Waiting for "); }
-static void say_waiting_for_probe_heating() { say_waiting_for(); SERIAL_ECHOLNPGM("probe heating."); }
-static void say_successfully_calibrated()   { SERIAL_ECHOPGM("Successfully calibrated"); }
-static void say_failed_to_calibrate()       { SERIAL_ECHOPGM("!Failed to calibrate"); }
+#if ALL(PTC_PROBE, PTC_BED)
 
-#if BOTH(PTC_PROBE, PTC_BED)
+  static void say_waiting_for()               { SERIAL_ECHOPGM("Waiting for "); }
+  static void say_waiting_for_probe_heating() { say_waiting_for(); SERIAL_ECHOLNPGM("probe heating."); }
+  static void say_successfully_calibrated()   { SERIAL_ECHOPGM("Successfully calibrated"); }
+  static void say_failed_to_calibrate()       { SERIAL_ECHOPGM("!Failed to calibrate"); }
 
   void GcodeSuite::G76() {
     auto report_temps = [](millis_t &ntr, millis_t timeout=0) {
@@ -108,14 +107,13 @@ static void say_failed_to_calibrate()       { SERIAL_ECHOPGM("!Failed to calibra
     };
 
     auto g76_probe = [](const TempSensorID sid, celsius_t &targ, const xy_pos_t &nozpos) {
-      do_z_clearance(5.0); // Raise nozzle before probing
       ptc.set_enabled(false);
       const float measured_z = probe.probe_at_point(nozpos, PROBE_PT_STOW, 0, false);  // verbose=0, probe_relative=false
       ptc.set_enabled(true);
       if (isnan(measured_z))
         SERIAL_ECHOLNPGM("!Received NAN. Aborting.");
       else {
-        SERIAL_ECHOLNPAIR_F("Measured: ", measured_z);
+        SERIAL_ECHOLNPGM("Measured: ", p_float_t(measured_z, 2));
         if (targ == ProbeTempComp::cali_info[sid].start_temp)
           ptc.prepare_new_calibration(measured_z);
         else

@@ -28,14 +28,16 @@
 #if NOT_TARGET(__STM32F1__, STM32F1)
   #error "Oops! Select an STM32F1 board in 'Tools > Board.'"
 #elif HOTENDS > 2 || E_STEPPERS > 2
-  #error "MKS Robin nano supports up to 2 hotends / E-steppers. Comment out this line to continue."
+  #error "MKS Robin nano supports up to 2 hotends / E steppers."
 #elif HAS_FSMC_TFT
   #error "MKS Robin nano v2 doesn't support FSMC-based TFT displays."
 #endif
 
 #define BOARD_INFO_NAME "MKS Robin nano V2.0"
 
-#define BOARD_NO_NATIVE_USB
+#ifndef USB_MOD
+  #define BOARD_NO_NATIVE_USB
+#endif
 #define USES_DIAG_PINS
 
 // Avoid conflict with TIMER_SERVO when using the STM32 HAL
@@ -52,15 +54,15 @@
 //#define FLASH_EEPROM_EMULATION
 //#define SDCARD_EEPROM_EMULATION
 
-#if EITHER(NO_EEPROM_SELECTED, I2C_EEPROM)
+#if ANY(NO_EEPROM_SELECTED, I2C_EEPROM)
   #define I2C_EEPROM                              // EEPROM on I2C-0
-  #define MARLIN_EEPROM_SIZE              0x1000  // 4KB
+  #define MARLIN_EEPROM_SIZE              0x1000  // 4K
 #endif
 
 //
-// Note: MKS Robin board is using SPI2 interface.
+// SPI
 //
-#define SPI_DEVICE                             2
+#define SPI_DEVICE                             2  // Maple
 
 //
 // Servos
@@ -120,18 +122,16 @@
 #endif
 
 //
-// Software SPI pins for TMC2130 stepper drivers
+// SPI pins for TMC2130 stepper drivers
 //
-#if ENABLED(TMC_USE_SW_SPI)
-  #ifndef TMC_SW_MOSI
-    #define TMC_SW_MOSI                     PD14
-  #endif
-  #ifndef TMC_SW_MISO
-    #define TMC_SW_MISO                     PD1
-  #endif
-  #ifndef TMC_SW_SCK
-    #define TMC_SW_SCK                      PD0
-  #endif
+#ifndef TMC_SPI_MOSI
+  #define TMC_SPI_MOSI                      PD14
+#endif
+#ifndef TMC_SPI_MISO
+  #define TMC_SPI_MISO                      PD1
+#endif
+#ifndef TMC_SPI_SCK
+  #define TMC_SPI_SCK                       PD0
 #endif
 
 #if HAS_TMC_UART
@@ -163,7 +163,10 @@
   #define E1_SERIAL_RX_PIN                  PD8
 
   // Reduce baud rate to improve software serial reliability
-  #define TMC_BAUD_RATE                    19200
+  #ifndef TMC_BAUD_RATE
+    #define TMC_BAUD_RATE                  19200
+  #endif
+
 #endif // HAS_TMC_UART
 
 //
@@ -180,7 +183,7 @@
 #define HEATER_1_PIN                        PB0   // HEATER2
 #define HEATER_BED_PIN                      PA0   // HOT BED
 
-#define FAN_PIN                             PB1   // FAN
+#define FAN0_PIN                            PB1   // FAN
 
 //
 // Thermocouples
@@ -239,7 +242,7 @@
 #endif
 
 #if SD_CONNECTION_IS(ONBOARD)
-  #define SDIO_SUPPORT
+  #define ONBOARD_SDIO
   #define SDIO_CLOCK                     4500000  // 4.5 MHz
   #define SD_DETECT_PIN                     PD12
   #define ONBOARD_SD_CS_PIN                 PC11
@@ -282,11 +285,10 @@
   #define TFT_MISO_PIN                      PA6
   #define TFT_MOSI_PIN                      PA7
   #define TFT_DC_PIN                        PD10
-  #define TFT_RST_PIN                       PC6
   #define TFT_A0_PIN                  TFT_DC_PIN
 
   #define TFT_RESET_PIN                     PC6
-  #define TFT_BACKLIGHT_PIN                 PD13
+  #define TFT_BACKLIGHT_PIN    LCD_BACKLIGHT_PIN
 
   #define TOUCH_BUTTONS_HW_SPI
   #define TOUCH_BUTTONS_HW_SPI_DEVICE          1
@@ -297,19 +299,19 @@
 
 #if ENABLED(TFT_CLASSIC_UI)
   // Emulated DOGM SPI
-  #define LCD_PINS_ENABLE                   PD13
+  #define LCD_PINS_EN                       PD13
   #define LCD_PINS_RS                       PC6
   #define BTN_ENC                           PE13
   #define BTN_EN1                           PE8
   #define BTN_EN2                           PE11
 #elif ENABLED(TFT_COLOR_UI)
-  #define TFT_BUFFER_SIZE                  14400
+  #define TFT_BUFFER_WORDS                 14400
 #endif
 
 #if HAS_WIRED_LCD && !HAS_SPI_TFT
   #define BEEPER_PIN                        PC5
   #define BTN_ENC                           PE13
-  #define LCD_PINS_ENABLE                   PD13
+  #define LCD_PINS_EN                       PD13
   #define LCD_PINS_RS                       PC6
   #define BTN_EN1                           PE8
   #define BTN_EN2                           PE11
@@ -354,7 +356,7 @@
     #endif
     //#define LCD_SCREEN_ROTATE              180  // 0, 90, 180, 270
 
-  #else                                           // !MKS_MINI_12864
+  #else // !MKS_MINI_12864
 
     #define LCD_PINS_D4                     PE14
     #if IS_ULTIPANEL
@@ -378,13 +380,13 @@
 
 #endif // HAS_WIRED_LCD && !HAS_SPI_TFT
 
-#define HAS_SPI_FLASH                          1
-#if HAS_SPI_FLASH
+#define SPI_FLASH
+#if ENABLED(SPI_FLASH)
   #define SPI_FLASH_SIZE               0x1000000  // 16MB
   #define SPI_FLASH_CS_PIN                  PB12
-  #define SPI_FLASH_MOSI_PIN                PB15
-  #define SPI_FLASH_MISO_PIN                PB14
   #define SPI_FLASH_SCK_PIN                 PB13
+  #define SPI_FLASH_MISO_PIN                PB14
+  #define SPI_FLASH_MOSI_PIN                PB15
 #endif
 
 #ifndef BEEPER_PIN

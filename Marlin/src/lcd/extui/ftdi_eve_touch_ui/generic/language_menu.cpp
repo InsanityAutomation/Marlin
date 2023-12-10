@@ -37,8 +37,8 @@ void LanguageMenu::onRedraw(draw_mode_t) {
      .colors(normal_btn)
      .font(Theme::font_medium);
 
-  #define GRID_ROWS 8
   #define GRID_COLS 1
+  #define GRID_ROWS 8
 
   cmd.tag(1).button(BTN_POS(1,1), BTN_SIZE(1,1), GET_LANGUAGE_NAME(1));
   cmd.tag(2).button(BTN_POS(1,2), BTN_SIZE(1,1), GET_LANGUAGE_NAME(2));
@@ -53,10 +53,12 @@ void LanguageMenu::onRedraw(draw_mode_t) {
   #endif
 }
 
+extern uint8_t ftdi_language;
+
 bool LanguageMenu::onTouchEnd(uint8_t tag) {
 
   if (tag > 0 && tag <= NUM_LANGUAGES) {
-    lang = tag - 1;
+    ftdi_language = tag - 1;
     GOTO_SCREEN(StatusScreen);
     return true;
   }

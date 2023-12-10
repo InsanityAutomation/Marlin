@@ -31,7 +31,7 @@
 #include "env_validate.h"
 
 #if HOTENDS > 2 || E_STEPPERS > 2
-  #error "Trigorilla Pro supports up to 2 hotends / E-steppers. Comment out this line to continue."
+  #error "Trigorilla Pro supports up to 2 hotends / E steppers."
 #endif
 
 #define BOARD_INFO_NAME "Trigorilla Pro"
@@ -51,10 +51,10 @@
 #if ENABLED(FLASH_EEPROM_EMULATION)
   // SoC Flash (framework-arduinoststm32-maple/STM32F1/libraries/EEPROM/EEPROM.h)
   #define EEPROM_START_ADDRESS (0x8000000UL + (512 * 1024) - 2 * EEPROM_PAGE_SIZE)
-  #define EEPROM_PAGE_SIZE     (0x800U)     // 2KB, but will use 2x more (4KB)
+  #define EEPROM_PAGE_SIZE     (0x800U)     // 2K, but will use 2x more (4K)
   #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE
 #else
-  #define MARLIN_EEPROM_SIZE   (0x800U) // On SD, Limit to 2KB, require this amount of RAM
+  #define MARLIN_EEPROM_SIZE   (0x800U) // On SD, Limit to 2K, require this amount of RAM
 #endif
 
 //
@@ -117,7 +117,7 @@
 // Fans
 //
 #define CONTROLLER_FAN_PIN                  PD6   // FAN
-#define FAN_PIN                             PG13  // FAN
+#define FAN0_PIN                            PG13  // FAN
 #define FAN1_PIN                            PG14  // FAN
 
 //
@@ -153,8 +153,6 @@
   #define TFT_RS_PIN                 FSMC_RS_PIN
 
   #define LCD_USE_DMA_FSMC                        // Use DMA transfers to send data to the TFT
-  #define FSMC_DMA_DEV                      DMA2
-  #define FSMC_DMA_CHANNEL               DMA_CH5
 
   #define ANYCUBIC_TFT35
 #else
@@ -186,9 +184,9 @@
 #endif
 
 // SPI1(PA7) & SPI3(PB5) not available
-#define SPI_DEVICE                             2
+#define SPI_DEVICE                             2  // Maple
 
-#if ENABLED(SDIO_SUPPORT)
+#if ENABLED(ONBOARD_SDIO)
   #define SD_SCK_PIN                        PB13  // SPI2 ok
   #define SD_MISO_PIN                       PB14  // SPI2 ok
   #define SD_MOSI_PIN                       PB15  // SPI2 ok

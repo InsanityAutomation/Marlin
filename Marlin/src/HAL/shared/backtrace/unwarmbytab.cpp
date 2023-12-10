@@ -55,7 +55,12 @@ static const char *UnwTabGetFunctionName(const UnwindCallbacks *cb, uint32_t add
     return nullptr;
 
   if ((flag_word & 0xFF000000) == 0xFF000000) {
-    return (const char *)(address - 4 - (flag_word & 0x00FFFFFF));
+    const uint32_t fn_name_addr = address - 4 - (flag_word & 0x00FFFFFF);
+
+    // Ensure the address is readable to avoid returning a bogus pointer
+    uint8_t dummy = 0;
+    if (cb->readB(fn_name_addr, &dummy))
+      return (const char *)fn_name_addr;
   }
   return nullptr;
 }
@@ -135,11 +140,11 @@ static UnwResult UnwTabExecuteInstructions(const UnwindCallbacks *cb, UnwTabStat
   while ((instruction = UnwTabGetNextInstruction(cb, ucb)) != -1) {
 
     if ((instruction & 0xC0) == 0x00) { // ARM_EXIDX_CMD_DATA_POP
-      /* vsp = vsp + (xxxxxx << 2) + 4 */
+      /* vsp += (xxxxxx << 2) + 4 */
       ucb->vrs[13] += ((instruction & 0x3F) << 2) + 4;
     }
     else if ((instruction & 0xC0) == 0x40) { // ARM_EXIDX_CMD_DATA_PUSH
-      /* vsp = vsp - (xxxxxx << 2) - 4 */
+      /* vsp -= (xxxxxx << 2) - 4 */
       ucb->vrs[13] -= ((instruction & 0x3F) << 2) - 4;
     }
     else if ((instruction & 0xF0) == 0x80) {

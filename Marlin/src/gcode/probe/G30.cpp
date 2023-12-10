@@ -28,13 +28,18 @@
 #include "../../module/motion.h"
 #include "../../module/probe.h"
 #include "../../feature/bedlevel/bedlevel.h"
+#include "../../lcd/marlinui.h"
 
 #if HAS_PTC
   #include "../../feature/probe_temp_comp.h"
 #endif
 
+#if HAS_MULTI_HOTEND
+  #include "../../module/tool_change.h"
+#endif
+
 /**
- * G30: Do a single Z probe at the current XY
+ * G30: Do a single Z probe at the given XY (default: current)
  *
  * Parameters:
  *
@@ -45,30 +50,63 @@
  */
 void GcodeSuite::G30() {
 
-  const xy_pos_t pos = { parser.linearval('X', current_position.x + probe.offset_xy.x),
-                         parser.linearval('Y', current_position.y + probe.offset_xy.y) };
+  xy_pos_t old_pos = current_position,
+           probepos = current_position;
 
-  if (!probe.can_reach(pos)) return;
+  const bool seenX = parser.seenval('X');
+  if (seenX) probepos.x = RAW_X_POSITION(parser.value_linear_units());
+  const bool seenY = parser.seenval('Y');
+  if (seenY) probepos.y = RAW_Y_POSITION(parser.value_linear_units());
 
-  // Disable leveling so the planner won't mess with us
-  TERN_(HAS_LEVELING, set_bed_leveling_enabled(false));
+  probe.use_probing_tool();
 
-  remember_feedrate_scaling_off();
+  if (probe.can_reach(probepos)) {
 
-  const ProbePtRaise raise_after = parser.boolval('E', true) ? PROBE_PT_STOW : PROBE_PT_NONE;
+    if (seenX) old_pos.x = probepos.x;
+    if (seenY) old_pos.y = probepos.y;
 
-  TERN_(HAS_PTC, ptc.set_enabled(!parser.seen('C') || parser.value_bool()));
-  const float measured_z = probe.probe_at_point(pos, raise_after, 1);
-  TERN_(HAS_PTC, ptc.set_enabled(true));
-  if (!isnan(measured_z))
-    SERIAL_ECHOLNPGM("Bed X: ", pos.x, " Y: ", pos.y, " Z: ", measured_z);
+    // Disable leveling so the planner won't mess with us
+    TERN_(HAS_LEVELING, set_bed_leveling_enabled(false));
 
-  restore_feedrate_and_scaling();
+    remember_feedrate_scaling_off();
 
-  if (raise_after == PROBE_PT_STOW)
-    probe.move_z_after_probing();
+    #if ANY(DWIN_LCD_PROUI, DWIN_CREALITY_LCD_JYERSUI)
+      process_subcommands_now(F("G28O"));
+    #endif
 
-  report_current_position();
+    const ProbePtRaise raise_after = parser.boolval('E', true) ? PROBE_PT_STOW : PROBE_PT_NONE;
+
+    TERN_(HAS_PTC, ptc.set_enabled(parser.boolval('C', true)));
+    const float measured_z = probe.probe_at_point(probepos, raise_after);
+    TERN_(HAS_PTC, ptc.set_enabled(true));
+    if (!isnan(measured_z)) {
+      const xy_pos_t lpos = probepos.asLogical();
+      SString<30> msg(
+        F("Bed X:"), p_float_t(lpos.x, 2),
+        F(  " Y:"), p_float_t(lpos.y, 2),
+        F(  " Z:"), p_float_t(measured_z, 3)
+      );
+      msg.echoln();
+      #if ANY(DWIN_LCD_PROUI, DWIN_CREALITY_LCD_JYERSUI)
+        ui.set_status(msg);
+      #endif
+    }
+
+    restore_feedrate_and_scaling();
+
+    do_blocking_move_to(old_pos);
+
+    if (raise_after == PROBE_PT_STOW)
+      probe.move_z_after_probing();
+
+    report_current_position();
+  }
+  else {
+    SERIAL_ECHOLN(GET_EN_TEXT_F(MSG_ZPROBE_OUT));
+    LCD_MESSAGE(MSG_ZPROBE_OUT);
+  }
+
+  probe.use_probing_tool(false);
 }
 
 #endif // HAS_BED_PROBE

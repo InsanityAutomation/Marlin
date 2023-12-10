@@ -21,189 +21,85 @@
  */
 #pragma once
 
-#include "../DGUSDisplay.h"
-#include "../DGUSVPVariable.h"
-#include "../DGUSDisplayDef.h"
+#include "../DGUSScreenHandlerBase.h"
 
-#include "../../../../inc/MarlinConfig.h"
+enum DGUS_ScreenID : uint8_t;
 
-enum DGUSLCD_Screens : uint8_t;
-
-class DGUSScreenHandler {
+class DGUSScreenHandlerMKS : public DGUSScreenHandler {
 public:
-  DGUSScreenHandler() = default;
-
-  static bool loop();
-
-  // Send all 4 strings that are displayed on the infoscreen, confirmation screen and kill screen
-  // The bools specifying whether the strings are in RAM or FLASH.
-  static void sendinfoscreen(PGM_P const line1, PGM_P const line2, PGM_P const line3, PGM_P const line4, bool l1inflash, bool l2inflash, bool l3inflash, bool liinflash);
-  static void sendinfoscreen(FSTR_P const line1, FSTR_P const line2, PGM_P const line3, PGM_P const line4, bool l1inflash, bool l2inflash, bool l3inflash, bool liinflash) {
-    sendinfoscreen(FTOP(line1), FTOP(line2), line3, line4, l1inflash, l2inflash, l3inflash, liinflash);
-  }
-  static void sendinfoscreen(FSTR_P const line1, FSTR_P const line2, FSTR_P const line3, FSTR_P const line4, bool l1inflash, bool l2inflash, bool l3inflash, bool liinflash) {
-    sendinfoscreen(FTOP(line1), FTOP(line2), FTOP(line3), FTOP(line4), l1inflash, l2inflash, l3inflash, liinflash);
-  }
-
-  static void HandleUserConfirmationPopUp(uint16_t ConfirmVP, PGM_P const line1, PGM_P const line2, PGM_P const line3, PGM_P const line4, bool l1inflash, bool l2inflash, bool l3inflash, bool liinflash);
+  DGUSScreenHandlerMKS() = default;
 
   #if 0
-  static void sendinfoscreen_ch_mks(const uint16_t *line1, const uint16_t *line2, const uint16_t *line3, const uint16_t *line4);
-  static void sendinfoscreen_en_mks(PGM_P const line1, PGM_P const line2, PGM_P const line3, PGM_P const line4);
-  static void sendinfoscreen_mks(const void *line1, const void *line2, const void *line3, const void *line4, uint16_t language);
+  static void sendinfoscreen_ch(const uint16_t *line1, const uint16_t *line2, const uint16_t *line3, const uint16_t *line4);
+  static void sendinfoscreen_en(PGM_P const line1, PGM_P const line2, PGM_P const line3, PGM_P const line4);
+  static void sendInfoScreen(const void *line1, const void *line2, const void *line3, const void *line4, uint16_t language);
   #endif
 
-  // "M117" Message -- msg is a RAM ptr.
-  static void setstatusmessage(const char *msg);
-  // The same for messages from Flash
-  static void setstatusmessagePGM(PGM_P const msg);
-  // Callback for VP "Display wants to change screen on idle printer"
-  static void ScreenChangeHookIfIdle(DGUS_VP_Variable &var, void *val_ptr);
-  // Callback for VP "Screen has been changed"
-  static void ScreenChangeHook(DGUS_VP_Variable &var, void *val_ptr);
+  static void screenBackChange(DGUS_VP_Variable &var, void *val_ptr);
 
-  static void ScreenBackChange(DGUS_VP_Variable &var, void *val_ptr);
-
-  // Callback for VP "All Heaters Off"
-  static void HandleAllHeatersOff(DGUS_VP_Variable &var, void *val_ptr);
-  // Hook for "Change this temperature"
-  static void HandleTemperatureChanged(DGUS_VP_Variable &var, void *val_ptr);
-  // Hook for "Change Flowrate"
-  static void HandleFlowRateChanged(DGUS_VP_Variable &var, void *val_ptr);
-  #if ENABLED(DGUS_UI_MOVE_DIS_OPTION)
-    // Hook for manual move option
-    static void HandleManualMoveOption(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-
-  static void EEPROM_CTRL(DGUS_VP_Variable &var, void *val_ptr);
-  static void LanguageChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void GetOffsetValue(DGUS_VP_Variable &var, void *val_ptr);
-  static void Level_Ctrl_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void MeshLevel(DGUS_VP_Variable &var, void *val_ptr);
-  static void MeshLevelDistanceConfig(DGUS_VP_Variable &var, void *val_ptr);
-  static void ManualAssistLeveling(DGUS_VP_Variable &var, void *val_ptr);
-  static void ZoffsetConfirm(DGUS_VP_Variable &var, void *val_ptr);
-  static void Z_offset_select(DGUS_VP_Variable &var, void *val_ptr);
-  static void GetManualMovestep(DGUS_VP_Variable &var, void *val_ptr);
-  static void GetZoffsetDistance(DGUS_VP_Variable &var, void *val_ptr);
-  static void GetMinExtrudeTemp(DGUS_VP_Variable &var, void *val_ptr);
-  static void GetParkPos_MKS(DGUS_VP_Variable &var, void *val_ptr);
+  static void eepromControl(DGUS_VP_Variable &var, void *val_ptr);
+  static void languageChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void getOffsetValue(DGUS_VP_Variable &var, void *val_ptr);
+  static void levelControl(DGUS_VP_Variable &var, void *val_ptr);
+  static void meshLevel(DGUS_VP_Variable &var, void *val_ptr);
+  static void meshLevelDistanceConfig(DGUS_VP_Variable &var, void *val_ptr);
+  static void manualAssistLeveling(DGUS_VP_Variable &var, void *val_ptr);
+  static void zOffsetConfirm(DGUS_VP_Variable &var, void *val_ptr);
+  static void zOffsetSelect(DGUS_VP_Variable &var, void *val_ptr);
+  static void getManualMovestep(DGUS_VP_Variable &var, void *val_ptr);
+  static void getZoffsetDistance(DGUS_VP_Variable &var, void *val_ptr);
+  static void getMinExtrudeTemp(DGUS_VP_Variable &var, void *val_ptr);
+  static void getParkPos(DGUS_VP_Variable &var, void *val_ptr);
   #if ENABLED(PREVENT_COLD_EXTRUSION)
-    static void HandleGetExMinTemp_MKS(DGUS_VP_Variable &var, void *val_ptr);
+    static void handleGetExMinTemp(DGUS_VP_Variable &var, void *val_ptr);
   #endif
-  static void DGUS_LanguageDisplay(uint8_t var);
-  static void TMC_ChangeConfig(DGUS_VP_Variable &var, void *val_ptr);
-  static void GetTurnOffCtrl(DGUS_VP_Variable &var, void *val_ptr);
-  static void LanguagePInit();
-  static void DGUS_Runout_Idle();
-  static void DGUS_RunoutInit();
-  static void DGUS_ExtrudeLoadInit();
-  static void LCD_BLK_Adjust(DGUS_VP_Variable &var, void *val_ptr);
-  static void SD_FileBack(DGUS_VP_Variable &var, void *val_ptr);
+  static void languageDisplay(uint8_t var);
+  static void tmcChangeConfig(DGUS_VP_Variable &var, void *val_ptr);
+  static void getTurnOffCtrl(DGUS_VP_Variable &var, void *val_ptr);
+  static void languagePInit();
+  static void runoutIdle();
+  static void runoutInit();
+  static void extrudeLoadInit();
+  static void lcdBLKAdjust(DGUS_VP_Variable &var, void *val_ptr);
+  static void sdFileBack(DGUS_VP_Variable &var, void *val_ptr);
 
-  // Hook for manual move.
-  static void HandleManualMove(DGUS_VP_Variable &var, void *val_ptr);
-  // Hook for manual extrude.
-  static void HandleManualExtrude(DGUS_VP_Variable &var, void *val_ptr);
-  // Hook for motor lock and unlook
-  static void HandleMotorLockUnlock(DGUS_VP_Variable &var, void *val_ptr);
-  #if ENABLED(POWER_LOSS_RECOVERY)
-    // Hook for power loss recovery.
-    static void HandlePowerLossRecovery(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  // Hook for settings
-  static void HandleSettings(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleStepPerMMChanged(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleStepPerMMExtruderChanged(DGUS_VP_Variable &var, void *val_ptr);
-
-  static void HandleStepPerMMChanged_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleStepPerMMExtruderChanged_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleMaxSpeedChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleExtruderMaxSpeedChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleAccChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleMaxAccChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleExtruderAccChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleChangeLevelPoint_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleTravelAccChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleFeedRateMinChange_MKS(DGUS_VP_Variable &var, void *val_ptr);
-  static void HandleMin_T_F_MKS(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleStepPerMMChanged(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleStepPerMMExtruderChanged(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleMaxSpeedChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleExtruderMaxSpeedChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleAccChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleMaxAccChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleExtruderAccChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleChangeLevelPoint(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleTravelAccChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleFeedRateMinChange(DGUS_VP_Variable &var, void *val_ptr);
+  static void handleMin_T_F(DGUS_VP_Variable &var, void *val_ptr);
 
   #if HAS_PID_HEATING
-    // Hook for "Change this temperature PID para"
-    static void HandleTemperaturePIDChanged(DGUS_VP_Variable &var, void *val_ptr);
-    // Hook for PID autotune
-    static void HandlePIDAutotune(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  #if HAS_BED_PROBE
-    // Hook for "Change probe offset z"
-    static void HandleProbeOffsetZChanged(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  #if ENABLED(BABYSTEPPING)
-    // Hook for live z adjust action
-    static void HandleLiveAdjustZ(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  #if HAS_FAN
-    // Hook for fan control
-    static void HandleFanControl(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  // Hook for heater control
-  static void HandleHeaterControl(DGUS_VP_Variable &var, void *val_ptr);
-  #if ENABLED(DGUS_PREHEAT_UI)
-    // Hook for preheat
-    static void HandlePreheat(DGUS_VP_Variable &var, void *val_ptr);
-  #endif
-  #if ENABLED(DGUS_FILAMENT_LOADUNLOAD)
-    // Hook for filament load and unload filament option
-    static void HandleFilamentOption(DGUS_VP_Variable &var, void *val_ptr);
-    // Hook for filament load and unload
-    static void HandleFilamentLoadUnload(DGUS_VP_Variable &var);
-
-    static void MKS_FilamentLoadUnload(DGUS_VP_Variable &var, void *val_ptr, const int filamentDir);
-    static void MKS_FilamentLoad(DGUS_VP_Variable &var, void *val_ptr);
-    static void MKS_FilamentUnLoad(DGUS_VP_Variable &var, void *val_ptr);
-    static void MKS_LOAD_UNLOAD_IDLE();
-    static void MKS_LOAD_Cancle(DGUS_VP_Variable &var, void *val_ptr);
-    static void GetManualFilament(DGUS_VP_Variable &var, void *val_ptr);
-    static void GetManualFilamentSpeed(DGUS_VP_Variable &var, void *val_ptr);
+    static void filamentLoadUnload(DGUS_VP_Variable &var, void *val_ptr, const int filamentDir);
+    static void filamentLoad(DGUS_VP_Variable &var, void *val_ptr);
+    static void filamentUnload(DGUS_VP_Variable &var, void *val_ptr);
+    static void getManualFilament(DGUS_VP_Variable &var, void *val_ptr);
+    static void getManualFilamentSpeed(DGUS_VP_Variable &var, void *val_ptr);
   #endif
 
-  #if ENABLED(SDSUPPORT)
-    // Callback for VP "Display wants to change screen when there is a SD card"
-    static void ScreenChangeHookIfSD(DGUS_VP_Variable &var, void *val_ptr);
-    // Scroll buttons on the file listing screen.
-    static void DGUSLCD_SD_ScrollFilelist(DGUS_VP_Variable &var, void *val_ptr);
-    // File touched.
-    static void DGUSLCD_SD_FileSelected(DGUS_VP_Variable &var, void *val_ptr);
-    // start print after confirmation received.
-    static void DGUSLCD_SD_StartPrint(DGUS_VP_Variable &var, void *val_ptr);
-    // User hit the pause, resume or abort button.
-    static void DGUSLCD_SD_ResumePauseAbort(DGUS_VP_Variable &var, void *val_ptr);
-    // User confirmed the abort action
-    static void DGUSLCD_SD_ReallyAbort(DGUS_VP_Variable &var, void *val_ptr);
-    // User hit the tune button
-    static void DGUSLCD_SD_PrintTune(DGUS_VP_Variable &var, void *val_ptr);
-    // Send a single filename to the display.
-    static void DGUSLCD_SD_SendFilename(DGUS_VP_Variable &var);
-    // Marlin informed us that a new SD has been inserted.
-    static void SDCardInserted();
-    // Marlin informed us that the SD Card has been removed().
-    static void SDCardRemoved();
-    // Marlin informed us about a bad SD Card.
-    static void SDCardError();
+  #if HAS_MEDIA
     // Marlin informed us about SD print completion.
-    static void SDPrintingFinished();
+    static void sdPrintingFinished();
   #else
-    static void PrintReturn(DGUS_VP_Variable &var, void *val_ptr);
+    static void printReturn(DGUS_VP_Variable &var, void *val_ptr);
   #endif
 
-  // OK Button on the Confirm screen.
-  static void ScreenConfirmedOK(DGUS_VP_Variable &var, void *val_ptr);
+  static void sendPrintTimeToDisplay(DGUS_VP_Variable &var);
+  static void sendBabyStepToDisplay(DGUS_VP_Variable &var);
+  static void sendFanToDisplay(DGUS_VP_Variable &var);
+  static void sendGbkToDisplay(DGUS_VP_Variable &var);
+  static void sendStringToDisplay_Language(DGUS_VP_Variable &var);
+  static void sendTMCStepValue(DGUS_VP_Variable &var);
 
-  // Update data after going to a new screen (by display or by GotoScreen)
-  // remember: store the last-displayed screen, so it can be returned to.
-  // (e.g for popup messages)
-  static void UpdateNewScreen(DGUSLCD_Screens newscreen, bool popup=false);
+  static void setUint8(DGUS_VP_Variable &var, void *val_ptr);
 
+<<<<<<< HEAD
   // Recall the remembered screen.
   static void PopToOldScreen();
 
@@ -305,17 +201,20 @@ private:
   #endif
 
   static void (*confirm_action_cb)();
+=======
+  static bool loop();
+>>>>>>> bugfix-2.1.x
 };
 
-#define MKS_Language_Choose   0x00
-#define MKS_Language_NoChoose 0x01
+enum MKS_Choose : uint8_t { MKS_Language_Choose, MKS_Language_NoChoose };
+enum MKS_Language : uint8_t { MKS_SimpleChinese, MKS_English };
 
-#define MKS_SimpleChinese     0
-#define MKS_English           1
-extern uint8_t mks_language_index;
+extern MKS_Language mks_language_index;
 extern bool DGUSAutoTurnOff;
 
 #if ENABLED(POWER_LOSS_RECOVERY)
   #define PLR_SCREEN_RECOVER MKSLCD_SCREEN_PRINT
   #define PLR_SCREEN_CANCEL MKSLCD_SCREEN_HOME
 #endif
+
+typedef DGUSScreenHandlerMKS DGUSScreenHandlerClass;

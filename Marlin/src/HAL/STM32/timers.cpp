@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
- * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -292,9 +292,9 @@ static constexpr int get_timer_num_from_base_address(uintptr_t base_address) {
 // constexpr doesn't like using the base address pointers that timers evaluate to.
 // We can get away with casting them to uintptr_t, if we do so inside an array.
 // GCC will not currently do it directly to a uintptr_t.
-IF_ENABLED(HAS_TMC_SW_SERIAL, static constexpr uintptr_t timer_serial[] = {uintptr_t(TIMER_SERIAL)});
-IF_ENABLED(SPEAKER,           static constexpr uintptr_t timer_tone[]   = {uintptr_t(TIMER_TONE)});
-IF_ENABLED(HAS_SERVOS,        static constexpr uintptr_t timer_servo[]  = {uintptr_t(TIMER_SERVO)});
+TERN_(HAS_TMC_SW_SERIAL, static constexpr uintptr_t timer_serial[] = {uintptr_t(TIMER_SERIAL)});
+TERN_(SPEAKER,           static constexpr uintptr_t timer_tone[]   = {uintptr_t(TIMER_TONE)});
+TERN_(HAS_SERVOS,        static constexpr uintptr_t timer_servo[]  = {uintptr_t(TIMER_SERVO)});
 
 enum TimerPurpose { TP_SERIAL, TP_TONE, TP_SERVO, TP_STEP, TP_TEMP };
 
@@ -303,21 +303,21 @@ enum TimerPurpose { TP_SERIAL, TP_TONE, TP_SERVO, TP_STEP, TP_TEMP };
 // This cannot yet account for timers used for PWM output, such as for fans.
 static constexpr struct { TimerPurpose p; int t; } timers_in_use[] = {
   #if HAS_TMC_SW_SERIAL
-    {TP_SERIAL, get_timer_num_from_base_address(timer_serial[0])},  // Set in variant.h, or as a define in platformio.h if not present in variant.h
+    { TP_SERIAL, get_timer_num_from_base_address(timer_serial[0]) }, // Set in variant.h, or as a define in platformio.h if not present in variant.h
   #endif
   #if ENABLED(SPEAKER)
-    {TP_TONE, get_timer_num_from_base_address(timer_tone[0])},    // Set in variant.h, or as a define in platformio.h if not present in variant.h
+    { TP_TONE, get_timer_num_from_base_address(timer_tone[0]) },     // Set in variant.h, or as a define in platformio.h if not present in variant.h
   #endif
   #if HAS_SERVOS
-    {TP_SERVO, get_timer_num_from_base_address(timer_servo[0])},   // Set in variant.h, or as a define in platformio.h if not present in variant.h
+    { TP_SERVO, get_timer_num_from_base_address(timer_servo[0]) },   // Set in variant.h, or as a define in platformio.h if not present in variant.h
   #endif
-  {TP_STEP, STEP_TIMER},
-  {TP_TEMP, TEMP_TIMER},
+  { TP_STEP, STEP_TIMER },
+  { TP_TEMP, TEMP_TIMER },
 };
 
 static constexpr bool verify_no_timer_conflicts() {
-  LOOP_L_N(i, COUNT(timers_in_use))
-    LOOP_S_L_N(j, i + 1, COUNT(timers_in_use))
+  for (uint8_t i = 0; i < COUNT(timers_in_use); ++i)
+    for (uint8_t j = i + 1; j < COUNT(timers_in_use); ++j)
       if (timers_in_use[i].t == timers_in_use[j].t) return false;
   return true;
 }

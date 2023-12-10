@@ -19,7 +19,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#pragma once
+#ifndef ENV_VALIDATE_H
+#define ENV_VALIDATE_H
 
 #if NOT_TARGET(__STM32F1__, STM32F1)
   #if DISABLED(ALLOW_STM32F4)
@@ -27,6 +28,13 @@
   #elif NOT_TARGET(STM32F4)
     #error "Oops! Select an STM32F4 board in 'Tools > Board.'"
   #endif
+<<<<<<< HEAD
+=======
+#endif
+
+#undef ALLOW_STM32F4
+
+>>>>>>> bugfix-2.1.x
 #endif
 
 #undef ALLOW_STM32F4

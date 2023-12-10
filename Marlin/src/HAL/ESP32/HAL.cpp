@@ -65,6 +65,7 @@ portMUX_TYPE MarlinHAL::spinlock = portMUX_INITIALIZER_UNLOCKED;
 // ------------------------
 
 uint16_t MarlinHAL::adc_result;
+pwm_pin_t MarlinHAL::pwm_pin_data[MAX_EXPANDER_BITS];
 
 // ------------------------
 // Private Variables
@@ -164,7 +165,7 @@ void MarlinHAL::init_board() {
 }
 
 void MarlinHAL::idletask() {
-  #if BOTH(WIFISUPPORT, OTASUPPORT)
+  #if ALL(WIFISUPPORT, OTASUPPORT)
     OTA_handle();
   #endif
   TERN_(ESP3D_WIFISUPPORT, esp3dlib.idletask());
@@ -174,10 +175,35 @@ uint8_t MarlinHAL::get_reset_source() { return rtc_get_reset_reason(1); }
 
 void MarlinHAL::reboot() { ESP.restart(); }
 
-void _delay_ms(int delay_ms) { delay(delay_ms); }
+void _delay_ms(const int ms) { delay(ms); }
 
 // return free memory between end of heap (or end bss) and whatever is current
 int MarlinHAL::freeMemory() { return ESP.getFreeHeap(); }
+
+// ------------------------
+// Watchdog Timer
+// ------------------------
+
+#if ENABLED(USE_WATCHDOG)
+
+  #define WDT_TIMEOUT_US TERN(WATCHDOG_DURATION_8S, 8000000, 4000000) // 4 or 8 second timeout
+
+  extern "C" {
+    esp_err_t esp_task_wdt_reset();
+  }
+
+  void watchdogSetup() {
+    // do whatever. don't remove this function.
+  }
+
+  void MarlinHAL::watchdog_init() {
+    // TODO
+  }
+
+  // Reset watchdog.
+  void MarlinHAL::watchdog_refresh() { esp_task_wdt_reset(); }
+
+#endif
 
 // ------------------------
 // ADC
@@ -244,7 +270,8 @@ void MarlinHAL::adc_start(const pin_t pin) {
   const adc1_channel_t chan = get_channel(pin);
   uint32_t mv;
   esp_adc_cal_get_voltage((adc_channel_t)chan, &characteristics[attenuations[chan]], &mv);
-  adc_result = mv * 1023.0f / float(ADC_REFERENCE_VOLTAGE) / 1000.0f;
+
+  adc_result = mv * isr_float_t(1023) / isr_float_t(ADC_REFERENCE_VOLTAGE) / isr_float_t(1000);
 
   // Change the attenuation level based on the new reading
   adc_atten_t atten;
@@ -304,14 +331,37 @@ int8_t get_pwm_channel(const pin_t pin, const uint32_t freq, const uint16_t res)
 }
 
 void MarlinHAL::set_pwm_duty(const pin_t pin, const uint16_t v, const uint16_t v_size/*=_BV(PWM_RESOLUTION)-1*/, const bool invert/*=false*/) {
+  #if ENABLED(I2S_STEPPER_STREAM)
+    if (pin > 127) {
+      const uint8_t pinlo = pin & 0x7F;
+      pwm_pin_t &pindata = pwm_pin_data[pinlo];
+      const uint32_t duty = map(invert ? v_size - v : v, 0, v_size, 0, pindata.pwm_cycle_ticks);
+      if (duty == 0 || duty == pindata.pwm_cycle_ticks) { // max or min (i.e., on/off)
+        pindata.pwm_duty_ticks = 0;  // turn off PWM for this pin
+        duty ? SBI32(i2s_port_data, pinlo) : CBI32(i2s_port_data, pinlo); // set pin level
+      }
+      else
+        pindata.pwm_duty_ticks = duty; // PWM duty count = # of 4µs ticks per full PWM cycle
+
+      return;
+    }
+  #endif
+
   const int8_t cid = get_pwm_channel(pin, PWM_FREQUENCY, PWM_RESOLUTION);
   if (cid >= 0) {
-    uint32_t duty = map(invert ? v_size - v : v, 0, v_size, 0, _BV(PWM_RESOLUTION)-1);
+    const uint32_t duty = map(invert ? v_size - v : v, 0, v_size, 0, _BV(PWM_RESOLUTION)-1);
     ledcWrite(cid, duty);
   }
 }
 
 int8_t MarlinHAL::set_pwm_frequency(const pin_t pin, const uint32_t f_desired) {
+  #if ENABLED(I2S_STEPPER_STREAM)
+    if (pin > 127) {
+      pwm_pin_data[pin & 0x7F].pwm_cycle_ticks = 1000000UL / f_desired / 4; // # of 4µs ticks per full PWM cycle
+      return 0;
+    }
+  #endif
+
   const int8_t cid = channel_for_pin(pin);
   if (cid >= 0) {
     if (f_desired == ledcReadFreq(cid)) return cid; // no freq change

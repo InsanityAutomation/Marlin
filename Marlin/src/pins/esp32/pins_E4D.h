@@ -30,10 +30,8 @@
 
 #include "env_validate.h"
 
-#if EXTRUDERS > 1 || E_STEPPERS > 1
-  #error "E4d@box only supports one E Stepper. Comment out this line to continue."
-#elif HAS_MULTI_HOTEND
-  #error "E4d@box only supports one hotend / E-stepper. Comment out this line to continue."
+#if HAS_MULTI_HOTEND || E_STEPPERS > 1
+  #error "E4d@box only supports 1 hotend / E stepper."
 #endif
 
 #define BOARD_INFO_NAME       "E4d@box"
@@ -41,18 +39,13 @@
 #define DEFAULT_MACHINE_NAME  BOARD_INFO_NAME
 
 //
-// Disable I2S stepper stream
-//
-#undef I2S_STEPPER_STREAM
-
-//
 // Redefine I2S for ESP32
 //
 #undef I2S_WS
-#define I2S_WS                                23
 #undef I2S_BCK
-#define I2S_BCK                               22
 #undef I2S_DATA
+#define I2S_WS                                23
+#define I2S_BCK                               22
 #define I2S_DATA                              21
 
 //
@@ -95,7 +88,7 @@
 // Heaters / Fans
 //
 #define HEATER_0_PIN                           2
-#define FAN_PIN                                0
+#define FAN0_PIN                               0
 #define HEATER_BED_PIN                        15
 
 //

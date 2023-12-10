@@ -21,10 +21,9 @@
  */
 #pragma once
 
-#include "../DGUSDisplay.h"
-#include "../DGUSVPVariable.h"
-#include "../DGUSDisplayDef.h"
+#include "../DGUSScreenHandlerBase.h"
 
+<<<<<<< HEAD
 #include "../../../../inc/MarlinConfig.h"
 
 enum DGUSLCD_Screens : uint8_t;
@@ -239,8 +238,11 @@ private:
 
   static void (*confirm_action_cb)();
 };
+=======
+typedef DGUSScreenHandler DGUSScreenHandlerClass;
+>>>>>>> bugfix-2.1.x
 
 #if ENABLED(POWER_LOSS_RECOVERY)
-  #define PLR_SCREEN_RECOVER DGUSLCD_SCREEN_SDPRINTMANIPULATION
-  #define PLR_SCREEN_CANCEL DGUSLCD_SCREEN_STATUS
+  #define PLR_SCREEN_RECOVER DGUS_SCREEN_SDPRINTMANIPULATION
+  #define PLR_SCREEN_CANCEL DGUS_SCREEN_STATUS
 #endif

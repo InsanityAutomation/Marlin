@@ -23,24 +23,25 @@
 
 #include "../config.h"
 #include "../screens.h"
+#include "../../../../module/stepper.h"
 
 #ifdef COCOA_MAIN_MENU
 
 using namespace FTDI;
 using namespace Theme;
 
-#define GRID_ROWS 6
 #define GRID_COLS 2
+#define GRID_ROWS 6
 
 #define ZPROBE_ZOFFSET_POS    BTN_POS(1,1), BTN_SIZE(1,1)
 #define MOVE_XYZ_POS          BTN_POS(1,2), BTN_SIZE(1,1)
-#define TEMPERATURE_POS       BTN_POS(2,1), BTN_SIZE(1,1)
+#define LEVELING_POS          BTN_POS(2,1), BTN_SIZE(1,1)
 #define MOVE_E_POS            BTN_POS(2,2), BTN_SIZE(1,1)
 #define SPEED_POS             BTN_POS(1,3), BTN_SIZE(1,1)
 #define FLOW_POS              BTN_POS(2,3), BTN_SIZE(1,1)
-#define ADVANCED_SETTINGS_POS BTN_POS(1,4), BTN_SIZE(1,1)
+#define TEMPERATURE_POS       BTN_POS(1,4), BTN_SIZE(1,1)
 #define DISABLE_STEPPERS_POS  BTN_POS(2,4), BTN_SIZE(1,1)
-#define LEVELING_POS          BTN_POS(1,5), BTN_SIZE(1,1)
+#define ADVANCED_SETTINGS_POS BTN_POS(1,5), BTN_SIZE(1,1)
 #define ABOUT_PRINTER_POS     BTN_POS(2,5), BTN_SIZE(1,1)
 #define BACK_POS              BTN_POS(1,6), BTN_SIZE(2,1)
 
@@ -57,14 +58,18 @@ void MainMenu::onRedraw(draw_mode_t what) {
        .font(Theme::font_medium)
        .tag( 2).button(MOVE_XYZ_POS,          GET_TEXT_F(MSG_XYZ_MOVE))
        .tag( 3).button(TEMPERATURE_POS,       GET_TEXT_F(MSG_TEMPERATURE))
-       .enabled(BOTH(HAS_LEVELING, HAS_BED_PROBE))
+               .enabled(ALL(HAS_LEVELING, HAS_BED_PROBE))
        .tag( 4).button(ZPROBE_ZOFFSET_POS,    GET_TEXT_F(MSG_ZPROBE_ZOFFSET))
        .tag( 5).button(MOVE_E_POS,            GET_TEXT_F(MSG_E_MOVE))
        .tag( 6).button(SPEED_POS,             GET_TEXT_F(MSG_PRINT_SPEED))
        .tag( 7).button(FLOW_POS,              GET_TEXT_F(MSG_FLOW))
        .tag( 8).button(ADVANCED_SETTINGS_POS, GET_TEXT_F(MSG_ADVANCED_SETTINGS))
+               .enabled(stepper.axis_is_enabled(X_AXIS) ||
+                        stepper.axis_is_enabled(Y_AXIS) ||
+                        stepper.axis_is_enabled(Z_AXIS) ||
+                        stepper.axis_is_enabled(E0_AXIS))
        .tag( 9).button(DISABLE_STEPPERS_POS,  GET_TEXT_F(MSG_DISABLE_STEPPERS))
-       .enabled(HAS_LEVELING)
+               .enabled(ENABLED(HAS_LEVELING))
        .tag(10).button(LEVELING_POS,          GET_TEXT_F(MSG_LEVELING))
        .tag(11).button(ABOUT_PRINTER_POS,     GET_TEXT_F(MSG_INFO_MENU))
        .colors(action_btn)
@@ -79,7 +84,7 @@ bool MainMenu::onTouchEnd(uint8_t tag) {
     case  1: SaveSettingsDialogBox::promptToSaveSettings(); break;
     case  2: GOTO_SCREEN(MoveXYZScreen);                    break;
     case  3: GOTO_SCREEN(TemperatureScreen);                break;
-    #if BOTH(HAS_LEVELING, HAS_BED_PROBE)
+    #if ALL(HAS_LEVELING, HAS_BED_PROBE)
     case  4: GOTO_SCREEN(ZOffsetScreen);                    break;
     #endif
     case  5: GOTO_SCREEN(MoveEScreen);                      break;
@@ -95,6 +100,14 @@ bool MainMenu::onTouchEnd(uint8_t tag) {
       return false;
   }
   return true;
+}
+
+void MainMenu::onIdle() {
+  if (refresh_timer.elapsed(STATUS_UPDATE_INTERVAL)) {
+    if (!EventLoop::is_touch_held())
+      onRefresh();
+    refresh_timer.start();
+  }
 }
 
 #endif // COCOA_MAIN_MENU

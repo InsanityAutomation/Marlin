@@ -30,7 +30,7 @@
 
 #define DISPLAY_CHARSET_ISO10646_5
 
-namespace Language_bg {
+namespace LanguageNarrow_bg {
   using namespace Language_en; // Inherit undefined strings from English
 
   constexpr uint8_t CHARSIZE              = 2;
@@ -39,29 +39,28 @@ namespace Language_bg {
   LSTR WELCOME_MSG                        = MACHINE_NAME _UxGT(" Готов.");
   LSTR MSG_MEDIA_INSERTED                 = _UxGT("Картата е поставена");
   LSTR MSG_MEDIA_REMOVED                  = _UxGT("Картата е извадена");
-  LSTR MSG_MAIN                           = _UxGT("Меню");
+  LSTR MSG_MAIN_MENU                      = _UxGT("Меню");
   LSTR MSG_RUN_AUTO_FILES                 = _UxGT("Автостарт");
   LSTR MSG_DISABLE_STEPPERS               = _UxGT("Изкл. двигатели");
   LSTR MSG_AUTO_HOME                      = _UxGT("Паркиране");
   LSTR MSG_SET_HOME_OFFSETS               = _UxGT("Задай Начало");
-  LSTR MSG_SET_ORIGIN                     = _UxGT("Изходна точка");
-  #if HAS_PREHEAT
-    LSTR MSG_PREHEAT_1                    = _UxGT("Подгряване ") PREHEAT_1_LABEL;
-    LSTR MSG_PREHEAT_1_H                  = _UxGT("Подгряване ") PREHEAT_1_LABEL " ~";
-    LSTR MSG_PREHEAT_1_END                = _UxGT("Подгряване ") PREHEAT_1_LABEL _UxGT(" Дюза");
-    LSTR MSG_PREHEAT_1_END_E              = _UxGT("Подгряване ") PREHEAT_1_LABEL _UxGT(" Дюза ~");
-    LSTR MSG_PREHEAT_1_ALL                = _UxGT("Подгр. ") PREHEAT_1_LABEL _UxGT(" Всички");
-    LSTR MSG_PREHEAT_1_BEDONLY            = _UxGT("Подгр. ") PREHEAT_1_LABEL _UxGT(" Легло");
-    LSTR MSG_PREHEAT_1_SETTINGS           = _UxGT("Настройки ") PREHEAT_1_LABEL;
 
-    LSTR MSG_PREHEAT_M                    = _UxGT("Подгряване $");
-    LSTR MSG_PREHEAT_M_H                  = _UxGT("Подгряване $ ~");
-    LSTR MSG_PREHEAT_M_END                = _UxGT("Подгряване $ Дюза");
-    LSTR MSG_PREHEAT_M_END_E              = _UxGT("Подгряване $ Дюза ~");
-    LSTR MSG_PREHEAT_M_ALL                = _UxGT("Подгр. $ Всички");
-    LSTR MSG_PREHEAT_M_BEDONLY            = _UxGT("Подгр. $ Легло");
-    LSTR MSG_PREHEAT_M_SETTINGS           = _UxGT("Настройки $");
-  #endif
+  LSTR MSG_PREHEAT_1                      = _UxGT("Подгряване ") PREHEAT_1_LABEL;
+  LSTR MSG_PREHEAT_1_H                    = _UxGT("Подгряване ") PREHEAT_1_LABEL " ~";
+  LSTR MSG_PREHEAT_1_END                  = _UxGT("Подгряване ") PREHEAT_1_LABEL _UxGT(" Дюза");
+  LSTR MSG_PREHEAT_1_END_E                = _UxGT("Подгряване ") PREHEAT_1_LABEL _UxGT(" Дюза ~");
+  LSTR MSG_PREHEAT_1_ALL                  = _UxGT("Подгр. ") PREHEAT_1_LABEL _UxGT(" Всички");
+  LSTR MSG_PREHEAT_1_BEDONLY              = _UxGT("Подгр. ") PREHEAT_1_LABEL _UxGT(" Легло");
+  LSTR MSG_PREHEAT_1_SETTINGS             = _UxGT("Настройки ") PREHEAT_1_LABEL;
+
+  LSTR MSG_PREHEAT_M                      = _UxGT("Подгряване $");
+  LSTR MSG_PREHEAT_M_H                    = _UxGT("Подгряване $ ~");
+  LSTR MSG_PREHEAT_M_END                  = _UxGT("Подгряване $ Дюза");
+  LSTR MSG_PREHEAT_M_END_E                = _UxGT("Подгряване $ Дюза ~");
+  LSTR MSG_PREHEAT_M_ALL                  = _UxGT("Подгр. $ Всички");
+  LSTR MSG_PREHEAT_M_BEDONLY              = _UxGT("Подгр. $ Легло");
+  LSTR MSG_PREHEAT_M_SETTINGS             = _UxGT("Настройки $");
+
   LSTR MSG_COOLDOWN                       = _UxGT("Охлаждане");
   LSTR MSG_SWITCH_PS_ON                   = _UxGT("Вкл. захранване");
   LSTR MSG_SWITCH_PS_OFF                  = _UxGT("Изкл. захранване");
@@ -73,15 +72,14 @@ namespace Language_bg {
   LSTR MSG_MOVE_X                         = _UxGT("Движение по X");
   LSTR MSG_MOVE_Y                         = _UxGT("Движение по Y");
   LSTR MSG_MOVE_Z                         = _UxGT("Движение по Z");
+  LSTR MSG_MOVE_N                         = _UxGT("Движение по @");
   LSTR MSG_MOVE_E                         = _UxGT("Екструдер");
   LSTR MSG_MOVE_EN                        = _UxGT("Екструдер *");
-  LSTR MSG_MOVE_N_MM                      = _UxGT("Премести с %smm");
-  LSTR MSG_MOVE_01MM                      = _UxGT("Премести с 0.1mm");
-  LSTR MSG_MOVE_1MM                       = _UxGT("Премести с 1mm");
-  LSTR MSG_MOVE_10MM                      = _UxGT("Премести с 10mm");
-  LSTR MSG_MOVE_100MM                     = _UxGT("Премести с 100mm");
+  LSTR MSG_MOVE_N_MM                      = _UxGT("Премести с $mm");
+  LSTR MSG_MOVE_N_IN                      = _UxGT("Премести с $in");
+  LSTR MSG_MOVE_N_DEG                     = _UxGT("Премести с $") LCD_STR_DEGREE;
   LSTR MSG_SPEED                          = _UxGT("Скорост");
-  LSTR MSG_BED_Z                          = _UxGT("Bed Z");
+  LSTR MSG_MESH_Z_OFFSET                  = _UxGT("Bed Z");
   LSTR MSG_NOZZLE                         = " " LCD_STR_THERMOMETER _UxGT(" Дюза");
   LSTR MSG_NOZZLE_N                       = " " LCD_STR_THERMOMETER _UxGT(" Дюза ~");
   LSTR MSG_BED                            = " " LCD_STR_THERMOMETER _UxGT(" Легло");
@@ -102,9 +100,7 @@ namespace Language_bg {
   LSTR MSG_A_STEPS                        = STR_A _UxGT(" стъпки/mm");
   LSTR MSG_B_STEPS                        = STR_B _UxGT(" стъпки/mm");
   LSTR MSG_C_STEPS                        = STR_C _UxGT(" стъпки/mm");
-  LSTR MSG_I_STEPS                        = STR_I _UxGT(" стъпки/mm");
-  LSTR MSG_J_STEPS                        = STR_J _UxGT(" стъпки/mm");
-  LSTR MSG_K_STEPS                        = STR_K _UxGT(" стъпки/mm");
+  LSTR MSG_N_STEPS                        = _UxGT("@ стъпки/mm");
   LSTR MSG_E_STEPS                        = _UxGT("E стъпки/mm");
   LSTR MSG_EN_STEPS                       = _UxGT("* стъпки/mm");
   LSTR MSG_TEMPERATURE                    = _UxGT("Температура");
@@ -149,6 +145,7 @@ namespace Language_bg {
   LSTR MSG_BABYSTEP_X                     = _UxGT("Министъпка X");
   LSTR MSG_BABYSTEP_Y                     = _UxGT("Министъпка Y");
   LSTR MSG_BABYSTEP_Z                     = _UxGT("Министъпка Z");
+  LSTR MSG_BABYSTEP_N                     = _UxGT("Министъпка @");
   LSTR MSG_ENDSTOP_ABORT                  = _UxGT("Стоп Кр.Изключватели");
   LSTR MSG_DELTA_CALIBRATE                = _UxGT("Делта Калибровка");
   LSTR MSG_DELTA_CALIBRATE_X              = _UxGT("Калибровка X");
@@ -156,4 +153,21 @@ namespace Language_bg {
   LSTR MSG_DELTA_CALIBRATE_Z              = _UxGT("Калибровка Z");
   LSTR MSG_DELTA_CALIBRATE_CENTER         = _UxGT("Калибровка Център");
   LSTR MSG_KILL_EXPECTED_PRINTER          = _UxGT("Неправилен принтер");
+}
+
+namespace LanguageWide_bg {
+  using namespace LanguageNarrow_bg;
+  #if LCD_WIDTH >= 20 || HAS_DWIN_E3V2
+  #endif
+}
+
+namespace LanguageTall_bg {
+  using namespace LanguageWide_bg;
+  #if LCD_HEIGHT >= 4
+    // Filament Change screens show up to 3 lines on a 4-line display
+  #endif
+}
+
+namespace Language_bg {
+  using namespace LanguageTall_bg;
 }

@@ -52,9 +52,9 @@
 #if ENABLED(I2C_EEPROM)
   #define IIC_EEPROM_SDA                    PB7
   #define IIC_EEPROM_SCL                    PB6
-  #define MARLIN_EEPROM_SIZE              0x1000  // 4KB
+  #define MARLIN_EEPROM_SIZE              0x1000  // 4K
 #elif ENABLED(SDCARD_EEPROM_EMULATION)
-  #define MARLIN_EEPROM_SIZE              0x1000  // 4KB
+  #define MARLIN_EEPROM_SIZE              0x1000  // 4K
 #endif
 
 //
@@ -112,7 +112,7 @@
 #define HEATER_0_PIN                        PC8   // HEATER1
 #define HEATER_BED_PIN                      PC9   // HOT BED
 
-#define FAN_PIN                             PC6   // FAN
+#define FAN0_PIN                            PC6   // FAN
 #define FAN_SOFT_PWM_REQUIRED
 
 #define CONTROLLER_FAN_PIN                  PC7
@@ -126,7 +126,7 @@
   #define BTN_EN2                           PA10
 
   #define LCD_PINS_RS                       PB8
-  #define LCD_PINS_ENABLE                   PB15
+  #define LCD_PINS_EN                       PB15
   #define LCD_PINS_D4                       PB9
 
   #define BEEPER_PIN                        PB5

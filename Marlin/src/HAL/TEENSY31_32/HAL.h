@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
- * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@
 #include "../shared/HAL_SPI.h"
 
 #include "fastio.h"
-#include "watchdog.h"
 
 #include <stdint.h>
 
@@ -102,7 +101,7 @@ uint32_t __get_PRIMASK(void); // CMSIS
   #define analogInputToDigitalPin(p) ((p < 12U) ? (p) + 54U : -1)
 #endif
 
-#define HAL_ADC_VREF         3.3
+#define HAL_ADC_VREF_MV   3300
 #define HAL_ADC_RESOLUTION  10
 
 //
@@ -135,6 +134,10 @@ public:
   // Earliest possible init, before setup()
   MarlinHAL() {}
 
+  // Watchdog
+  static void watchdog_init()    IF_DISABLED(USE_WATCHDOG, {});
+  static void watchdog_refresh() IF_DISABLED(USE_WATCHDOG, {});
+
   static void init() {}        // Called early in setup()
   static void init_board() {}  // Called less early in setup()
   static void reboot();        // Restart the firmware from 0x0
@@ -166,7 +169,7 @@ public:
   // Called by Temperature::init for each sensor at startup
   static void adc_enable(const pin_t ch) {}
 
-  // Begin ADC sampling on the given channel
+  // Begin ADC sampling on the given channel. Called from Temperature::isr!
   static void adc_start(const pin_t ch);
 
   // Is the ADC ready for reading?

@@ -24,7 +24,7 @@
 #include "env_validate.h"
 
 /**
- * 21017 Victor Perez Marlin for stm32f1 test
+ * 2017 Victor Perez Marlin for stm32f1 test
  */
 
 #define BOARD_INFO_NAME      "Misc. STM32F1R"
@@ -101,7 +101,7 @@
     #error "REPRAPWORLD_GRAPHICAL_LCD is not supported."
   #else
     #define LCD_PINS_RS                     PB8
-    #define LCD_PINS_ENABLE                 PD2
+    #define LCD_PINS_EN                     PD2
     #define LCD_PINS_D4                     PB12
     #define LCD_PINS_D5                     PB13
     #define LCD_PINS_D6                     PB14

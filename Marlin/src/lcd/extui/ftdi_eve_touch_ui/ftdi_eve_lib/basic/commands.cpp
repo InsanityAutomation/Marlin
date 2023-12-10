@@ -178,6 +178,14 @@ void CLCD::mem_write_pgm(uint32_t reg_address, const void *data, uint16_t len, u
 }
 
 // Write 3-Byte Address, Multiple Bytes, plus padding bytes, from PROGMEM, reversing bytes (suitable for loading XBM images)
+void CLCD::mem_write_xbm(uint32_t reg_address, const void *data, uint16_t len, uint8_t padding) {
+  spi_ftdi_select();
+  spi_write_addr(reg_address);
+  spi_write_bulk<xbm_write>(data, len, padding);
+  spi_ftdi_deselect();
+}
+
+// Write 3-Byte Address, Multiple Bytes, plus padding bytes, from PROGMEM, reversing bytes (suitable for loading XBM images)
 void CLCD::mem_write_xbm(uint32_t reg_address, FSTR_P data, uint16_t len, uint8_t padding) {
   spi_ftdi_select();
   spi_write_addr(reg_address);
@@ -1024,9 +1032,7 @@ template <class T> bool CLCD::CommandFifo::write(T data, uint16_t len) {
   uint16_t Command_Space = mem_read_32(REG::CMDB_SPACE) & 0x0FFF;
   if (Command_Space < (len + padding)) {
     #if ENABLED(TOUCH_UI_DEBUG)
-      SERIAL_ECHO_START();
-      SERIAL_ECHOPGM("Waiting for ", len + padding);
-      SERIAL_ECHOLNPGM(" bytes in command queue, now free: ", Command_Space);
+      SERIAL_ECHO_MSG("Waiting for ", len + padding, " bytes in command queue, now free: ", Command_Space);
     #endif
     do {
       Command_Space = mem_read_32(REG::CMDB_SPACE) & 0x0FFF;

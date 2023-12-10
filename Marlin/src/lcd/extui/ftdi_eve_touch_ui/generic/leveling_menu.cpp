@@ -25,7 +25,7 @@
 
 #ifdef FTDI_LEVELING_MENU
 
-#if BOTH(HAS_BED_PROBE,BLTOUCH)
+#if ALL(HAS_BED_PROBE,BLTOUCH)
   #include "../../../../feature/bltouch.h"
 #endif
 
@@ -34,8 +34,8 @@ using namespace ExtUI;
 using namespace Theme;
 
 #if ENABLED(TOUCH_UI_PORTRAIT)
-  #define GRID_ROWS 8
   #define GRID_COLS 2
+  #define GRID_ROWS 8
   #define LEVELING_TITLE_POS BTN_POS(1,1), BTN_SIZE(2,1)
   #define LEVEL_AXIS_POS     BTN_POS(1,2), BTN_SIZE(2,1)
   #define BED_MESH_TITLE_POS BTN_POS(1,3), BTN_SIZE(2,1)
@@ -48,8 +48,8 @@ using namespace Theme;
   #define BLTOUCH_TEST_POS   BTN_POS(2,7), BTN_SIZE(1,1)
   #define BACK_POS           BTN_POS(1,8), BTN_SIZE(2,1)
 #else
-  #define GRID_ROWS 6
   #define GRID_COLS 3
+  #define GRID_ROWS 6
   #define LEVELING_TITLE_POS BTN_POS(1,1), BTN_SIZE(3,1)
   #define LEVEL_AXIS_POS     BTN_POS(1,2), BTN_SIZE(3,1)
   #define BED_MESH_TITLE_POS BTN_POS(1,3), BTN_SIZE(2,1)
@@ -81,7 +81,7 @@ void LevelingMenu::onRedraw(draw_mode_t what) {
        .text(BLTOUCH_TITLE_POS, GET_TEXT_F(MSG_BLTOUCH))
     #endif
        .font(font_medium).colors(normal_btn)
-       .enabled(EITHER(Z_STEPPER_AUTO_ALIGN,MECHANICAL_GANTRY_CALIBRATION))
+       .enabled(ANY(Z_STEPPER_AUTO_ALIGN, MECHANICAL_GANTRY_CALIBRATION))
        .tag(2).button(LEVEL_AXIS_POS, GET_TEXT_F(MSG_LEVEL_X_AXIS))
        .enabled(ENABLED(HAS_BED_PROBE))
        .tag(3).button(PROBE_BED_POS, GET_TEXT_F(MSG_PROBE_BED))
@@ -103,7 +103,7 @@ void LevelingMenu::onRedraw(draw_mode_t what) {
 bool LevelingMenu::onTouchEnd(uint8_t tag) {
   switch (tag) {
     case 1: GOTO_PREVIOUS(); break;
-    #if EITHER(Z_STEPPER_AUTO_ALIGN,MECHANICAL_GANTRY_CALIBRATION)
+    #if ANY(Z_STEPPER_AUTO_ALIGN, MECHANICAL_GANTRY_CALIBRATION)
       case 2: SpinnerDialogBox::enqueueAndWait(F("G34")); break;
     #endif
     #if HAS_BED_PROBE

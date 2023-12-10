@@ -22,7 +22,7 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if HAS_M206_COMMAND
+#if HAS_HOME_OFFSET
 
 #include "../gcode.h"
 #include "../../module/motion.h"
@@ -33,26 +33,15 @@
 /**
  * M206: Set Additional Homing Offset (X Y Z). SCARA aliases T=X, P=Y
  *
- * *** @thinkyhead: I recommend deprecating M206 for SCARA in favor of M665.
- * ***              M206 for SCARA will remain enabled in 1.1.x for compatibility.
- * ***              In the 2.0 release, it will simply be disabled by default.
+ * *** TODO: Deprecate M206 for SCARA in favor of M665.
  */
 void GcodeSuite::M206() {
   if (!parser.seen_any()) return M206_report();
-  NUM_AXIS_CODE(
-    if (parser.seen('X')) set_home_offset(X_AXIS, parser.value_linear_units()),
-    if (parser.seen('Y')) set_home_offset(Y_AXIS, parser.value_linear_units()),
-    if (parser.seen('Z')) set_home_offset(Y_AXIS, parser.value_linear_units()),
-    if (parser.seen(AXIS4_NAME)) set_home_offset(I_AXIS, parser.TERN(AXIS4_ROTATES, value_float, value_linear_units)()),
-    if (parser.seen(AXIS5_NAME)) set_home_offset(J_AXIS, parser.TERN(AXIS5_ROTATES, value_float, value_linear_units)()),
-    if (parser.seen(AXIS6_NAME)) set_home_offset(K_AXIS, parser.TERN(AXIS6_ROTATES, value_float, value_linear_units)()),
-    if (parser.seen(AXIS7_NAME)) set_home_offset(U_AXIS, parser.TERN(AXIS7_ROTATES, value_float, value_linear_units)()),
-    if (parser.seen(AXIS8_NAME)) set_home_offset(V_AXIS, parser.TERN(AXIS8_ROTATES, value_float, value_linear_units)()),
-    if (parser.seen(AXIS9_NAME)) set_home_offset(W_AXIS, parser.TERN(AXIS9_ROTATES, value_float, value_linear_units)())
-  );
+  LOOP_NUM_AXES(a)
+    if (parser.seenval(AXIS_CHAR(a))) set_home_offset((AxisEnum)a, parser.value_axis_units((AxisEnum)a));
   #if ENABLED(MORGAN_SCARA)
-    if (parser.seen('T')) set_home_offset(A_AXIS, parser.value_float()); // Theta
-    if (parser.seen('P')) set_home_offset(B_AXIS, parser.value_float()); // Psi
+    if (parser.seenval('T')) set_home_offset(A_AXIS, parser.value_float()); // Theta
+    if (parser.seenval('P')) set_home_offset(B_AXIS, parser.value_float()); // Psi
   #endif
 
   report_current_position();
@@ -100,7 +89,7 @@ void GcodeSuite::M428() {
       diff[i] = -current_position[i];
     if (!WITHIN(diff[i], -20, 20)) {
       SERIAL_ERROR_MSG(STR_ERR_M428_TOO_FAR);
-      LCD_ALERTMESSAGE_F("Err: Too far!");
+      LCD_ALERTMESSAGE(MSG_ERR_M428_TOO_FAR);
       ERR_BUZZ();
       return;
     }
@@ -112,4 +101,4 @@ void GcodeSuite::M428() {
   OKAY_BUZZ();
 }
 
-#endif // HAS_M206_COMMAND
+#endif // HAS_HOME_OFFSET

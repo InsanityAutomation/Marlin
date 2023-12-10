@@ -55,6 +55,7 @@
 // eu         Basque-Euskera
 // fi         Finnish
 // fr         French
+// fr_na      French without accents (DWIN T5UID1 touchscreen)
 // gl         Galician
 // hr         Croatian
 // hu         Hungarian
@@ -153,7 +154,7 @@
 #define STR_ERR_ARC_ARGS                    "G2/G3 bad parameters"
 #define STR_ERR_PROTECTED_PIN               "Protected Pin"
 #define STR_ERR_M420_FAILED                 "Failed to enable Bed Leveling"
-#define STR_ERR_M428_TOO_FAR                "Too far from reference point"
+#define STR_ERR_M428_TOO_FAR                "Too far from MIN/MAX"
 #define STR_ERR_M303_DISABLED               "PIDTEMP disabled"
 #define STR_M119_REPORT                     "Reporting endstop status"
 #define STR_ON                              "ON"
@@ -174,6 +175,7 @@
 #define STR_SD_VOL_INIT_FAIL                "volume.init failed"
 #define STR_SD_OPENROOT_FAIL                "openRoot failed"
 #define STR_SD_CARD_OK                      "SD card ok"
+#define STR_SD_CARD_RELEASED                "SD card released"
 #define STR_SD_WORKDIR_FAIL                 "workDir open failed"
 #define STR_SD_OPEN_FILE_FAIL               "open failed, File: "
 #define STR_SD_FILE_OPENED                  "File opened: "
@@ -191,6 +193,7 @@
 #define STR_ERR_LONG_EXTRUDE_STOP           " too long extrusion prevented"
 #define STR_ERR_HOTEND_TOO_COLD             "Hotend too cold"
 #define STR_ERR_EEPROM_WRITE                "Error writing to EEPROM!"
+#define STR_ERR_EEPROM_CORRUPT              "EEPROM Corrupt"
 
 #define STR_FILAMENT_CHANGE_HEAT_LCD        "Press button to heat nozzle"
 #define STR_FILAMENT_CHANGE_INSERT_LCD      "Insert filament and press button"
@@ -199,16 +202,20 @@
 #define STR_FILAMENT_CHANGE_INSERT_M108     "Insert filament and send M108"
 #define STR_FILAMENT_CHANGE_WAIT_M108       "Send M108 to resume"
 
-#define STR_STOP_BLTOUCH                    "!! STOP called because of BLTouch error - restart with M999"
-#define STR_STOP_UNHOMED                    "!! STOP called because of unhomed error - restart with M999"
-#define STR_KILL_INACTIVE_TIME              "!! KILL caused by too much inactive time - current command: "
-#define STR_KILL_BUTTON                     "!! KILL caused by KILL button/pin"
+#define STR_STOP_PRE                        "!! STOP called because of "
+#define STR_STOP_POST                       " error - restart with M999"
+#define STR_STOP_BLTOUCH                    "BLTouch"
+#define STR_STOP_UNHOMED                    "unhomed"
+#define STR_KILL_PRE                        "!! KILL caused by "
+#define STR_KILL_INACTIVE_TIME              "too much inactive time - current command: "
+#define STR_KILL_BUTTON                     "KILL button/pin"
 
 // temperature.cpp strings
-#define STR_PID_AUTOTUNE_START              "PID Autotune start"
-#define STR_PID_BAD_HEATER_ID               "PID Autotune failed! Bad heater id"
-#define STR_PID_TEMP_TOO_HIGH               "PID Autotune failed! Temperature too high"
-#define STR_PID_TIMEOUT                     "PID Autotune failed! timeout"
+#define STR_PID_AUTOTUNE                    "PID Autotune"
+#define STR_PID_AUTOTUNE_START              " start"
+#define STR_PID_BAD_HEATER_ID               " failed! Bad heater id"
+#define STR_PID_TEMP_TOO_HIGH               " failed! Temperature too high"
+#define STR_PID_TIMEOUT                     " failed! timeout"
 #define STR_BIAS                            " bias: "
 #define STR_D_COLON                         " d: "
 #define STR_T_MIN                           " min: "
@@ -219,29 +226,35 @@
 #define STR_KP                              " Kp: "
 #define STR_KI                              " Ki: "
 #define STR_KD                              " Kd: "
-#define STR_PID_AUTOTUNE_FINISHED           "PID Autotune finished! Put the last Kp, Ki and Kd constants from below into Configuration.h"
+#define STR_PID_AUTOTUNE_FINISHED           " finished! Put the last Kp, Ki and Kd constants from below into Configuration.h"
 #define STR_PID_DEBUG                       " PID_DEBUG "
 #define STR_PID_DEBUG_INPUT                 ": Input "
 #define STR_PID_DEBUG_OUTPUT                " Output "
-#define STR_PID_DEBUG_PTERM                 " pTerm "
-#define STR_PID_DEBUG_ITERM                 " iTerm "
-#define STR_PID_DEBUG_DTERM                 " dTerm "
-#define STR_PID_DEBUG_CTERM                 " cTerm "
 #define STR_INVALID_EXTRUDER_NUM            " - Invalid extruder number !"
+#define STR_MPC_AUTOTUNE_START              "MPC Autotune start for " STR_E
+#define STR_MPC_AUTOTUNE_INTERRUPTED        "MPC Autotune interrupted!"
+#define STR_MPC_AUTOTUNE_FINISHED           "MPC Autotune finished! Put the constants below into Configuration.h"
+#define STR_MPC_COOLING_TO_AMBIENT          "Cooling to ambient"
+#define STR_MPC_HEATING_PAST_200            "Heating to over 200C"
+#define STR_MPC_MEASURING_AMBIENT           "Measuring ambient heatloss at "
+#define STR_MPC_TEMPERATURE_ERROR           "Temperature error"
 
 #define STR_HEATER_BED                      "bed"
 #define STR_HEATER_CHAMBER                  "chamber"
 #define STR_COOLER                          "cooler"
 #define STR_MOTHERBOARD                     "motherboard"
+#define STR_SOC                             "soc"
 #define STR_PROBE                           "probe"
 #define STR_REDUNDANT                       "redundant "
 #define STR_LASER_TEMP                      "laser temperature"
 
 #define STR_STOPPED_HEATER                  ", system stopped! Heater_ID: "
+#define STR_DETECTED_TEMP_B                 " (temp: "
+#define STR_DETECTED_TEMP_E                 ")"
 #define STR_REDUNDANCY                      "Heater switched off. Temperature difference between temp sensors is too high !"
 #define STR_T_HEATING_FAILED                "Heating failed"
 #define STR_T_THERMAL_RUNAWAY               "Thermal Runaway"
-#define STR_T_MALFUNCTION                   "Thermal Malfunction"
+#define STR_T_THERMAL_MALFUNCTION           "Thermal Malfunction"
 #define STR_T_MAXTEMP                       "MAXTEMP triggered"
 #define STR_T_MINTEMP                       "MINTEMP triggered"
 #define STR_ERR_PROBING_FAILED              "Probing Failed"
@@ -267,9 +280,11 @@
 // Settings Report Strings
 #define STR_Z_AUTO_ALIGN                    "Z Auto-Align"
 #define STR_BACKLASH_COMPENSATION           "Backlash compensation"
+#define STR_FT_MOTION                       "Fixed-Time Motion"
 #define STR_S_SEG_PER_SEC                   "S<seg-per-sec>"
 #define STR_DELTA_SETTINGS                  "Delta (L<diagonal-rod> R<radius> H<height> S<seg-per-sec> XYZ<tower-angle-trim> ABC<rod-trim>)"
 #define STR_SCARA_SETTINGS                  "SCARA"
+#define STR_POLAR_SETTINGS                  "Polar"
 #define STR_POLARGRAPH_SETTINGS             "Polargraph"
 #define STR_SCARA_P_T_Z                     "P<theta-psi-offset> T<theta-offset> Z<home-offset>"
 #define STR_ENDSTOP_ADJUSTMENT              "Endstop adjustment"
@@ -286,6 +301,7 @@
 #define STR_CHAMBER_PID                     "Chamber PID"
 #define STR_STEPS_PER_UNIT                  "Steps per unit"
 #define STR_LINEAR_ADVANCE                  "Linear Advance"
+#define STR_NONLINEAR_EXTRUSION             "Nonlinear Extrusion"
 #define STR_CONTROLLER_FAN                  "Controller Fan"
 #define STR_STEPPER_MOTOR_CURRENTS          "Stepper motor currents"
 #define STR_RETRACT_S_F_Z                   "Retract (S<length> F<feedrate> Z<lift>)"
@@ -303,6 +319,7 @@
 #define STR_MATERIAL_HEATUP                 "Material heatup parameters"
 #define STR_LCD_CONTRAST                    "LCD Contrast"
 #define STR_LCD_BRIGHTNESS                  "LCD Brightness"
+#define STR_DISPLAY_SLEEP                   "Display Sleep"
 #define STR_UI_LANGUAGE                     "UI Language"
 #define STR_Z_PROBE_OFFSET                  "Z-Probe Offset"
 #define STR_TEMPERATURE_UNITS               "Temperature Units"
@@ -312,10 +329,12 @@
 //
 // Endstop Names used by Endstops::report_states
 //
-#define STR_X_MIN                           "x_min"
-#define STR_X_MAX                           "x_max"
-#define STR_X2_MIN                          "x2_min"
-#define STR_X2_MAX                          "x2_max"
+#if HAS_X_AXIS
+  #define STR_X_MIN                         "x_min"
+  #define STR_X_MAX                         "x_max"
+  #define STR_X2_MIN                        "x2_min"
+  #define STR_X2_MAX                        "x2_max"
+#endif
 
 #if HAS_Y_AXIS
   #define STR_Y_MIN                         "y_min"
@@ -492,7 +511,7 @@
   #define STR_W   ""
 #endif
 
-#if EITHER(HAS_MARLINUI_HD44780, IS_TFTGLCD_PANEL)
+#if ANY(HAS_MARLINUI_HD44780, IS_TFTGLCD_PANEL)
 
   // Custom characters defined in the first 8 characters of the LCD
   #define LCD_STR_BEDTEMP     "\x00" // Print only as a char. This will have 'unexpected' results when used in a string!

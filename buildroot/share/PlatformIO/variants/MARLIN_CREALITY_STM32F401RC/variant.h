@@ -112,7 +112,11 @@ extern "C" {
 #define PIN_SERIAL_RX           PA10
 #define PIN_SERIAL_TX           PA9
 
+<<<<<<< HEAD
 // Used when user instanciate a hardware Serial using its peripheral name.
+=======
+// Used when the user instantiates a hardware Serial using its peripheral name.
+>>>>>>> bugfix-2.1.x
 // Example: HardwareSerial mySerial(USART3);
 // will use PIN_SERIAL3_RX and PIN_SERIAL3_TX if defined.
 #define PIN_SERIAL1_RX          PA10
@@ -123,6 +127,10 @@ extern "C" {
 #ifdef __cplusplus
 } // extern "C"
 #endif
+<<<<<<< HEAD
+=======
+
+>>>>>>> bugfix-2.1.x
 /*----------------------------------------------------------------------------
  *        Arduino objects - C++ only
  *----------------------------------------------------------------------------*/
@@ -148,4 +156,8 @@ extern "C" {
   #define SERIAL_PORT_HARDWARE_OPEN   Serial2
 #endif
 
+<<<<<<< HEAD
 #endif /* _VARIANT_ARDUINO_STM32_ */
+=======
+#endif /* _VARIANT_ARDUINO_STM32_ */
+>>>>>>> bugfix-2.1.x

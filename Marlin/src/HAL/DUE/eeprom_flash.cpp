@@ -1,10 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
- * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
- * Copyright (c) 2016 Victor Perez victor_pv@hotmail.com
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -199,8 +198,7 @@ static bool ee_PageWrite(uint16_t page, const void *data) {
   for (i = 0; i <PageSize >> 2; i++)
     pageContents[i] = (((uint32_t*)data)[i]) | (~(pageContents[i] ^ ((uint32_t*)data)[i]));
 
-  DEBUG_ECHO_START();
-  DEBUG_ECHOLNPGM("EEPROM PageWrite   ", page);
+  DEBUG_ECHO_MSG("EEPROM PageWrite   ", page);
   DEBUG_ECHOLNPGM(" in FLASH address ", (uint32_t)addrflash);
   DEBUG_ECHOLNPGM(" base address     ", (uint32_t)getFlashStorage(0));
   DEBUG_FLUSH();
@@ -245,8 +243,7 @@ static bool ee_PageWrite(uint16_t page, const void *data) {
     // Reenable interrupts
     __enable_irq();
 
-    DEBUG_ECHO_START();
-    DEBUG_ECHOLNPGM("EEPROM Unlock failure for page ", page);
+    DEBUG_ECHO_MSG("EEPROM Unlock failure for page ", page);
     return false;
   }
 
@@ -270,8 +267,7 @@ static bool ee_PageWrite(uint16_t page, const void *data) {
     // Reenable interrupts
     __enable_irq();
 
-    DEBUG_ECHO_START();
-    DEBUG_ECHOLNPGM("EEPROM Write failure for page ", page);
+    DEBUG_ECHO_MSG("EEPROM Write failure for page ", page);
 
     return false;
   }
@@ -286,8 +282,7 @@ static bool ee_PageWrite(uint16_t page, const void *data) {
   if (memcmp(getFlashStorage(page),data,PageSize)) {
 
     #ifdef EE_EMU_DEBUG
-      DEBUG_ECHO_START();
-      DEBUG_ECHOLNPGM("EEPROM Verify Write failure for page ", page);
+      DEBUG_ECHO_MSG("EEPROM Verify Write failure for page ", page);
 
       ee_Dump( page, (uint32_t *)addrflash);
       ee_Dump(-page, data);
@@ -325,8 +320,7 @@ static bool ee_PageErase(uint16_t page) {
   uint16_t i;
   uint32_t addrflash = uint32_t(getFlashStorage(page));
 
-  DEBUG_ECHO_START();
-  DEBUG_ECHOLNPGM("EEPROM PageErase  ", page);
+  DEBUG_ECHO_MSG("EEPROM PageErase  ", page);
   DEBUG_ECHOLNPGM(" in FLASH address ", (uint32_t)addrflash);
   DEBUG_ECHOLNPGM(" base address     ", (uint32_t)getFlashStorage(0));
   DEBUG_FLUSH();
@@ -370,8 +364,7 @@ static bool ee_PageErase(uint16_t page) {
     // Reenable interrupts
     __enable_irq();
 
-    DEBUG_ECHO_START();
-    DEBUG_ECHOLNPGM("EEPROM Unlock failure for page ",page);
+    DEBUG_ECHO_MSG("EEPROM Unlock failure for page ",page);
 
     return false;
   }
@@ -394,8 +387,7 @@ static bool ee_PageErase(uint16_t page) {
     // Reenable interrupts
     __enable_irq();
 
-    DEBUG_ECHO_START();
-    DEBUG_ECHOLNPGM("EEPROM Erase failure for page ",page);
+    DEBUG_ECHO_MSG("EEPROM Erase failure for page ",page);
 
     return false;
   }
@@ -410,8 +402,7 @@ static bool ee_PageErase(uint16_t page) {
   uint32_t * aligned_src = (uint32_t *) addrflash;
   for (i = 0; i < PageSize >> 2; i++) {
     if (*aligned_src++ != 0xFFFFFFFF) {
-      DEBUG_ECHO_START();
-      DEBUG_ECHOLNPGM("EEPROM Verify Erase failure for page ",page);
+      DEBUG_ECHO_MSG("EEPROM Verify Erase failure for page ",page);
       ee_Dump(page, (uint32_t *)addrflash);
       return false;
     }
@@ -921,8 +912,7 @@ static void ee_Init() {
   // If all groups seem to be used, default to first group
   if (curGroup >= GroupCount) curGroup = 0;
 
-  DEBUG_ECHO_START();
-  DEBUG_ECHOLNPGM("EEPROM Current Group: ",curGroup);
+  DEBUG_ECHO_MSG("EEPROM Current Group: ",curGroup);
   DEBUG_FLUSH();
 
   // Now, validate that all the other group pages are empty
@@ -931,8 +921,7 @@ static void ee_Init() {
 
     for (int page = 0; page < PagesPerGroup; page++) {
       if (!ee_IsPageClean(grp * PagesPerGroup + page)) {
-        DEBUG_ECHO_START();
-        DEBUG_ECHOLNPGM("EEPROM Page ", page, " not clean on group ", grp);
+        DEBUG_ECHO_MSG("EEPROM Page ", page, " not clean on group ", grp);
         DEBUG_FLUSH();
         ee_PageErase(grp * PagesPerGroup + page);
       }
@@ -948,15 +937,13 @@ static void ee_Init() {
     }
   }
 
-  DEBUG_ECHO_START();
-  DEBUG_ECHOLNPGM("EEPROM Active page: ", curPage);
+  DEBUG_ECHO_MSG("EEPROM Active page: ", curPage);
   DEBUG_FLUSH();
 
   // Make sure the pages following the first clean one are also clean
   for (int page = curPage + 1; page < PagesPerGroup; page++) {
     if (!ee_IsPageClean(curGroup * PagesPerGroup + page)) {
-      DEBUG_ECHO_START();
-      DEBUG_ECHOLNPGM("EEPROM Page ", page, " not clean on active group ", curGroup);
+      DEBUG_ECHO_MSG("EEPROM Page ", page, " not clean on active group ", curGroup);
       DEBUG_FLUSH();
       ee_Dump(curGroup * PagesPerGroup + page, getFlashStorage(curGroup * PagesPerGroup + page));
       ee_PageErase(curGroup * PagesPerGroup + page);

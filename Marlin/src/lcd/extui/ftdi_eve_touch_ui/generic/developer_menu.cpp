@@ -44,7 +44,7 @@ void DeveloperMenu::onRedraw(draw_mode_t what) {
       constexpr bool has_flash = false;
     #endif
 
-    #if ENABLED(SDSUPPORT)
+    #if HAS_MEDIA
       constexpr bool has_media = true;
     #else
       constexpr bool has_media = false;
@@ -52,8 +52,8 @@ void DeveloperMenu::onRedraw(draw_mode_t what) {
 
     cmd.cmd(COLOR_RGB(bg_text_enabled));
     #if ENABLED(TOUCH_UI_PORTRAIT)
-      #define GRID_ROWS 10
       #define GRID_COLS 1
+      #define GRID_ROWS 10
       cmd.font(font_large)         .text  ( BTN_POS(1,1), BTN_SIZE(1,1), F("Developer Menu"))
          .colors(normal_btn)
          .tag(2).font(font_medium) .button(BTN_POS(1,2), BTN_SIZE(1,1), F("Show All Widgets"))
@@ -68,8 +68,8 @@ void DeveloperMenu::onRedraw(draw_mode_t what) {
          .tag(1).colors(action_btn)
                                    .button(BTN_POS(1,10), BTN_SIZE(1,1), F("Back"));
     #else
-      #define GRID_ROWS 6
       #define GRID_COLS 2
+      #define GRID_ROWS 6
       cmd.font(font_medium)        .text  ( BTN_POS(1,1), BTN_SIZE(2,1), F("Developer Menu"))
          .colors(normal_btn)
          .tag(2).font(font_small)  .button(BTN_POS(1,2), BTN_SIZE(1,1), F("Show All Widgets"))
@@ -98,7 +98,7 @@ bool DeveloperMenu::onTouchEnd(uint8_t tag) {
       break;
     case 4: GOTO_SCREEN(TouchRegistersScreen);          break;
     case 5: sound.play(js_bach_joy, PLAY_ASYNCHRONOUS); break;
-    #if ENABLED(SDSUPPORT)
+    #if HAS_MEDIA
     case 6:
         if (!MediaPlayerScreen::playCardMedia())
           AlertDialogBox::showError(F("Cannot open STARTUP.AVI"));

@@ -48,6 +48,7 @@ void GcodeSuite::M591() {
     #endif
     const bool seenR = parser.seen_test('R'), seenS = parser.seen('S');
     if (seenR || seenS) runout.reset();
+<<<<<<< HEAD:Marlin/src/gcode/feature/runout/M591.cpp
     const uint8_t tool = TERN0(MULTI_FILAMENT_SENSOR, parser.ushortval('E', active_extruder));
     if (seenS) runout.enabled[tool] = parser.value_bool();
     if (parser.seen('D') || parser.seen('L')) runout.set_runout_distance(parser.value_linear_units(), tool);
@@ -61,6 +62,12 @@ void GcodeSuite::M591() {
         default: break;
       }
     }
+=======
+    if (seenS) runout.enabled = parser.value_bool();
+    #if HAS_FILAMENT_RUNOUT_DISTANCE
+      if (parser.seenval('D')) runout.set_runout_distance(parser.value_linear_units());
+    #endif
+>>>>>>> bugfix-2.1.x:Marlin/src/gcode/feature/runout/M412.cpp
   }
   else {
     SERIAL_ECHO_START();

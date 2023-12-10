@@ -22,7 +22,6 @@
 
 #include "../gcode.h"
 #include "../../module/motion.h"
-#include "../../module/stepper.h"
 
 #if ENABLED(I2C_POSITION_ENCODERS)
   #include "../../feature/encoder_i2c.h"
@@ -64,17 +63,14 @@ void GcodeSuite::G92() {
 
     #if ENABLED(CNC_COORDINATE_SYSTEMS) && !IS_SCARA
       case 1:                                                         // G92.1 - Zero the Workspace Offset
-        LOOP_NUM_AXES(i) if (position_shift[i]) {
-          position_shift[i] = 0;
-          update_workspace_offset((AxisEnum)i);
-        }
+        workspace_offset.reset();
         break;
     #endif
 
     #if ENABLED(POWER_LOSS_RECOVERY)
       case 9:                                                         // G92.9 - Set Current Position directly (like Marlin 1.0)
         LOOP_LOGICAL_AXES(i) {
-          if (parser.seenval(axis_codes[i])) {
+          if (parser.seenval(AXIS_CHAR(i))) {
             if (TERN1(HAS_EXTRUDERS, i != E_AXIS))
               sync_XYZE = true;
             else {
@@ -88,29 +84,28 @@ void GcodeSuite::G92() {
 
     case 0:
       LOOP_LOGICAL_AXES(i) {
-        if (parser.seenval(axis_codes[i])) {
-          const float l = parser.value_axis_units((AxisEnum)i),       // Given axis coordinate value, converted to millimeters
+        if (parser.seenval(AXIS_CHAR(i))) {
+          const float l = parser.value_axis_units((AxisEnum)i),   // Given axis coordinate value, converted to millimeters
                       v = TERN0(HAS_EXTRUDERS, i == E_AXIS) ? l : LOGICAL_TO_NATIVE(l, i),  // Axis position in NATIVE space (applying the existing offset)
-                      d = v - current_position[i];                    // How much is the current axis position altered by?
+                      d = v - current_position[i];                // How much is the current axis position altered by?
           if (!NEAR_ZERO(d)) {
-            #if HAS_POSITION_SHIFT && !IS_SCARA                       // When using workspaces...
+            #if HAS_WORKSPACE_OFFSET && NONE(IS_SCARA, POLARGRAPH)  // When using workspaces...
               if (TERN1(HAS_EXTRUDERS, i != E_AXIS)) {
-                position_shift[i] += d;                               // ...most axes offset the workspace...
-                update_workspace_offset((AxisEnum)i);
+                workspace_offset[i] += d;                         // ...most axes offset the workspace...
               }
               else {
                 #if HAS_EXTRUDERS
                   sync_E = true;
-                  current_position.e = v;                             // ...but E is set directly
+                  current_position.e = v;                         // ...but E is set directly
                 #endif
               }
-            #else                                                     // Without workspaces...
+            #else                                                 // Without workspaces...
               if (TERN1(HAS_EXTRUDERS, i != E_AXIS))
                 sync_XYZE = true;
               else {
                 TERN_(HAS_EXTRUDERS, sync_E = true);
               }
-              current_position[i] = v;                                // ...set Current Position directly (like Marlin 1.0)
+              current_position[i] = v;                            // ...set Current Position directly (like Marlin 1.0)
             #endif
           }
         }
@@ -121,7 +116,7 @@ void GcodeSuite::G92() {
   #if ENABLED(CNC_COORDINATE_SYSTEMS)
     // Apply Workspace Offset to the active coordinate system
     if (WITHIN(active_coordinate_system, 0, MAX_COORDINATE_SYSTEMS - 1))
-      coordinate_system[active_coordinate_system] = position_shift;
+      coordinate_system[active_coordinate_system] = workspace_offset;
   #endif
 
   if (sync_XYZE) sync_plan_position();

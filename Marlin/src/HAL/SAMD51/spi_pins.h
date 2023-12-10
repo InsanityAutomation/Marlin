@@ -1,8 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * SAMD51 HAL developed by Giuliano Zaro (AKA GMagician)
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +21,13 @@
  */
 #pragma once
 
+/**
+ * SAMD51 HAL developed by Giuliano Zaro (AKA GMagician)
+ */
+
 #ifdef ADAFRUIT_GRAND_CENTRAL_M4
 
- /*
+ /**
   * AGCM4 Default SPI Pins
   *
   *         SS    SCK   MISO   MOSI

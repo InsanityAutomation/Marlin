@@ -22,7 +22,7 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if HAS_SPI_FLASH
+#if ENABLED(SPI_FLASH)
 
 #include "W25Qxx.h"
 
@@ -48,10 +48,12 @@ void W25QXXFlash::init(uint8_t spiRate) {
    * STM32F1 has 3 SPI ports, SPI1 in APB2, SPI2/SPI3 in APB1
    * so the minimum prescale of SPI1 is DIV4, SPI2/SPI3 is DIV2
    */
-  #if SPI_DEVICE == 1
-    #define SPI_CLOCK_MAX SPI_CLOCK_DIV4
-  #else
-    #define SPI_CLOCK_MAX SPI_CLOCK_DIV2
+  #ifndef SPI_CLOCK_MAX
+    #if SPI_DEVICE == 1
+      #define SPI_CLOCK_MAX SPI_CLOCK_DIV4
+    #else
+      #define SPI_CLOCK_MAX SPI_CLOCK_DIV2
+    #endif
   #endif
   uint8_t clock;
   switch (spiRate) {
@@ -380,4 +382,4 @@ void W25QXXFlash::SPI_FLASH_BufferRead(uint8_t *pBuffer, uint32_t ReadAddr, uint
   SPI_FLASH_CS_H();
 }
 
-#endif // HAS_SPI_FLASH
+#endif // SPI_FLASH

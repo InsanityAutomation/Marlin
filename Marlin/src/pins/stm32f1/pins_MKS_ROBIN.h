@@ -29,7 +29,7 @@
 #if NOT_TARGET(STM32F1, STM32F1xx)
   #error "Oops! Select an STM32F1 board in 'Tools > Board.'"
 #elif HOTENDS > 2 || E_STEPPERS > 2
-  #error "MKS Robin supports up to 2 hotends / E-steppers. Comment out this line to continue."
+  #error "MKS Robin supports up to 2 hotends / E steppers."
 #endif
 
 #define BOARD_INFO_NAME "MKS Robin"
@@ -53,7 +53,7 @@
 #endif
 
 #if ENABLED(FLASH_EEPROM_EMULATION)
-  #define EEPROM_PAGE_SIZE     (0x800U) // 2KB
+  #define EEPROM_PAGE_SIZE     (0x800U) // 2K
   #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
   #define MARLIN_EEPROM_SIZE (EEPROM_PAGE_SIZE)
 #endif
@@ -116,7 +116,7 @@
 //
 // Fan
 //
-#define FAN_PIN                             PA7   // FAN
+#define FAN0_PIN                            PA7   // FAN
 
 //
 // Thermocouples
@@ -176,15 +176,13 @@
   #define LCD_USE_DMA_FSMC                        // Use DMA transfers to send data to the TFT
   #define FSMC_CS_PIN                       PG12  // NE4
   #define FSMC_RS_PIN                       PF0   // A0
-  #define FSMC_DMA_DEV                      DMA2
-  #define FSMC_DMA_CHANNEL               DMA_CH5
 
   #define TFT_CS_PIN                 FSMC_CS_PIN
   #define TFT_RS_PIN                 FSMC_RS_PIN
 
   #define TOUCH_BUTTONS_HW_SPI
   #define TOUCH_BUTTONS_HW_SPI_DEVICE          2
-  #define TFT_BUFFER_SIZE                  14400
+  #define TFT_BUFFER_WORDS                 14400
 #endif
 
 #if NEED_TOUCH_PINS
@@ -197,12 +195,12 @@
 
 // SPI2 is shared by LCD touch driver and flash
 // SPI1(PA7) & SPI3(PB5) not available
-#define SPI_DEVICE                             2
+#define SPI_DEVICE                             2  // Maple
 
-#define SDIO_SUPPORT
+#define ONBOARD_SDIO
 #define SDIO_CLOCK                       4500000
 #define SDIO_READ_RETRIES                     16
-#if ENABLED(SDIO_SUPPORT)
+#if ENABLED(ONBOARD_SDIO)
   #define SD_SCK_PIN                        PB13  // SPI2
   #define SD_MISO_PIN                       PB14  // SPI2
   #define SD_MOSI_PIN                       PB15  // SPI2
@@ -272,11 +270,11 @@
 //
 // W25Q64 64Mb (8MB) SPI flash
 //
-#define HAS_SPI_FLASH                          1
-#if HAS_SPI_FLASH
+#define SPI_FLASH
+#if ENABLED(SPI_FLASH)
   #define SPI_FLASH_SIZE                0x800000  // 8MB
   #define SPI_FLASH_CS_PIN                  PG9
-  #define SPI_FLASH_MOSI_PIN                PB15
-  #define SPI_FLASH_MISO_PIN                PB14
   #define SPI_FLASH_SCK_PIN                 PB13
+  #define SPI_FLASH_MISO_PIN                PB14
+  #define SPI_FLASH_MOSI_PIN                PB15
 #endif

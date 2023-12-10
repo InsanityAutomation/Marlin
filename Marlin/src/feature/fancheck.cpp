@@ -34,7 +34,7 @@
 #if HAS_AUTO_FAN && EXTRUDER_AUTO_FAN_SPEED != 255 && DISABLED(FOURWIRES_FANS)
   bool FanCheck::measuring = false;
 #endif
-bool FanCheck::tacho_state[TACHO_COUNT];
+Flags<TACHO_COUNT> FanCheck::tacho_state;
 uint16_t FanCheck::edge_counter[TACHO_COUNT];
 uint8_t FanCheck::rps[TACHO_COUNT];
 FanCheck::TachoError FanCheck::error = FanCheck::TachoError::NONE;
@@ -72,7 +72,7 @@ void FanCheck::update_tachometers() {
   bool status;
 
   #define _TACHO_CASE(N) case N: status = READ(E##N##_FAN_TACHO_PIN); break;
-  LOOP_L_N(f, TACHO_COUNT) {
+  for (uint8_t f = 0; f < TACHO_COUNT; ++f) {
     switch (f) {
       #if HAS_E0_FAN_TACHO
         _TACHO_CASE(0)
@@ -103,7 +103,7 @@ void FanCheck::update_tachometers() {
 
     if (status != tacho_state[f]) {
       if (measuring) ++edge_counter[f];
-      tacho_state[f] = status;
+      tacho_state.set(f, status);
     }
   }
 }
@@ -113,7 +113,7 @@ void FanCheck::compute_speed(uint16_t elapsedTime) {
   static uint8_t fan_reported_errors_msk = 0;
 
   uint8_t fan_error_msk = 0;
-  LOOP_L_N(f, TACHO_COUNT) {
+  for (uint8_t f = 0; f < TACHO_COUNT; ++f) {
     switch (f) {
       TERN_(HAS_E0_FAN_TACHO, case 0:)
       TERN_(HAS_E1_FAN_TACHO, case 1:)
@@ -150,7 +150,7 @@ void FanCheck::compute_speed(uint16_t elapsedTime) {
 
   if (fan_error_msk & ~fan_reported_errors_msk) {
     // Handle new faults only
-    LOOP_L_N(f, TACHO_COUNT) if (TEST(fan_error_msk, f)) report_speed_error(f);
+    for (uint8_t f = 0; f < TACHO_COUNT; ++f) if (TEST(fan_error_msk, f)) report_speed_error(f);
   }
   fan_reported_errors_msk = fan_error_msk;
 }
@@ -176,8 +176,8 @@ void FanCheck::report_speed_error(uint8_t fan) {
 }
 
 void FanCheck::print_fan_states() {
-  LOOP_L_N(s, 2) {
-    LOOP_L_N(f, TACHO_COUNT) {
+  for (uint8_t s = 0; s < 2; ++s) {
+    for (uint8_t f = 0; f < TACHO_COUNT; ++f) {
       switch (f) {
         TERN_(HAS_E0_FAN_TACHO, case 0:)
         TERN_(HAS_E1_FAN_TACHO, case 1:)

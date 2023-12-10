@@ -27,7 +27,7 @@
 #define BOARD_WEBSITE_URL "fysetc.com"
 
 #define BOARD_NO_NATIVE_USB
-
+#define RESET_STEPPERS_ON_MEDIA_INSERT
 #define DISABLE_JTAG
 
 #define pins_v2_20190128                          // new pins define
@@ -38,11 +38,11 @@
 //
 // Flash EEPROM Emulation
 //
-#if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
+#if ANY(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #define FLASH_EEPROM_EMULATION
-  #define EEPROM_PAGE_SIZE     (0x800U)           // 2KB
+  #define EEPROM_PAGE_SIZE     (0x800U)           // 2K
   #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
-  #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2KB
+  #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2K
 #endif
 
 //
@@ -118,8 +118,11 @@
   #endif
 
   // Reduce baud rate to improve software serial reliability
-  #define TMC_BAUD_RATE                    19200
-#endif
+  #ifndef TMC_BAUD_RATE
+    #define TMC_BAUD_RATE                  19200
+  #endif
+
+#endif // HAS_TMC_UART
 
 //
 // Stepper current PWM
@@ -134,8 +137,8 @@
 //
 #define HEATER_0_PIN                        PC7
 #define HEATER_BED_PIN                      PC6
-#ifndef FAN_PIN
-  #define FAN_PIN                           PC8
+#ifndef FAN0_PIN
+  #define FAN0_PIN                          PC8
 #endif
 
 //

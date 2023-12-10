@@ -22,8 +22,8 @@
 #pragma once
 
 /**
- * parser.h - Parser for a GCode line, providing a parameter interface.
- *           Codes like M149 control the way the GCode parser behaves,
+ * parser.h - Parser for a G-Code line, providing a parameter interface.
+ *           Codes like M149 control the way the G-Code parser behaves,
  *           so settings for these codes are located in this class.
  */
 
@@ -43,9 +43,9 @@
 #endif
 
 /**
- * GCode parser
+ * G-Code parser
  *
- *  - Parse a single gcode line for its letter, code, subcode, and parameters
+ *  - Parse a single G-code line for its letter, code, subcode, and parameters
  *  - FASTER_GCODE_PARSER:
  *    - Flags existing params (1 bit each)
  *    - Stores value offsets (1 byte each)
@@ -68,7 +68,7 @@ private:
 
 public:
 
-  // Global states for GCode-level units features
+  // Global states for G-Code-level units features
 
   static bool volumetric_enabled;
 
@@ -225,7 +225,7 @@ public:
   #endif // !FASTER_GCODE_PARSER
 
   // Seen any axis parameter
-  static bool seen_axis() { return seen(LOGICAL_AXES_STRING); }
+  static bool seen_axis() { return seen(STR_AXES_LOGICAL); }
 
   #if ENABLED(GCODE_QUOTED_STRINGS)
     static char* unescape_string(char* &src);
@@ -233,7 +233,7 @@ public:
     FORCE_INLINE static char* unescape_string(char* &src) { return src; }
   #endif
 
-  // Populate all fields by parsing a single line of GCode
+  // Populate all fields by parsing a single line of G-Code
   // This uses 54 bytes of SRAM to speed up seen/value
   static void parse(char * p);
 
@@ -256,22 +256,20 @@ public:
 
   // Float removes 'E' to prevent scientific notation interpretation
   static float value_float() {
-    if (value_ptr) {
-      char *e = value_ptr;
-      for (;;) {
-        const char c = *e;
-        if (c == '\0' || c == ' ') break;
-        if (c == 'E' || c == 'e') {
-          *e = '\0';
-          const float ret = strtof(value_ptr, nullptr);
-          *e = c;
-          return ret;
-        }
-        ++e;
+    if (!value_ptr) return 0;
+    char *e = value_ptr;
+    for (;;) {
+      const char c = *e;
+      if (c == '\0' || c == ' ') break;
+      if (c == 'E' || c == 'e' || c == 'X' || c == 'x') {
+        *e = '\0';
+        const float ret = strtof(value_ptr, nullptr);
+        *e = c;
+        return ret;
       }
-      return strtof(value_ptr, nullptr);
+      ++e;
     }
-    return 0;
+    return strtof(value_ptr, nullptr);
   }
 
   // Code value as a long or ulong

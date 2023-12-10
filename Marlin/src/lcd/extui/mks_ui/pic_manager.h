@@ -122,7 +122,7 @@
 #define VAR_INF_ADDR                    0x000000
 #define FLASH_INF_VALID_FLAG            0x20201118
 
-// Store some gcode commands, such as auto leveling commands
+// Store some G-code commands, such as auto-leveling commands
 #define GCODE_COMMAND_ADDR              VAR_INF_ADDR + 3 * 1024
 #define AUTO_LEVELING_COMMAND_ADDR      GCODE_COMMAND_ADDR
 #define OTHERS_COMMAND_ADDR_1           AUTO_LEVELING_COMMAND_ADDR + 100
@@ -154,8 +154,8 @@ typedef struct pic_msg PIC_MSG;
 #define PIC_SIZE_xM   6
 #define FONT_SIZE_xM  2
 
-void Pic_Read(uint8_t *Pname, uint8_t *P_Rbuff);
-void Pic_Logo_Read(uint8_t *LogoName, uint8_t *Logo_Rbuff, uint32_t LogoReadsize);
+void picRead(uint8_t *Pname, uint8_t *P_Rbuff);
+void picLogoRead(uint8_t *LogoName, uint8_t *Logo_Rbuff, uint32_t LogoReadsize);
 void lv_pic_test(uint8_t *P_Rbuff, uint32_t addr, uint32_t size);
 uint32_t lv_get_pic_addr(uint8_t *Pname);
 void get_spi_flash_data(const char *rec_buf, int offset, int size);

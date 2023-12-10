@@ -32,19 +32,18 @@ using namespace Theme;
 #define GRID_ROWS 8
 
 template<typename T>
-void DialogBoxBaseClass::drawMessage(T message, int16_t font) {
+void DialogBoxBaseClass::drawMessage(T message, const int16_t font) {
   CommandProcessor cmd;
   cmd.cmd(CMD_DLSTART)
      .cmd(CLEAR_COLOR_RGB(bg_color))
      .cmd(CLEAR(true,true,true))
      .cmd(COLOR_RGB(bg_text_enabled))
      .tag(0);
-  draw_text_box(cmd, BTN_POS(1,1), BTN_SIZE(2,6), message, OPT_CENTER, font ? font : font_large);
+  draw_text_box(cmd, BTN_POS(1,1), BTN_SIZE(2,6), message, OPT_CENTER, font ?: font_large);
   cmd.colors(normal_btn);
 }
 
-template void DialogBoxBaseClass::drawMessage(const char *, int16_t font);
-template void DialogBoxBaseClass::drawMessage(FSTR_P, int16_t font);
+template void DialogBoxBaseClass::drawMessage(PGM_P const, const int16_t);
 
 void DialogBoxBaseClass::drawYesNoButtons(uint8_t default_btn) {
   CommandProcessor cmd;

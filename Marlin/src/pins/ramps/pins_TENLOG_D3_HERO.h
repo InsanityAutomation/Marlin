@@ -22,14 +22,15 @@
 #pragma once
 
 /**
- * Tenlog pin assignments
+ * Tenlog D3 Hero pin assignments
+ * ATmega2560
  */
 
 #define REQUIRE_MEGA2560
 #include "env_validate.h"
 
 #if HOTENDS > 2 || E_STEPPERS > 2
-  #error "Tenlog supports up to 2 hotends / E-steppers. Comment out this line to continue."
+  #error "Tenlog supports up to 2 hotends / E steppers."
 #endif
 
 #define BOARD_INFO_NAME      "Tenlog D3 Hero"
@@ -124,7 +125,7 @@
 #define TEMP_BED_PIN                          14  // Analog Input
 
 // SPI for MAX Thermocouple
-#if DISABLED(SDSUPPORT)
+#if !HAS_MEDIA
   #define TEMP_0_CS_PIN                       -1  // Don't use 53 if using Display/SD card
 #else
   #define TEMP_0_CS_PIN                       -1  // Don't use 49 (SD_DETECT_PIN)
@@ -137,7 +138,7 @@
 #define HEATER_1_PIN                          11
 #define HEATER_BED_PIN                         8
 
-#define FAN_PIN                                9
+#define FAN0_PIN                               9
 #define FAN1_PIN                               5  // Normally this would be a servo pin
 
 // XXX Runout support unknown?
@@ -148,6 +149,7 @@
 //
 // Misc. Functions
 //
+//#define PS_ON_PIN                           40  // The M80/M81 PSU pin for boards v2.1-2.3
 //#define CASE_LIGHT_PIN                       5
 #define SDSS                                  53
 //#ifndef LED_PIN
@@ -167,7 +169,7 @@
 //#if IS_RRD_SC
 
 #define LCD_PINS_RS                           -1
-#define LCD_PINS_ENABLE                       -1
+#define LCD_PINS_EN                           -1
 #define LCD_PINS_D4                           -1
 #define LCD_PINS_D5                           -1
 #define LCD_PINS_D6                           -1

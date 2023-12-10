@@ -26,14 +26,14 @@
  */
 
 #if HAS_MULTI_HOTEND || E_STEPPERS > 1
-  #error "Creality v4.5.2 only supports one hotend / E-stepper. Comment out this line to continue."
+  #error "Creality v4.5.2 only supports 1 hotend / E stepper."
 #endif
 
 #define BOARD_INFO_NAME "Creality v4.5.2"
 
 #define HEATER_0_PIN                        PA1   // HEATER1
 #define HEATER_BED_PIN                      PA2   // HOT BED
-#define FAN_PIN                             PA0   // FAN
+#define FAN0_PIN                            PA0   // FAN
 
 #if ENABLED(PROBE_ACTIVATION_SWITCH)
   #ifndef PROBE_ACTIVATION_SWITCH_PIN

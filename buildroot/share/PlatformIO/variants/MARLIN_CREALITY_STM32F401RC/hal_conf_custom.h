@@ -5,8 +5,13 @@
   ******************************************************************************
   * @attention
   *
+<<<<<<< HEAD
   * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
   * All rights reserved.</center></h2>
+=======
+  * Copyright (c) 2017 STMicroelectronics.
+  * All rights reserved.
+>>>>>>> bugfix-2.1.x
   *
   * This software component is licensed by ST under BSD 3-Clause license,
   * the "License"; You may not use this file except in compliance with the

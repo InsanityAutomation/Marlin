@@ -44,8 +44,13 @@
   #endif
 
   #if ENABLED(SWITCHING_NOZZLE)
-    constexpr uint16_t sasn[] = SWITCHING_NOZZLE_SERVO_ANGLES;
-    static_assert(COUNT(sasn) == 2, "SWITCHING_NOZZLE_SERVO_ANGLES needs 2 angles.");
+    #if SWITCHING_NOZZLE_TWO_SERVOS
+      constexpr uint16_t sasn[][2] = SWITCHING_NOZZLE_SERVO_ANGLES;
+      static_assert(COUNT(sasn) == 2, "SWITCHING_NOZZLE_SERVO_ANGLES (with SWITCHING_NOZZLE_E1_SERVO_NR) needs 2 sets of angles: { { lower, raise }, { lower, raise } }.");
+    #else
+      constexpr uint16_t sasn[] = SWITCHING_NOZZLE_SERVO_ANGLES;
+      static_assert(COUNT(sasn) == 2, "SWITCHING_NOZZLE_SERVO_ANGLES needs two angles: { E0, E1 }.");
+    #endif
   #else
     constexpr uint16_t sasn[2] = { 0 };
   #endif
@@ -75,12 +80,15 @@
     #define Z_PROBE_SERVO_NR -1
   #endif
 
-  #define ASRC(N,I) (                                  \
-      N == SWITCHING_EXTRUDER_SERVO_NR     ? sase[I]   \
-    : N == SWITCHING_EXTRUDER_E23_SERVO_NR ? sase[I+2] \
-    : N == SWITCHING_NOZZLE_SERVO_NR       ? sasn[I]   \
-    : N == Z_PROBE_SERVO_NR                ? sazp[I]   \
-    : 0                                                )
+  #define SASN(J,I) TERN(SWITCHING_NOZZLE_TWO_SERVOS, sasn[J][I], sasn[I])
+
+  #define ASRC(N,I) ( \
+                                         N == SWITCHING_EXTRUDER_SERVO_NR     ? sase[I]     \
+                                       : N == SWITCHING_EXTRUDER_E23_SERVO_NR ? sase[I+2]   \
+                                       : N == SWITCHING_NOZZLE_SERVO_NR       ? SASN(0,I)   \
+    TERN_(SWITCHING_NOZZLE_TWO_SERVOS, : N == SWITCHING_NOZZLE_E1_SERVO_NR    ? SASN(1,I))  \
+                                       : N == Z_PROBE_SERVO_NR                ? sazp[I]     \
+                                       : 0                                                  )
 
   #if ENABLED(EDITABLE_SERVO_ANGLES)
     extern uint16_t servo_angles[NUM_SERVOS][2];
@@ -97,20 +105,20 @@
         , { ASRC(2,0), ASRC(2,1) }
         #if NUM_SERVOS > 3
           , { ASRC(3,0), ASRC(3,1) }
+          #if NUM_SERVOS > 4
+            , { ASRC(4,0), ASRC(4,1) }
+          #endif
         #endif
       #endif
     #endif
   };
 
   #if HAS_Z_SERVO_PROBE
-    #define DEPLOY_Z_SERVO() MOVE_SERVO(Z_PROBE_SERVO_NR, servo_angles[Z_PROBE_SERVO_NR][0])
-    #define STOW_Z_SERVO() MOVE_SERVO(Z_PROBE_SERVO_NR, servo_angles[Z_PROBE_SERVO_NR][1])
+    #define DEPLOY_Z_SERVO() servo[Z_PROBE_SERVO_NR].move(servo_angles[Z_PROBE_SERVO_NR][0])
+    #define STOW_Z_SERVO() servo[Z_PROBE_SERVO_NR].move(servo_angles[Z_PROBE_SERVO_NR][1])
   #endif
 
 #endif // HAS_SERVO_ANGLES
-
-#define MOVE_SERVO(I, P) servo[I].move(P)
-#define DETACH_SERVO(I) servo[I].detach()
 
 extern hal_servo_t servo[NUM_SERVOS];
 void servo_init();

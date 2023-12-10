@@ -35,7 +35,7 @@ public:
    */
   struct SerialState {
     /**
-     * GCode line number handling. Hosts may include line numbers when sending
+     * G-Code line number handling. Hosts may include line numbers when sending
      * commands to Marlin, and lines will be checked for sequentiality.
      * M110 N<int> sets the current line number.
      */
@@ -48,7 +48,7 @@ public:
   static SerialState serial_state[NUM_SERIAL]; //!< Serial states for each serial port
 
   /**
-   * GCode Command Queue
+   * G-Code Command Queue
    * A simple (circular) ring buffer of BUFSIZE command strings.
    *
    * Commands are copied into this buffer by the command injectors
@@ -79,11 +79,11 @@ public:
 
     void advance_pos(uint8_t &p, const int inc) { if (++p >= BUFSIZE) p = 0; length += inc; }
 
-    void commit_command(bool skip_ok
+    void commit_command(const bool skip_ok
       OPTARG(HAS_MULTI_SERIAL, serial_index_t serial_ind = serial_index_t())
     );
 
-    bool enqueue(const char *cmd, bool skip_ok = true
+    bool enqueue(const char *cmd, const bool skip_ok=true
       OPTARG(HAS_MULTI_SERIAL, serial_index_t serial_ind = serial_index_t())
     );
 
@@ -134,19 +134,20 @@ public:
    * Aborts the current SRAM queue so only use for one or two commands.
    */
   static void inject(const char * const gcode) {
-    strncpy(injected_commands, gcode, sizeof(injected_commands) - 1);
+    strlcpy(injected_commands, gcode, sizeof(injected_commands));
   }
 
   /**
    * Enqueue and return only when commands are actually enqueued
    */
   static void enqueue_one_now(const char * const cmd);
+  static void enqueue_one_now(FSTR_P const fcmd);
 
   /**
    * Attempt to enqueue a single G-code command
    * and return 'true' if successful.
    */
-  static bool enqueue_one(FSTR_P const fgcode);
+  static bool enqueue_one(FSTR_P const fcmd);
 
   /**
    * Enqueue with Serial Echo
@@ -200,6 +201,12 @@ public:
    */
   static void flush_and_request_resend(const serial_index_t serial_ind);
 
+  #if (defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32)) && defined(USBCON)
+    static void flush_rx();
+  #else
+    static void flush_rx() {}
+  #endif
+
   /**
    * (Re)Set the current line number for the last received command
    */
@@ -249,7 +256,7 @@ private:
 
   static void get_serial_commands();
 
-  #if ENABLED(SDSUPPORT)
+  #if HAS_MEDIA
     static void get_sdcard_commands();
   #endif
 

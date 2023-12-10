@@ -51,7 +51,7 @@ When done, the MMU sends
 
 - MMU => 'ok\n'
 
-We don't wait for a response here but immediately continue with the next gcode which should
+We don't wait for a response here but immediately continue with the next G-code which should
 be one or more extruder moves to feed the filament into the hotend.
 
 
@@ -91,4 +91,3 @@ Eject filament
 
 - MMU <= 'E*Filament index*\n'
 - MMU => 'ok\n'
-

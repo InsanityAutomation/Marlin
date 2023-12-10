@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
- * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@
 #include "../shared/HAL_SPI.h"
 
 #include "fastio.h"
-#include "watchdog.h"
 
 #include <stdint.h>
 #include <util/atomic.h>
@@ -81,7 +80,7 @@ extern USBSerialType USBSerial;
 #define MSERIAL(X) _MSERIAL(X)
 
 #if SERIAL_PORT == -1
-  #define MYSERIAL1 SerialUSB
+  #define MYSERIAL1 USBSerial
 #elif WITHIN(SERIAL_PORT, 0, 8)
   DECLARE_SERIAL(SERIAL_PORT);
   #define MYSERIAL1 MSERIAL(SERIAL_PORT)
@@ -91,13 +90,25 @@ extern USBSerialType USBSerial;
 
 #ifdef SERIAL_PORT_2
   #if SERIAL_PORT_2 == -1
-    #define MYSERIAL2 usbSerial
+    #define MYSERIAL2 USBSerial
   #elif SERIAL_PORT_2 == -2
     #define MYSERIAL2 ethernet.telnetClient
   #elif WITHIN(SERIAL_PORT_2, 0, 8)
+    DECLARE_SERIAL(SERIAL_PORT_2);
     #define MYSERIAL2 MSERIAL(SERIAL_PORT_2)
   #else
     #error "SERIAL_PORT_2 must be from 0 to 8, or -1 for Native USB, or -2 for Ethernet."
+  #endif
+#endif
+
+#ifdef SERIAL_PORT_3
+  #if SERIAL_PORT_3 == -1
+    #define MYSERIAL3 USBSerial
+  #elif WITHIN(SERIAL_PORT_3, 0, 8)
+    DECLARE_SERIAL(SERIAL_PORT_3);
+    #define MYSERIAL3 MSERIAL(SERIAL_PORT_3)
+  #else
+    #error "SERIAL_PORT_3 must be from 0 to 8, or -1 for Native USB."
   #endif
 #endif
 
@@ -125,7 +136,7 @@ typedef int8_t pin_t;
   #define analogInputToDigitalPin(p) ((p < 12U) ? (p) + 54U : -1)
 #endif
 
-#define HAL_ADC_VREF         3.3
+#define HAL_ADC_VREF_MV   3300
 #define HAL_ADC_RESOLUTION  10
 #define HAL_ADC_FILTERED      // turn off ADC oversampling
 
@@ -140,7 +151,7 @@ typedef int8_t pin_t;
 bool is_output(pin_t pin);
 
 // ------------------------
-// Class Utilities
+// Free Memory Accessor
 // ------------------------
 
 #pragma GCC diagnostic push
@@ -161,6 +172,10 @@ public:
 
   // Earliest possible init, before setup()
   MarlinHAL() {}
+
+  // Watchdog
+  static void watchdog_init()    IF_DISABLED(USE_WATCHDOG, {});
+  static void watchdog_refresh() IF_DISABLED(USE_WATCHDOG, {});
 
   static void init() {}        // Called early in setup()
   static void init_board() {}  // Called less early in setup()
@@ -195,7 +210,7 @@ public:
   // Called by Temperature::init for each sensor at startup
   static void adc_enable(const pin_t pin) {}
 
-  // Begin ADC sampling on the given channel
+  // Begin ADC sampling on the given pin. Called from Temperature::isr!
   static void adc_start(const pin_t pin);
 
   // Is the ADC ready for reading?

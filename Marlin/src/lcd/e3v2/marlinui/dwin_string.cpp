@@ -25,85 +25,87 @@
 #if IS_DWIN_MARLINUI
 
 #include "dwin_string.h"
-//#include "../../fontutils.h"
+//#include "../../utf8.h"
 
-uint8_t DWIN_String::data[];
+char DWIN_String::data[];
 uint16_t DWIN_String::span;
-uint8_t DWIN_String::len;
+uint8_t DWIN_String::length;
 
 void DWIN_String::set() {
   //*data = 0x00;
   memset(data, 0x00, sizeof(data));
   span = 0;
-  len = 0;
+  length = 0;
 }
 
-uint8_t read_byte(uint8_t *byte) { return *byte; }
+uint8_t read_byte(const uint8_t *byte) { return *byte; }
 
 /**
  * Add a string, applying substitutions for the following characters:
  *
- *   $ displays the clipped C-string given by the itemString argument
- *   = displays  '0'....'10' for indexes 0 - 10
+ *   $ displays the clipped string given by fstr or cstr
+ *   { displays  '0'....'10' for indexes 0 - 10
  *   ~ displays  '1'....'11' for indexes 0 - 10
  *   * displays 'E1'...'E11' for indexes 0 - 10 (By default. Uses LCD_FIRST_TOOL)
  *   @ displays an axis name such as XYZUVW, or E for an extruder
  */
-void DWIN_String::add(uint8_t *string, const int8_t index, uint8_t *itemString/*=nullptr*/) {
-  wchar_t wchar;
+void DWIN_String::add(const char *tpl, const int8_t index, const char *cstr/*=nullptr*/, FSTR_P const fstr/*=nullptr*/) {
+  lchar_t wc;
 
-  while (*string) {
-    string = get_utf8_value_cb(string, read_byte, &wchar);
-    if (wchar > 255) wchar |= 0x0080;
-    uint8_t ch = uint8_t(wchar & 0x00FF);
+  while (*tpl) {
+    tpl = get_utf8_value_cb(tpl, read_byte, wc);
+    if (wc > 255) wc |= 0x0080;
+    const uint8_t ch = uint8_t(wc & 0x00FF);
 
-    if (ch == '=' || ch == '~' || ch == '*') {
+    if (ch == '{' || ch == '~' || ch == '*') {
       if (index >= 0) {
-        int8_t inum = index + ((ch == '=') ? 0 : LCD_FIRST_TOOL);
+        int8_t inum = index + ((ch == '{') ? 0 : LCD_FIRST_TOOL);
         if (ch == '*') add_character('E');
         if (inum >= 10) { add_character('0' + (inum / 10)); inum %= 10; }
         add_character('0' + inum);
       }
       else
-        add(index == -2 ? GET_TEXT(MSG_CHAMBER) : GET_TEXT(MSG_BED));
+        add(index == -2 ? GET_TEXT_F(MSG_CHAMBER) : GET_TEXT_F(MSG_BED));
     }
-    else if (ch == '$' && itemString)
-      add(itemString);
+    else if (ch == '$' && fstr)
+      add(fstr);
+    else if (ch == '$' && cstr)
+      add(cstr);
     else if (ch == '@')
-      add_character(axis_codes[index]);
+      add_character(AXIS_CHAR(index));
     else
       add_character(ch);
   }
   eol();
 }
 
-void DWIN_String::add(uint8_t *string, uint8_t max_len) {
-  wchar_t wchar;
-  while (*string && max_len) {
-    string = get_utf8_value_cb(string, read_byte, &wchar);
+void DWIN_String::add(const char *cstr, uint8_t max_len/*=MAX_STRING_LENGTH*/) {
+  lchar_t wc;
+  while (*cstr && max_len) {
+    cstr = get_utf8_value_cb(cstr, read_byte, wc);
     /*
-    if (wchar > 255) wchar |= 0x0080;
-    uint8_t ch = uint8_t(wchar & 0x00FF);
+    if (wc > 255) wc |= 0x0080;
+    const uint8_t ch = uint8_t(wc & 0x00FF);
     add_character(ch);
     */
-    add(wchar);
+    add(wc);
     max_len--;
   }
   eol();
 }
 
-void DWIN_String::add(wchar_t character) {
+void DWIN_String::add(const lchar_t &wc) {
   int ret;
   size_t idx = 0;
   dwin_charmap_t pinval;
   dwin_charmap_t *copy_address = nullptr;
-  pinval.uchar = character;
+  pinval.uchar = wc;
   pinval.idx = -1;
 
   // For 8-bit ASCII just print the single character
   char str[] = { '?', 0 };
-  if (character < 255) {
-    str[0] = (char)character;
+  if (wc < 255) {
+    str[0] = (char)wc;
   }
   else {
     copy_address = nullptr;
@@ -127,19 +129,19 @@ void DWIN_String::add(wchar_t character) {
   if (str[1]) add_character(str[1]);
 }
 
-void DWIN_String::add_character(const uint8_t character) {
-  if (len < MAX_STRING_LENGTH) {
-    data[len] = character;
-    len++;
-    //span += glyph(character)->DWidth;
+void DWIN_String::add_character(const char character) {
+  if (length < MAX_STRING_LENGTH) {
+    data[length] = character;
+    length++;
+    //span += glyph(character)->dWidth;
   }
 }
 
-void DWIN_String::rtrim(const uint8_t character) {
-  while (len) {
-    if (data[len - 1] == 0x20 || data[len - 1] == character) {
-      len--;
-      //span -= glyph(data[length])->DWidth;
+void DWIN_String::rtrim(const char character) {
+  while (length) {
+    if (data[length - 1] == 0x20 || data[length - 1] == character) {
+      length--;
+      //span -= glyph(data[length])->dWidth;
       eol();
     }
     else
@@ -147,18 +149,18 @@ void DWIN_String::rtrim(const uint8_t character) {
   }
 }
 
-void DWIN_String::ltrim(const uint8_t character) {
+void DWIN_String::ltrim(const char character) {
   uint16_t i, j;
-  for (i = 0; (i < len) && (data[i] == 0x20 || data[i] == character); i++) {
-    //span -= glyph(data[i])->DWidth;
+  for (i = 0; (i < length) && (data[i] == 0x20 || data[i] == character); i++) {
+    //span -= glyph(data[i])->dWidth;
   }
   if (i == 0) return;
-  for (j = 0; i < len; data[j++] = data[i++]);
-  len = j;
+  for (j = 0; i < length; data[j++] = data[i++]);
+  length = j;
   eol();
 }
 
-void DWIN_String::trim(const uint8_t character) {
+void DWIN_String::trim(const char character) {
   rtrim(character);
   ltrim(character);
 }

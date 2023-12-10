@@ -30,10 +30,8 @@
 
 #include "env_validate.h"
 
-#if EXTRUDERS > 1 || E_STEPPERS > 1
-  #error "MRR ESPA only supports one E Stepper. Comment out this line to continue."
-#elif HAS_MULTI_HOTEND
-  #error "MRR ESPA only supports one hotend / E-stepper. Comment out this line to continue."
+#if HAS_MULTI_HOTEND || E_STEPPERS > 1
+  #error "MRR ESPA only supports 1 hotend / E stepper."
 #endif
 
 #define BOARD_INFO_NAME       "MRR ESPA"

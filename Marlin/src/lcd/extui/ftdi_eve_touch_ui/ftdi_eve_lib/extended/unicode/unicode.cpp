@@ -21,7 +21,7 @@
 
 #include "../ftdi_extended.h"
 
-#if BOTH(FTDI_EXTENDED, TOUCH_UI_USE_UTF8)
+#if ALL(FTDI_EXTENDED, TOUCH_UI_USE_UTF8)
 
   using namespace FTDI;
 
@@ -66,15 +66,7 @@
    *          character (this is not the unicode codepoint)
    */
 
-  utf8_char_t FTDI::get_utf8_char_and_inc(char *&c) {
-    utf8_char_t val = *(uint8_t*)c++;
-    if ((val & 0xC0) == 0xC0)
-      while ((*c & 0xC0) == 0x80)
-        val = (val << 8) | *(uint8_t*)c++;
-    return val;
-  }
-
-  utf8_char_t FTDI::get_utf8_char_and_inc(char *&c) {
+  utf8_char_t FTDI::get_utf8_char_and_inc(const char *&c) {
     utf8_char_t val = *(uint8_t*)c++;
     if ((val & 0xC0) == 0xC0)
       while ((*c & 0xC0) == 0x80)
@@ -192,9 +184,13 @@
   }
 
   uint16_t FTDI::get_utf8_text_width(FSTR_P fstr, font_size_t fs) {
-    char str[strlen_P(FTOP(fstr)) + 1];
-    strcpy_P(str, FTOP(fstr));
-    return get_utf8_text_width(str, fs);
+    #ifdef __AVR__
+      char str[strlen_P(FTOP(fstr)) + 1];
+      strcpy_P(str, FTOP(fstr));
+      return get_utf8_text_width(str, fs);
+    #else
+      return get_utf8_text_width(FTOP(fstr), fs);
+    #endif
   }
 
    /**

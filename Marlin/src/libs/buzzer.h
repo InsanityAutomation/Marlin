@@ -23,11 +23,13 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if USE_BEEPER
+#if HAS_BEEPER
 
   #include "circularqueue.h"
 
-  #define TONE_QUEUE_LENGTH 4
+  #ifndef TONE_QUEUE_LENGTH
+    #define TONE_QUEUE_LENGTH 4
+  #endif
 
   /**
    * @brief Tone structure
@@ -62,18 +64,6 @@
       FORCE_INLINE static void invert() { TOGGLE(BEEPER_PIN); }
 
       /**
-       * @brief Turn off a digital PIN
-       * @details Alias of digitalWrite(PIN, LOW) using FastIO
-       */
-      FORCE_INLINE static void off() { WRITE(BEEPER_PIN, LOW); }
-
-      /**
-       * @brief Turn on a digital PIN
-       * @details Alias of digitalWrite(PIN, HIGH) using FastIO
-       */
-      FORCE_INLINE static void on() { WRITE(BEEPER_PIN, HIGH); }
-
-      /**
        * @brief Resets the state of the class
        * @details Brings the class state to a known one.
        */
@@ -90,6 +80,20 @@
         SET_OUTPUT(BEEPER_PIN);
         reset();
       }
+
+      /**
+       * @brief Turn on a digital PIN
+       * @details Alias of digitalWrite(PIN, HIGH) using FastIO
+       */
+      FORCE_INLINE static void on() { WRITE(BEEPER_PIN, HIGH); }
+
+      /**
+       * @brief Turn off a digital PIN
+       * @details Alias of digitalWrite(PIN, LOW) using FastIO
+       */
+      FORCE_INLINE static void off() { WRITE(BEEPER_PIN, LOW); }
+
+      static void click(const uint16_t duration) { on(); delay(duration); off(); }
 
       /**
        * @brief Add a tone to the queue
@@ -113,21 +117,20 @@
   extern Buzzer buzzer;
 
   // Buzz directly via the BEEPER pin tone queue
-  #define BUZZ(d,f) buzzer.tone(d, f)
+  #define BUZZ(V...) buzzer.tone(V)
 
-#elif HAS_BUZZER
+#elif USE_MARLINUI_BUZZER
 
-  // Buzz indirectly via the MarlinUI instance
-  #include "../lcd/marlinui.h"
-  #define BUZZ(d,f) ui.buzz(d,f)
+  // Use MarlinUI for a buzzer on the LCD
+  #define BUZZ(V...) ui.buzz(V)
 
 #else
 
   // No buzz capability
-  #define BUZZ(d,f) NOOP
+  #define BUZZ(...) NOOP
 
 #endif
 
-#define ERR_BUZZ() BUZZ(400, 40);
-#define OKAY_BUZZ() do{ BUZZ(100, 659); BUZZ(10, 0); BUZZ(100, 698); }while(0)
-#define DONE_BUZZ(OK) do{ if (OK) OKAY_BUZZ(); else ERR_BUZZ(); }while(0)
+#define ERR_BUZZ() BUZZ(400, 40)
+#define OKAY_BUZZ() do{ BUZZ(100, 659); BUZZ(10); BUZZ(100, 698); }while(0)
+#define DONE_BUZZ(ok) do{ if (ok) OKAY_BUZZ(); else ERR_BUZZ(); }while(0)
