@@ -409,6 +409,7 @@
 
 #define BOARD_TEENSY31_32             5100  // Teensy3.1 and Teensy3.2
 #define BOARD_TEENSY35_36             5101  // Teensy3.5 and Teensy3.6
+#define BOARD_EBAB                    5102
 
 //
 // STM32 ARM Cortex-M4F
