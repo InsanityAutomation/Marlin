@@ -407,11 +407,11 @@
 
   #define PSU_OFF_REDUNDANT             // Second pin for redundant power control
   //#define PSU_OFF_REDUNDANT_OPPOSING    // Redundant pin works opposite standard pin
+  #define PS_ON_PIN                  P4_28  // Redundant Pin
+  #define PS_ON1_PIN                 P1_03  // Redundant Pin
 
-  #define PS_ON1_PIN                  6  // Redundant Pin
-
-  #define PS_ON_EDM_PIN             8    // EDM Pins to monitor feedback on external power control relay. Fault on mismatch.
-  #define PS_ON1_EDM_PIN            8
+  #define PS_ON_EDM_PIN             P4_29    // EDM Pins to monitor feedback on external power control relay. Fault on mismatch.
+  #define PS_ON1_EDM_PIN            P1_17
   #define PS_EDM_RESPONSE       250     // Time in MS to allow for relay action
 
   //#define POWER_OFF_TIMER               // Enable M81 D<seconds> to power off after a delay
@@ -420,7 +420,7 @@
   //#define PSU_POWERUP_GCODE  "M355 S1"  // G-code to run after power-on (e.g., case light on)
   //#define PSU_POWEROFF_GCODE "M355 S0"  // G-code to run before power-off (e.g., case light off)
 
-  //#define AUTO_POWER_CONTROL      // Enable automatic control of the PS_ON pin
+  #define AUTO_POWER_CONTROL      // Enable automatic control of the PS_ON pin
   #if ENABLED(AUTO_POWER_CONTROL)
     #define AUTO_POWER_FANS           // Turn on PSU for fans
     #define AUTO_POWER_E_FANS         // Turn on PSU for E Fans
