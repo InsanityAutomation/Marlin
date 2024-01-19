@@ -33,7 +33,6 @@
 
 // EXTRA PINS
 #define FIL_RUNOUT_PIN P1_12
-#define PS_ON_PIN P3_15
 
 // DRIVERS EXTRA PINS
 #define DRIVERS_SCK                            P1_20
@@ -234,7 +233,7 @@
 #endif
 
 #ifndef PS_ON_PIN
-  #define PS_ON_PIN                           P_NC
+  //#define PS_ON_PIN                           P_NC
 #endif
 
 //

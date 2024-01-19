@@ -108,7 +108,8 @@ extern DefaultSerial1 USBSerial;
 
 #define CRITICAL_SECTION_START()  const bool irqon = !MCUCore::primask(); MCUCore::nvic_interrupts_disable()
 #define CRITICAL_SECTION_END()    if (irqon) MCUCore::nvic_interrupts_enable()
-
+#define cli() noInterrupts()
+#define sei() interrupts()
 //
 // ADC
 //
@@ -142,6 +143,14 @@ constexpr bool VALID_PIN(const pin_t pin) {
 constexpr int8_t DIGITAL_PIN_TO_ANALOG_PIN(const pin_t pin) {
   return (MCUI::pin_is_valid(pin) && MCUI::pin_has_adc(pin)) ? pin : -1;
 }
+
+//
+// Misc. Functions
+//
+#ifndef analogInputToDigitalPin
+  #define analogInputToDigitalPin(p) (p)
+#endif
+
 
 // Return the index of a pin number
 constexpr int16_t GET_PIN_MAP_INDEX(const pin_t pin) {
