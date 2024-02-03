@@ -722,15 +722,22 @@ namespace ExtUI {
   }
 
   #if HAS_FILAMENT_SENSOR
-    bool getFilamentRunoutEnabled()                 { return runout.enabled; }
-    void setFilamentRunoutEnabled(const bool value) { runout.enabled = value; }
+    bool getFilamentRunoutEnabled(const extruder_t extruder/*=E0*/)                 { return (runout.enabled[extruder] && (runout.mode[extruder]!=0)); }
+    void setFilamentRunoutEnabled(const bool value, const extruder_t extruder/*=E0*/) { runout.enabled[extruder] = value; }
     bool getFilamentRunoutState()                   { return runout.filament_ran_out; }
     void setFilamentRunoutState(const bool value)   { runout.filament_ran_out = value; }
+    float getFilamentRunoutDistance_mm()                 { return runout.runout_distance(); }
+    void setFilamentRunoutDistance_mm(const_float_t value) { runout.set_runout_distance(constrain(value, 0, 999)); }
+    int getRunoutMode(const extruder_t extruder/*=E0*/){
+      return (int)runout.mode[extruder];
+    }
+    void setRunoutMode(const int mode, const extruder_t extruder/*=E0*/){
+      if((mode >= 0 && mode <=2) || mode==7) {
+        runout.mode[extruder] = (RunoutMode)mode;
+        runout.setup();
+      }
+    }
 
-    #if HAS_FILAMENT_RUNOUT_DISTANCE
-      float getFilamentRunoutDistance_mm()                 { return runout.runout_distance(); }
-      void setFilamentRunoutDistance_mm(const_float_t value) { runout.set_runout_distance(constrain(value, 0, 999)); }
-    #endif
   #endif
 
   #if ENABLED(CASE_LIGHT_ENABLE)

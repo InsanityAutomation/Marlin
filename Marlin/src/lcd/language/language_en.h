@@ -719,6 +719,14 @@ namespace LanguageNarrow_en {
   LSTR MSG_FILAMENT_CHANGE_NOZZLE         = _UxGT("  Nozzle: ");
   LSTR MSG_RUNOUT_SENSOR                  = _UxGT("Runout Sensor");
   LSTR MSG_RUNOUT_DISTANCE_MM             = _UxGT("Runout Dist mm");
+  LSTR MSG_RUNOUT_MODE                    = _UxGT("Runout Mode");
+  LSTR MSG_RUNOUT_MODE_HIGH               = _UxGT("Sensor High");
+  LSTR MSG_RUNOUT_MODE_LOW                = _UxGT("Sensor Low");
+  LSTR MSG_RUNOUT_MODE_MOTION             = _UxGT("Motion Encoder");
+  LSTR MSG_RUNOUT_MODE_NONE               = _UxGT("No Sensor");
+  LSTR MSG_RUNOUT_ENABLE                  = _UxGT("Enable Runout");
+  LSTR MSG_RUNOUT_ACTIVE                  = _UxGT("Runout Active");
+  LSTR MSG_INVERT_EXTRUDER                = _UxGT("Invert Extruder");
   LSTR MSG_EXTRUDER_MIN_TEMP              = _UxGT("Extruder Min Temp.");  // ProUI
   LSTR MSG_FANCHECK                       = _UxGT("Fan Tacho Check");
   LSTR MSG_KILL_HOMING_FAILED             = _UxGT("Homing Failed");

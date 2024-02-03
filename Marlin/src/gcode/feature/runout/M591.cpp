@@ -28,36 +28,46 @@
 #include "../../../feature/runout.h"
 
 /**
- * M412: Enable / Disable filament runout detection
+ * M591: Configure filament runout detection
  *
  * Parameters
  *  R         : Reset the runout sensor
  *  S<bool>   : Reset and enable/disable the runout sensor
  *  H<bool>   : Enable/disable host handling of filament runout
- *  D<linear> : Extra distance to continue after runout is triggered
+ *  L<linear> : Extra distance to continue after runout is triggered or motion interval
+ *  D<linear> : Alias for L
+ *  P<index>  : Mode 0 = NONE
+ *                   1 = Switch NO (HIGH = filament present)
+ *                   2 = Switch NC (LOW = filament present)
+ *                   3 = Encoder / Motion Sensor
  */
-void GcodeSuite::M412() {
-  if (parser.seen("RS"
-    TERN_(HAS_FILAMENT_RUNOUT_DISTANCE, "D")
-    TERN_(HOST_ACTION_COMMANDS, "H")
-  )) {
+void GcodeSuite::M591() {
+  if (parser.seen("RSDP" TERN_(HOST_ACTION_COMMANDS, "H"))) {
     #if ENABLED(HOST_ACTION_COMMANDS)
       if (parser.seen('H')) runout.host_handling = parser.value_bool();
     #endif
     const bool seenR = parser.seen_test('R'), seenS = parser.seen('S');
     if (seenR || seenS) runout.reset();
-    if (seenS) runout.enabled = parser.value_bool();
-    #if HAS_FILAMENT_RUNOUT_DISTANCE
-      if (parser.seenval('D')) runout.set_runout_distance(parser.value_linear_units());
-    #endif
+    const uint8_t tool = TERN0(MULTI_FILAMENT_SENSOR, parser.ushortval('E', active_extruder));
+    if (seenS) runout.enabled[tool] = parser.value_bool();
+    if (parser.seen('D') || parser.seen('L')) runout.set_runout_distance(parser.value_linear_units(), tool);
+    if (parser.seen('P')) {
+      const RunoutMode tmp_mode = (RunoutMode)parser.value_int();
+      switch (tmp_mode) {
+        case RM_NONE ... RM_OUT_ON_HIGH:
+        case RM_MOTION_SENSOR:
+          runout.mode[tool] = tmp_mode;
+          runout.setup();
+        default: break;
+      }
+    }
   }
   else {
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM("Filament runout ");
-    serialprint_onoff(runout.enabled);
-    #if HAS_FILAMENT_RUNOUT_DISTANCE
-      SERIAL_ECHOPGM(" ; Distance ", runout.runout_distance(), "mm");
-    #endif
+    serialprint_onoff(runout.enabled[active_extruder]);
+    SERIAL_ECHOPGM(" ; Distance ", runout.runout_distance(active_extruder), "mm");
+    SERIAL_ECHOPGM(" ; Mode ", runout.mode[active_extruder]);
     #if ENABLED(HOST_ACTION_COMMANDS)
       SERIAL_ECHOPGM(" ; Host handling ");
       serialprint_onoff(runout.host_handling);
@@ -66,18 +76,19 @@ void GcodeSuite::M412() {
   }
 }
 
-void GcodeSuite::M412_report(const bool forReplay/*=true*/) {
+void GcodeSuite::M591_report(const bool forReplay/*=true*/) {
   TERN_(MARLIN_SMALL_BUILD, return);
-
   report_heading_etc(forReplay, F(STR_FILAMENT_RUNOUT_SENSOR));
-  SERIAL_ECHOPGM(
-    "  M412 S", runout.enabled
-    #if HAS_FILAMENT_RUNOUT_DISTANCE
-      , " D", LINEAR_UNIT(runout.runout_distance())
-    #endif
-    , " ; Sensor "
-  );
-  serialprintln_onoff(runout.enabled);
+  for(int e=0; e < NUM_RUNOUT_SENSORS; e++)
+    SERIAL_ECHOLNPGM(
+      "  M591"
+      #if MULTI_FILAMENT_SENSOR
+        " E", e,
+      #endif
+        " S", runout.enabled[e]
+      , " D", LINEAR_UNIT(runout.runout_distance(e))
+      , " P", runout.mode[e]
+    );
 }
 
 #endif // HAS_FILAMENT_SENSOR

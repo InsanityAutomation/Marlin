@@ -504,22 +504,36 @@ void __O2 Endstops::report_states() {
   #if USE_CALIBRATION
     print_es_state(READ(CALIBRATION_PIN) != CALIBRATION_PIN_INVERTING, F(STR_CALIBRATION));
   #endif
-  #if MULTI_FILAMENT_SENSOR
+  #if HAS_FILAMENT_SENSOR
     #define _CASE_RUNOUT(N) case N: pin = FIL_RUNOUT##N##_PIN; state = FIL_RUNOUT##N##_STATE; break;
     for (uint8_t i = 1; i <= NUM_RUNOUT_SENSORS; ++i) {
       pin_t pin;
-      uint8_t state;
       switch (i) {
         default: continue;
+        #define _CASE_RUNOUT(N) case N: pin = FIL_RUNOUT##N##_PIN; break;
         REPEAT_1(NUM_RUNOUT_SENSORS, _CASE_RUNOUT)
+        #undef _CASE_RUNOUT
       }
-      SERIAL_ECHOPGM(STR_FILAMENT);
-      if (i > 1) SERIAL_CHAR(' ', '0' + i);
-      print_es_state(extDigitalRead(pin) != state);
+      const RunoutMode rm = runout.mode[i - 1];
+      const uint8_t outval = runout.out_state(i - 1);
+
+      #if DISABLED(SLIM_LCD_MENUS)
+        SERIAL_ECHOPGM(STR_FILAMENT);
+        if (i > 1) SERIAL_CHAR(' ', '0' + i);
+        SERIAL_ECHOPGM(": ");
+        if (rm == RM_NONE)
+          SERIAL_ECHOLNPGM(STR_OFF);
+        else if (rm == RM_MOTION_SENSOR) {
+          SERIAL_ECHOPGM("MOTION : ");
+          print_es_state(extDigitalRead(pin) == outval);
+        }
+        else
+          SERIAL_ECHOLNPGM_P(extDigitalRead(pin) == outval ? PSTR("OUT") : PSTR("PRESENT"));
+      #else
+        print_es_state(extDigitalRead(pin) == outval, F(STR_FILAMENT));
+      #endif
     }
-    #undef _CASE_RUNOUT
-  #elif HAS_FILAMENT_SENSOR
-    print_es_state(READ(FIL_RUNOUT1_PIN) != FIL_RUNOUT1_STATE, F(STR_FILAMENT));
+
   #endif
 
   TERN_(BLTOUCH, bltouch._reset_SW_mode());

@@ -214,12 +214,21 @@ bool load_filament(const_float_t slow_load_length/*=0*/, const_float_t fast_load
       impatient_beep(max_beep_count);
       #if ALL(FILAMENT_CHANGE_RESUME_ON_INSERT, FILAMENT_RUNOUT_SENSOR)
         #if MULTI_FILAMENT_SENSOR
-          #define _CASE_INSERTED(N) case N-1: if (READ(FIL_RUNOUT##N##_PIN) != FIL_RUNOUT##N##_STATE) wait_for_user = false; break;
-          switch (active_extruder) {
-            REPEAT_1(NUM_RUNOUT_SENSORS, _CASE_INSERTED)
+          LOOP_S_LE_N(i, 1, NUM_RUNOUT_SENSORS) {
+            pin_t pin;
+            switch (i) {
+              default: continue;
+              #define _CASE_RUNOUT(N) case N: pin = FIL_RUNOUT##N##_PIN; break;
+              REPEAT_1(NUM_RUNOUT_SENSORS, _CASE_RUNOUT)
+              #undef _CASE_RUNOUT
+            }
+            const RunoutMode rm = runout.mode[i - 1];
+            if (rm != RM_NONE && rm != RM_MOTION_SENSOR && extDigitalRead(pin) != runout.out_state(i - 1))
+              wait_for_user = false;
           }
         #else
-          if (READ(FIL_RUNOUT_PIN) != FIL_RUNOUT_STATE) wait_for_user = false;
+          if (READ(FIL_RUNOUT_PIN) != runout.out_state(active_extruder))
+            wait_for_user = false;
         #endif
       #endif
       idle_no_sleep();

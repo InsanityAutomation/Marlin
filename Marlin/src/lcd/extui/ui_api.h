@@ -394,15 +394,14 @@ namespace ExtUI {
 
   // Filament Runout Sensor
   #if HAS_FILAMENT_SENSOR
-    bool getFilamentRunoutEnabled();
-    void setFilamentRunoutEnabled(const bool);
+    bool getFilamentRunoutEnabled(const extruder_t extruder=E0);
+    void setFilamentRunoutEnabled(const bool, const extruder_t extruder=E0);
     bool getFilamentRunoutState();
     void setFilamentRunoutState(const bool);
-
-    #if HAS_FILAMENT_RUNOUT_DISTANCE
-      float getFilamentRunoutDistance_mm();
-      void setFilamentRunoutDistance_mm(const_float_t);
-    #endif
+    float getFilamentRunoutDistance_mm();
+    void setFilamentRunoutDistance_mm(const_float_t);
+    int getRunoutMode(const extruder_t extruder=E0);
+    void setRunoutMode(const int, const extruder_t extruder=E0);
   #endif
 
   // Case Light Control

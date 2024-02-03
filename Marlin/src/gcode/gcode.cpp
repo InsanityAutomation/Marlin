@@ -947,6 +947,11 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 575: M575(); break;                                  // M575: Set serial baudrate
       #endif
 
+      #if HAS_FILAMENT_SENSOR
+        case 412: M412(); break;                                  // Alias to M591
+        case 591: M591(); break;                                  // M591 Configure filament runout detection
+      #endif
+
       #if ENABLED(NONLINEAR_EXTRUSION)
         case 592: M592(); break;                                  // M592: Nonlinear Extrusion control
       #endif
