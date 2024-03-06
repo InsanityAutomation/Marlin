@@ -24,8 +24,7 @@
 #include "../../shared/HAL_SPI.h"
 
 #include <stdint.h>
-// #include <lpc17xx_ssp.h>
-// #include <lpc17xx_gpdma.h>
+#include <mcu_interface.h>
 
 //#define MSBFIRST 1
 
@@ -63,17 +62,25 @@
 
 #define SPI_CLOCK_MAX SPI_CLOCK_DIV2
 
-#define BOARD_NR_SPI 2
+#define BOARD_NR_SPI 3
 
-//#define BOARD_SPI1_NSS_PIN      PA4 ?!
-#define BOARD_SPI1_SCK_PIN      P0_15
-#define BOARD_SPI1_MISO_PIN     P0_17
-#define BOARD_SPI1_MOSI_PIN     P0_18
+// SSP0 TMC port
+#define BOARD_SPI1_NSS_PIN      P_NC
+#define BOARD_SPI1_SCK_PIN      P1_20
+#define BOARD_SPI1_MISO_PIN     P1_23
+#define BOARD_SPI1_MOSI_PIN     P1_24
 
-//#define BOARD_SPI2_NSS_PIN      PB12 ?!
-#define BOARD_SPI2_SCK_PIN      P0_07
-#define BOARD_SPI2_MISO_PIN     P0_08
-#define BOARD_SPI2_MOSI_PIN     P0_09
+// SSP2 LCD SD port
+#define BOARD_SPI2_NSS_PIN      P_NC
+#define BOARD_SPI2_SCK_PIN      P1_00
+#define BOARD_SPI2_MISO_PIN     P1_04
+#define BOARD_SPI2_MOSI_PIN     P1_01
+
+// SSP1 Onboard SD port
+#define BOARD_SPI3_NSS_PIN      P_NC
+#define BOARD_SPI3_SCK_PIN      P0_07
+#define BOARD_SPI3_MISO_PIN     P0_08
+#define BOARD_SPI3_MOSI_PIN     P0_09
 
 class SPISettings {
 public:
@@ -115,13 +122,16 @@ private:
     dataSize = inDataSize;
   }
 
+  MCUI::SSP::Config m_config;
+
   //uint32_t spi_speed;
   uint32_t clock;
   uint32_t dataSize;
   //uint32_t clockDivider;
   uint8_t bitOrder;
   uint8_t dataMode;
-  //LPC_SSP_TypeDef *spi_d;
+
+  uint8_t device_id;
 
   friend class SPIClass;
 };
