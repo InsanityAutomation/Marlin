@@ -128,6 +128,18 @@
   #define E1_CS_PIN                           44
 #endif
 
+#define Z4_STEP_PIN                            13
+#define Z4_DIR_PIN                             71
+#define Z4_ENABLE_PIN                          12
+
+#define Z2_STEP_PIN                            4
+#define Z2_DIR_PIN                             5
+#define Z2_ENABLE_PIN                          6
+
+#define Z3_STEP_PIN                            12
+#define Z3_DIR_PIN                             40
+#define Z3_ENABLE_PIN                          44
+
 //
 // Temperature Sensors
 //
