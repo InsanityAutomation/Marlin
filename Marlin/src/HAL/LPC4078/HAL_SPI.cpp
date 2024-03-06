@@ -164,123 +164,103 @@
 // /**
 //  * @brief Wait until TXE (tx empty) flag is set and BSY (busy) flag unset.
 //  */
-// static inline void waitSpiTxEnd(LPC_SSP_TypeDef *spi_d) {
-//   while (SSP_GetStatus(spi_d, SSP_STAT_TXFIFO_EMPTY) == RESET) { /* nada */ } // wait until TXE=1
-//   while (SSP_GetStatus(spi_d, SSP_STAT_BUSY) == SET) { /* nada */ }     // wait until BSY=0
-// }
+static inline void waitSpiTxEnd(void *spi_d) {
+  #warning unimplemented
+  // while (SSP_GetStatus(spi_d, SSP_STAT_TXFIFO_EMPTY) == RESET) { /* nada */ } // wait until TXE=1
+  // while (SSP_GetStatus(spi_d, SSP_STAT_BUSY) == SET) { /* nada */ }     // wait until BSY=0
+}
 
 // // Retain the pin init state of the SPI, to avoid init more than once,
 // // even if more instances of SPIClass exist
-// static bool spiInitialised[BOARD_NR_SPI] = { false };
+static bool spiInitialised[BOARD_NR_SPI] = { false };
 
-// SPIClass::SPIClass(uint8_t device) {
+SPIClass::SPIClass(uint8_t device) {
 //   // Init things specific to each SPI device
 //   // clock divider setup is a bit of hack, and needs to be improved at a later date.
 
-//   #if BOARD_NR_SPI >= 1
-//     _settings[0].spi_d = LPC_SSP0;
+  #if BOARD_NR_SPI >= 1
+    _settings[0].device_id = 0;
+    _settings[0].m_config.pin_miso = BOARD_SPI1_MISO_PIN;
+    _settings[0].m_config.pin_mosi = BOARD_SPI1_MOSI_PIN;
+    _settings[0].m_config.pin_sck  = BOARD_SPI1_SCK_PIN;
+    _settings[0].m_config.pin_ssel = BOARD_SPI1_NSS_PIN;
 //     _settings[0].dataMode = SPI_MODE0;
 //     _settings[0].dataSize = DATA_SIZE_8BIT;
 //     _settings[0].clock = SPI_CLOCK_MAX;
 //     //_settings[0].clockDivider = determine_baud_rate(_settings[0].spi_d, _settings[0].clock);
-//   #endif
+  #endif
 
-//   #if BOARD_NR_SPI >= 2
-//     _settings[1].spi_d = LPC_SSP1;
+  #if BOARD_NR_SPI >= 2
+    _settings[1].device_id = 2;
+    _settings[1].m_config.pin_miso = BOARD_SPI2_MISO_PIN;
+    _settings[1].m_config.pin_mosi = BOARD_SPI2_MOSI_PIN;
+    _settings[1].m_config.pin_sck  = BOARD_SPI2_SCK_PIN;
+    _settings[1].m_config.pin_ssel = BOARD_SPI2_NSS_PIN;
 //     _settings[1].dataMode = SPI_MODE0;
 //     _settings[1].dataSize = DATA_SIZE_8BIT;
 //     _settings[1].clock = SPI_CLOCK_MAX;
 //     //_settings[1].clockDivider = determine_baud_rate(_settings[1].spi_d, _settings[1].clock);
-//   #endif
+  #endif
 
-//   setModule(device);
+  setModule(device);
 
 //   // Init the GPDMA controller
 //   // TODO: call once in the constructor? or each time?
 //   GPDMA_Init();
-// }
+}
 
-// SPIClass::SPIClass(pin_t mosi, pin_t miso, pin_t sclk, pin_t ssel) {
-//   #if BOARD_NR_SPI >= 1
-//     if (mosi == BOARD_SPI1_MOSI_PIN) SPIClass(1);
-//   #endif
-//   #if BOARD_NR_SPI >= 2
-//     if (mosi == BOARD_SPI2_MOSI_PIN) SPIClass(2);
-//   #endif
-// }
+SPIClass::SPIClass(pin_t mosi, pin_t miso, pin_t sclk, pin_t ssel) {
+  #if BOARD_NR_SPI >= 1
+    if (mosi == BOARD_SPI1_MOSI_PIN) SPIClass(1);
+  #endif
+  #if BOARD_NR_SPI >= 2
+    if (mosi == BOARD_SPI2_MOSI_PIN) SPIClass(2);
+  #endif
+}
 
-// void SPIClass::begin() {
+void SPIClass::begin() {
 //   // Init the SPI pins in the first begin call
-//   if ((_currentSetting->spi_d == LPC_SSP0 && spiInitialised[0] == false) ||
-//       (_currentSetting->spi_d == LPC_SSP1 && spiInitialised[1] == false)) {
-//     pin_t sck, miso, mosi;
-//     if (_currentSetting->spi_d == LPC_SSP0) {
-//       sck = BOARD_SPI1_SCK_PIN;
-//       miso = BOARD_SPI1_MISO_PIN;
-//       mosi = BOARD_SPI1_MOSI_PIN;
-//       spiInitialised[0] = true;
-//     }
-//     else if (_currentSetting->spi_d == LPC_SSP1) {
-//       sck = BOARD_SPI2_SCK_PIN;
-//       miso = BOARD_SPI2_MISO_PIN;
-//       mosi = BOARD_SPI2_MOSI_PIN;
-//       spiInitialised[1] = true;
-//     }
-//     PINSEL_CFG_Type PinCfg;  // data structure to hold init values
-//     PinCfg.Funcnum = 2;
-//     PinCfg.OpenDrain = 0;
-//     PinCfg.Pinmode = 0;
-//     PinCfg.Pinnum = LPC176x::pin_bit(sck);
-//     PinCfg.Portnum = LPC176x::pin_port(sck);
-//     PINSEL_ConfigPin(&PinCfg);
-//     SET_OUTPUT(sck);
+  if ((_currentSetting->device_id == 0 && spiInitialised[0] == false) ||
+      (_currentSetting->device_id == 1 && spiInitialised[1] == false) ||
+      (_currentSetting->device_id == 2 && spiInitialised[2] == false)) {
+    MCUI::SSP::init(_currentSetting->device_id, _currentSetting->m_config);
+    spiInitialised[_currentSetting->device_id] = true;
+  }
+  updateSettings();
+}
 
-//     PinCfg.Pinnum = LPC176x::pin_bit(miso);
-//     PinCfg.Portnum = LPC176x::pin_port(miso);
-//     PINSEL_ConfigPin(&PinCfg);
-//     SET_INPUT(miso);
+void SPIClass::beginTransaction(const SPISettings &cfg) {
+  setBitOrder(cfg.bitOrder);
+  setDataMode(cfg.dataMode);
+  setDataSize(cfg.dataSize);
+  //setClockDivider(determine_baud_rate(_currentSetting->spi_d, settings.clock));
+  begin();
+}
 
-//     PinCfg.Pinnum = LPC176x::pin_bit(mosi);
-//     PinCfg.Portnum = LPC176x::pin_port(mosi);
-//     PINSEL_ConfigPin(&PinCfg);
-//     SET_OUTPUT(mosi);
-//   }
+uint8_t SPIClass::transfer(const uint16_t b) {
+  uint16_t rx_word = 0;
+  // clear rx fifo
+  while(MCUI::SSP::read(_currentSetting->device_id, &rx_word) == 1);
+  MCUI::SSP::write(_currentSetting->device_id, b);
+  while(MCUI::SSP::read(_currentSetting->device_id, &rx_word) != 1);
+  return rx_word;
+}
 
-//   updateSettings();
-//   SSP_Cmd(_currentSetting->spi_d, ENABLE);  // start SSP running
-// }
+uint16_t SPIClass::transfer16(const uint16_t data) {
+   return (transfer((data >> 8) & 0xFF) << 8) | (transfer(data & 0xFF) & 0xFF);
+}
 
-// void SPIClass::beginTransaction(const SPISettings &cfg) {
-//   setBitOrder(cfg.bitOrder);
-//   setDataMode(cfg.dataMode);
-//   setDataSize(cfg.dataSize);
-//   //setClockDivider(determine_baud_rate(_currentSetting->spi_d, settings.clock));
-//   begin();
-// }
-
-// uint8_t SPIClass::transfer(const uint16_t b) {
-//   // Send and receive a single byte
-//   SSP_ReceiveData(_currentSetting->spi_d); // read any previous data
-//   SSP_SendData(_currentSetting->spi_d, b);
-//   waitSpiTxEnd(_currentSetting->spi_d);  // wait for it to finish
-//   return SSP_ReceiveData(_currentSetting->spi_d);
-// }
-
-// uint16_t SPIClass::transfer16(const uint16_t data) {
-//   return (transfer((data >> 8) & 0xFF) << 8) | (transfer(data & 0xFF) & 0xFF);
-// }
-
-// void SPIClass::end() {
+void SPIClass::end() {
 //   // Neither is needed for Marlin
 //   //SSP_Cmd(_currentSetting->spi_d, DISABLE);
 //   //SSP_DeInit(_currentSetting->spi_d);
-// }
+}
 
-// void SPIClass::send(uint8_t data) {
-//   SSP_SendData(_currentSetting->spi_d, data);
-// }
+void SPIClass::send(uint8_t data) {
+  MCUI::SSP::write(_currentSetting->device_id, data);
+}
 
-// void SPIClass::dmaSend(void *buf, uint16_t length, bool minc) {
+void SPIClass::dmaSend(void *buf, uint16_t length, bool minc) {
 //   //TODO: LPC dma can only write 0xFFF bytes at once.
 //   GPDMA_Channel_CFG_Type GPDMACfg;
 
@@ -329,76 +309,46 @@
 //   waitSpiTxEnd(_currentSetting->spi_d);
 
 //   SSP_DMACmd(_currentSetting->spi_d, SSP_DMA_TX, DISABLE);
-// }
+}
 
-// uint16_t SPIClass::read() {
-//   return SSP_ReceiveData(_currentSetting->spi_d);
-// }
+uint16_t SPIClass::read() {
+  uint16_t rx_word = 0;
+  MCUI::SSP::read(_currentSetting->device_id, &rx_word);
+  return rx_word;
+}
 
-// void SPIClass::read(uint8_t *buf, uint32_t len) {
-//   for (uint16_t i = 0; i < len; i++) buf[i] = transfer(0xFF);
-// }
+void SPIClass::read(uint8_t *buf, uint32_t len) {
+  uint16_t rx_word = 0;
+  // clear rx fifo
+  while(MCUI::SSP::read(_currentSetting->device_id, &rx_word) == 1);
+  for (uint16_t i = 0; i < len; i++) {
+    MCUI::SSP::write(_currentSetting->device_id, 0xFF);
+    while(MCUI::SSP::read(_currentSetting->device_id, &rx_word) != 1);
+    buf[i] = rx_word;
+  }
+}
 
-// void SPIClass::setClock(uint32_t clock) { _currentSetting->clock = clock; }
+void SPIClass::setClock(uint32_t clock) { _currentSetting->clock = clock; }
 
-// void SPIClass::setModule(uint8_t device) { _currentSetting = &_settings[device - 1]; } // SPI channels are called 1, 2, and 3 but the array is zero-indexed
+void SPIClass::setModule(uint8_t device) { _currentSetting = &_settings[device - 1]; } // SPI channels are called 1, 2, and 3 but the array is zero-indexed
 
-// void SPIClass::setBitOrder(uint8_t bitOrder) { _currentSetting->bitOrder = bitOrder; }
+void SPIClass::setBitOrder(uint8_t bitOrder) { _currentSetting->bitOrder = bitOrder; }
 
-// void SPIClass::setDataMode(uint8_t dataMode) { _currentSetting->dataMode = dataMode; }
+void SPIClass::setDataMode(uint8_t dataMode) { _currentSetting->dataMode = dataMode; }
 
-// void SPIClass::setDataSize(uint32_t dataSize) { _currentSetting->dataSize = dataSize; }
+void SPIClass::setDataSize(uint32_t dataSize) { _currentSetting->dataSize = dataSize; }
 
 // /**
 //  * Set up/tear down
 //  */
-// void SPIClass::updateSettings() {
-//   //SSP_DeInit(_currentSetting->spi_d); //todo: need force de init?!
+void SPIClass::updateSettings() { }
 
-//   // Divide PCLK by 2 for SSP0
-//   //CLKPWR_SetPCLKDiv(_currentSetting->spi_d == LPC_SSP0 ? CLKPWR_PCLKSEL_SSP0 : CLKPWR_PCLKSEL_SSP1, CLKPWR_PCLKSEL_CCLK_DIV_2);
+SPIClass SPI(1);
 
-//   SSP_CFG_Type HW_SPI_init; // data structure to hold init values
-//   SSP_ConfigStructInit(&HW_SPI_init);  // set values for SPI mode
-//   HW_SPI_init.ClockRate = _currentSetting->clock;
-//   HW_SPI_init.Databit = _currentSetting->dataSize;
-
-//   /**
-//    * SPI Mode  CPOL  CPHA  Shift SCK-edge  Capture SCK-edge
-//    * 0       0     0     Falling     Rising
-//    * 1       0     1     Rising      Falling
-//    * 2       1     0     Rising      Falling
-//    * 3       1     1     Falling     Rising
-//    */
-//   switch (_currentSetting->dataMode) {
-//     case SPI_MODE0:
-//       HW_SPI_init.CPHA = SSP_CPHA_FIRST;
-//       HW_SPI_init.CPOL = SSP_CPOL_HI;
-//       break;
-//     case SPI_MODE1:
-//       HW_SPI_init.CPHA = SSP_CPHA_SECOND;
-//       HW_SPI_init.CPOL = SSP_CPOL_HI;
-//       break;
-//     case SPI_MODE2:
-//       HW_SPI_init.CPHA = SSP_CPHA_FIRST;
-//       HW_SPI_init.CPOL = SSP_CPOL_LO;
-//       break;
-//     case SPI_MODE3:
-//       HW_SPI_init.CPHA = SSP_CPHA_SECOND;
-//       HW_SPI_init.CPOL = SSP_CPOL_LO;
-//       break;
-//     default:
-//       break;
-//   }
-
-//   // TODO: handle bitOrder
-//   SSP_Init(_currentSetting->spi_d, &HW_SPI_init);  // puts the values into the proper bits in the SSP0 registers
-// }
-
-// #if SD_MISO_PIN == BOARD_SPI1_MISO_PIN
-//   SPIClass SPI(1);
-// #elif SD_MISO_PIN == BOARD_SPI2_MISO_PIN
-//   SPIClass SPI(2);
-// #endif
+#if SD_MISO_PIN == BOARD_SPI1_MISO_PIN
+  SPIClass SPI(1);
+#elif SD_MISO_PIN == BOARD_SPI2_MISO_PIN
+  SPIClass SPI(2);
+#endif
 
 #endif // TARGET_LPC4078
