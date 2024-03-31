@@ -42,22 +42,31 @@
  *  P0 S<strokes>    : Stroke cleaning with S strokes
  *  P1 Sn T<objects> : Zigzag cleaning with S repeats and T zigzags
  *  P2 Sn R<radius>  : Circle cleaning with S repeats and R radius
+ *  X, Y, Z          : Specify axes to move during cleaning. Default: ALL.
  */
 void GcodeSuite::G12() {
+
   // Don't allow nozzle cleaning without homing first
-  if (homing_needed_error()) return;
+  constexpr main_axes_bits_t clean_axis_mask = main_axes_mask & ~TERN0(NOZZLE_CLEAN_NO_Z, Z_AXIS) & ~TERN0(NOZZLE_CLEAN_NO_Y, Y_AXIS);
+  if (homing_needed_error(clean_axis_mask)) return;
 
   #ifdef WIPE_SEQUENCE_COMMANDS
     if (!parser.seen_any()) {
-      gcode.process_subcommands_now_P(PSTR(WIPE_SEQUENCE_COMMANDS));
+      process_subcommands_now(F(WIPE_SEQUENCE_COMMANDS));
       return;
     }
   #endif
 
-  const uint8_t pattern = parser.ushortval('P', 0),
-                strokes = parser.ushortval('S', NOZZLE_CLEAN_STROKES),
-                objects = parser.ushortval('T', NOZZLE_CLEAN_TRIANGLES);
-  const float radius = parser.linearval('R', NOZZLE_CLEAN_CIRCLE_RADIUS);
+  const uint8_t pattern = (
+    #if COUNT_ENABLED(NOZZLE_CLEAN_PATTERN_LINE, NOZZLE_CLEAN_PATTERN_ZIGZAG, NOZZLE_CLEAN_PATTERN_CIRCLE) > 1
+      parser.ushortval('P', NOZZLE_CLEAN_DEFAULT_PATTERN)
+    #else
+      NOZZLE_CLEAN_DEFAULT_PATTERN
+    #endif
+  );
+  const uint8_t strokes = parser.ushortval('S', NOZZLE_CLEAN_STROKES),
+                objects = TERN0(NOZZLE_CLEAN_PATTERN_ZIGZAG, parser.ushortval('T', NOZZLE_CLEAN_TRIANGLES));
+  const float radius = TERN0(NOZZLE_CLEAN_PATTERN_CIRCLE, parser.linearval('R', NOZZLE_CLEAN_CIRCLE_RADIUS));
 
   const bool seenxyz = parser.seen("XYZ");
   const uint8_t cleans =  (!seenxyz || parser.boolval('X') ? _BV(X_AXIS) : 0)
@@ -70,9 +79,11 @@ void GcodeSuite::G12() {
     TEMPORARY_BED_LEVELING_STATE(!TEST(cleans, Z_AXIS) && planner.leveling_active);
   #endif
 
-  TEMPORARY_SOFT_ENDSTOP_STATE(parser.boolval('E'));
+  SET_SOFT_ENDSTOP_LOOSE(!parser.boolval('E'));
 
   nozzle.clean(pattern, strokes, radius, objects, cleans);
+
+  SET_SOFT_ENDSTOP_LOOSE(false);
 }
 
 #endif // NOZZLE_CLEAN_FEATURE

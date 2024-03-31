@@ -21,6 +21,8 @@
  */
 
 /**
+ * sd/SdVolume.cpp
+ *
  * Arduino SdFat Library
  * Copyright (c) 2009 by William Greiman
  *
@@ -29,7 +31,7 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if ENABLED(SDSUPPORT)
+#if HAS_MEDIA
 
 #include "SdVolume.h"
 
@@ -39,13 +41,13 @@
   // raw block cache
   uint32_t SdVolume::cacheBlockNumber_;  // current block number
   cache_t  SdVolume::cacheBuffer_;       // 512 byte cache for Sd2Card
-  Sd2Card* SdVolume::sdCard_;            // pointer to SD card object
+  DiskIODriver *SdVolume::sdCard_;       // pointer to SD card object
   bool     SdVolume::cacheDirty_;        // cacheFlush() will write block if true
   uint32_t SdVolume::cacheMirrorBlock_;  // mirror  block for second FAT
-#endif  // USE_MULTIPLE_CARDS
+#endif
 
 // find a contiguous group of clusters
-bool SdVolume::allocContiguous(uint32_t count, uint32_t* curCluster) {
+bool SdVolume::allocContiguous(const uint32_t count, uint32_t * const curCluster) {
   if (ENABLED(SDCARD_READONLY)) return false;
 
   // start of group
@@ -136,7 +138,7 @@ bool SdVolume::cacheFlush() {
   return true;
 }
 
-bool SdVolume::cacheRawBlock(uint32_t blockNumber, bool dirty) {
+bool SdVolume::cacheRawBlock(const uint32_t blockNumber, const bool dirty) {
   if (cacheBlockNumber_ != blockNumber) {
     if (!cacheFlush()) return false;
     if (!sdCard_->readBlock(blockNumber, cacheBuffer_.data)) return false;
@@ -147,7 +149,7 @@ bool SdVolume::cacheRawBlock(uint32_t blockNumber, bool dirty) {
 }
 
 // return the size in bytes of a cluster chain
-bool SdVolume::chainSize(uint32_t cluster, uint32_t* size) {
+bool SdVolume::chainSize(uint32_t cluster, uint32_t * const size) {
   uint32_t s = 0;
   do {
     if (!fatGet(cluster, &cluster)) return false;
@@ -158,7 +160,7 @@ bool SdVolume::chainSize(uint32_t cluster, uint32_t* size) {
 }
 
 // Fetch a FAT entry
-bool SdVolume::fatGet(uint32_t cluster, uint32_t* value) {
+bool SdVolume::fatGet(const uint32_t cluster, uint32_t * const value) {
   uint32_t lba;
   if (cluster > (clusterCount_ + 1)) return false;
   if (FAT12_SUPPORT && fatType_ == 12) {
@@ -193,7 +195,7 @@ bool SdVolume::fatGet(uint32_t cluster, uint32_t* value) {
 }
 
 // Store a FAT entry
-bool SdVolume::fatPut(uint32_t cluster, uint32_t value) {
+bool SdVolume::fatPut(const uint32_t cluster, const uint32_t value) {
   if (ENABLED(SDCARD_READONLY)) return false;
 
   uint32_t lba;
@@ -324,9 +326,9 @@ int32_t SdVolume::freeClusterCount() {
  * Reasons for failure include not finding a valid partition, not finding a valid
  * FAT file system in the specified partition or an I/O error.
  */
-bool SdVolume::init(Sd2Card* dev, uint8_t part) {
+bool SdVolume::init(DiskIODriver * const dev, const uint8_t part) {
   uint32_t totalBlocks, volumeStartBlock = 0;
-  fat32_boot_t* fbs;
+  fat32_boot_t *fbs;
 
   sdCard_ = dev;
   fatType_ = 0;
@@ -340,7 +342,7 @@ bool SdVolume::init(Sd2Card* dev, uint8_t part) {
   if (part) {
     if (part > 4) return false;
     if (!cacheRawBlock(volumeStartBlock, CACHE_FOR_READ)) return false;
-    part_t* p = &cacheBuffer_.mbr.part[part - 1];
+    part_t *p = &cacheBuffer_.mbr.part[part - 1];
     if ((p->boot & 0x7F) != 0  || p->totalSectors < 100 || p->firstSector == 0)
       return false; // not a valid partition
     volumeStartBlock = p->firstSector;
@@ -400,4 +402,4 @@ bool SdVolume::init(Sd2Card* dev, uint8_t part) {
   return true;
 }
 
-#endif // SDSUPPORT
+#endif // HAS_MEDIA

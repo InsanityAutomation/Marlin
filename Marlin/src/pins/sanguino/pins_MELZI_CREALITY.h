@@ -23,6 +23,9 @@
 
 /**
  * Melzi (Creality) pin assignments
+ * Schematic: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Melzi%20(Creality)/CR-10%20Schematic.pdf
+ * Origin: https://github.com/Creality3DPrinting/CR10-Melzi-1.1.2/blob/master/Circuit%20diagram/Motherboard/CR-10%20Schematic.pdf
+ * ATmega1284P
  *
  * The Creality board needs a bootloader installed before Marlin can be uploaded.
  * If you don't have a chip programmer you can use a spare Arduino plus a few
@@ -36,52 +39,76 @@
 #define BOARD_INFO_NAME "Melzi (Creality)"
 
 // Alter timing for graphical display
-#if HAS_MARLINUI_U8GLIB
-  #ifndef BOARD_ST7920_DELAY_1
-    #define BOARD_ST7920_DELAY_1 DELAY_NS(125)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_2
-    #define BOARD_ST7920_DELAY_2 DELAY_NS(125)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_3
-    #define BOARD_ST7920_DELAY_3 DELAY_NS(125)
-  #endif
+#if IS_U8GLIB_ST7920
+  #define BOARD_ST7920_DELAY_1               125
+  #define BOARD_ST7920_DELAY_2               125
+  #define BOARD_ST7920_DELAY_3               125
 #endif
 
-#include "pins_MELZI.h"
+/**
+ *       EXP1          EXP1 as ENDER2 STOCKDISPLAY           EXP1 as CR10 STOCKDISPLAY
+ *      ------                    ------                               ------
+ * D27 | 1  2 | D16          SCK | 1  2 | BTN_E            BEEPER_PIN | 1  2 | BTN_ENC
+ * D11 | 3  4 | RESET    BTN_EN1 | 3  4 | RESET               BTN_EN1 | 3  4 | RESET
+ * D10   5  6 | D30      BTN_EN2   5  6 | LCD_A0              BTN_EN2   5  6 | LCD_D4 (ST9720 CLK)
+ * D28 | 7  8 | D17       LCD_CS | 7  8 | MOSI     (ST9720 CS) LCD_RS | 7  8 | LCD_EN (ST9720 DAT)
+ * GND | 9 10 | 5V           GND | 9 10 | 5V                      GND | 9 10 | 5V
+ *      ------                    ------                               ------
+ */
+#define EXP1_01_PIN                           27
+#define EXP1_02_PIN                           16
+#define EXP1_03_PIN                           11
+#define EXP1_04_PIN                           -1  // RESET
+#define EXP1_05_PIN                           10
+#define EXP1_06_PIN                           30
+#define EXP1_07_PIN                           28
+#define EXP1_08_PIN                           17
 
 //
-// For the stock CR-10 enable CR10_STOCKDISPLAY in Configuration.h
+// LCD / Controller
 //
-#undef LCD_SDSS
-#undef LED_PIN
-#undef LCD_PINS_RS
-#undef LCD_PINS_ENABLE
-#undef LCD_PINS_D4
-#undef LCD_PINS_D5
-#undef LCD_PINS_D6
-#undef LCD_PINS_D7
+#if ANY(MKS_MINI_12864, CR10_STOCKDISPLAY, ENDER2_STOCKDISPLAY)
+  #if ENABLED(MKS_MINI_12864)
+    #ifndef NO_CONTROLLER_CUSTOM_WIRING_WARNING
+      #error "CAUTION! MKS_MINI_12864 on MELZI_CREALITY requires wiring modifications. (Define NO_CONTROLLER_CUSTOM_WIRING_WARNING to suppress this warning.)"
+    #endif
+    #define DOGLCD_CS                EXP1_07_PIN
+    #define DOGLCD_A0                EXP1_06_PIN
+  #elif ENABLED(CR10_STOCKDISPLAY)
+    #define LCD_PINS_RS              EXP1_07_PIN  // ST9720 CS
+    #define LCD_PINS_EN              EXP1_08_PIN  // ST9720 DAT
+    #define LCD_PINS_D4              EXP1_06_PIN  // ST9720 CLK
+    #define BEEPER_PIN               EXP1_01_PIN
+  #elif ENABLED(ENDER2_STOCKDISPLAY)
+    #define DOGLCD_CS                EXP1_07_PIN
+    #define DOGLCD_A0                EXP1_06_PIN
+    #define DOGLCD_SCK               EXP1_01_PIN
+    #define DOGLCD_MOSI              EXP1_08_PIN
+    #define FORCE_SOFT_SPI
+  #endif
+  #define BTN_ENC                    EXP1_02_PIN
+  #define BTN_EN1                    EXP1_03_PIN
+  #define BTN_EN2                    EXP1_05_PIN
+  #define LCD_SDSS                            31  // Controller's SD card
+  #define LCD_PINS_DEFINED
+#endif
 
-#define LCD_SDSS                             31   // Smart Controller SD card reader (rather than the Melzi)
-#define LCD_PINS_RS                          28   // ST9720 CS
-#define LCD_PINS_ENABLE                      17   // ST9720 DAT
-#define LCD_PINS_D4                          30   // ST9720 CLK
+#include "pins_MELZI.h" // ... SANGUINOLOLU_12 ... SANGUINOLOLU_11
 
 #if ENABLED(BLTOUCH)
-  #define SERVO0_PIN                         27
-  #undef BEEPER_PIN
-#elif ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #ifndef SERVO0_PIN
+    #define SERVO0_PIN               EXP1_01_PIN
+  #endif
+  #if SERVO0_PIN == BEEPER_PIN
+    #undef BEEPER_PIN
+  #endif
+#elif HAS_FILAMENT_SENSOR
   #ifndef FIL_RUNOUT_PIN
-    #define FIL_RUNOUT_PIN                   27
+    #define FIL_RUNOUT_PIN           EXP1_01_PIN
   #endif
   #if FIL_RUNOUT_PIN == BEEPER_PIN
     #undef BEEPER_PIN
   #endif
-#endif
-
-#if ENABLED(MINIPANEL)
-  #undef DOGLCD_CS
-  #define DOGLCD_CS LCD_PINS_RS
 #endif
 
 /**
@@ -90,14 +117,14 @@
   PIN:   2   Port: B2        Z_DIR_PIN                   protected
   PIN:   3   Port: B3        Z_STEP_PIN                  protected
   PIN:   4   Port: B4        AVR_SS_PIN                  protected
-  .                          FAN_PIN                     protected
-  .                          SS_PIN                      protected
+  .                          FAN0_PIN                    protected
+  .                       SD_SS_PIN                      protected
   PIN:   5   Port: B5        AVR_MOSI_PIN                Output = 1
-  .                          MOSI_PIN                    Output = 1
+  .                       SD_MOSI_PIN                    Output = 1
   PIN:   6   Port: B6        AVR_MISO_PIN                Input  = 0    TIMER3A   PWM:     0    WGM: 1    COM3A: 0    CS: 3    TCCR3A: 1    TCCR3B: 3    TIMSK3: 0
-  .                          MISO_PIN                    Input  = 0
+  .                       SD_MISO_PIN                    Input  = 0
   PIN:   7   Port: B7        AVR_SCK_PIN                 Output = 0    TIMER3B   PWM:     0    WGM: 1    COM3B: 0    CS: 3    TCCR3A: 1    TCCR3B: 3    TIMSK3: 0
-  .                          SCK_PIN                     Output = 0
+  .                       SD_SCK_PIN                     Output = 0
   PIN:   8   Port: D0        RXD                         Input  = 1
   PIN:   9   Port: D1        TXD                         Input  = 0
   PIN:  10   Port: D2        BTN_EN2                     Input  = 1
@@ -110,7 +137,7 @@
   PIN:  15   Port: D7        X_STEP_PIN                  protected
   PIN:  16   Port: C0        BTN_ENC                     Input  = 1
   .                          SCL                         Input  = 1
-  PIN:  17   Port: C1        LCD_PINS_ENABLE             Output = 0
+  PIN:  17   Port: C1        LCD_PINS_EN                 Output = 0
   .                          SDA                         Output = 0
   PIN:  18   Port: C2        X_MIN_PIN                   protected
   .                          X_STOP_PIN                  protected
@@ -130,14 +157,3 @@
   PIN:  30   Port: A1        LCD_PINS_D4                 Output = 1
   PIN:  31   Port: A0        SDSS                        Output = 1
 */
-
-/**
- *    EXP1 Connector                      EXP1 as CR10 STOCKDISPLAY
- *        _____                                      _____
- *   PA4 | 6 5 | PC0                     BEEPER_PIN | 6 5 | BTN_ENC
- *   PD3 | 7 4 | RESET                      BTN_EN1 | 7 4 | RESET
- *   PD2   8 3 | PA1                        BTN_EN2   8 3 | LCD_PINS_D4 (ST9720 CLK)
- *   PA3 | 9 2 | PC1        (ST9720 CS) LCD_PINS_RS | 9 2 | LCD_PINS_ENABLE (ST9720 DAT)
- *   GND |10 1 | 5V                             GND |10 1 | 5V
- *        -----                                   -----
- */

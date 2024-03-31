@@ -4,7 +4,6 @@
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
- * Copyright (c) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +19,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-#if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC)
+#include "../platforms.h"
+
+#ifdef HAL_STM32
 
 #include "../../inc/MarlinConfig.h"
 
-GPIO_TypeDef* FastIOPortMap[LastPort + 1];
+GPIO_TypeDef* FastIOPortMap[LastPort + 1] = { 0 };
 
 void FastIO_init() {
-  LOOP_L_N(i, NUM_DIGITAL_PINS)
+  for (uint8_t i = 0; i < NUM_DIGITAL_PINS; ++i)
     FastIOPortMap[STM_PORT(digitalPin[i])] = get_GPIO_Port(STM_PORT(digitalPin[i]));
 }
 
-#endif
+#endif // HAL_STM32

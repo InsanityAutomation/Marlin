@@ -23,6 +23,9 @@
 
 //
 // FYSETC F6 1.3 (and 1.4) pin assignments
+// Schematic (1.3): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/RAMPS/FYSETC%20F6%201.3/F6_V13.pdf
+// Origin: https://github.com/FYSETC/FYSETC-F6/blob/master/Hardware/V1.3/F6_V13.pdf
+// ATmega2560
 //
 
 #if NOT_TARGET(__AVR_ATmega2560__)
@@ -34,7 +37,7 @@
 #endif
 
 #define RESET_PIN                             30
-#define SPI_FLASH_CS                          83
+#define SPI_FLASH_CS_PIN                      83
 
 //
 // Servos
@@ -124,41 +127,41 @@
    * Software serial communication pins.
    * At the moment, F6 rx pins are not pc interrupt pins
    */
-  #ifndef X_SERIAL_RX_PIN
-    #define X_SERIAL_RX_PIN                   -1  // 71
-  #endif
   #ifndef X_SERIAL_TX_PIN
     #define X_SERIAL_TX_PIN                   72
   #endif
-  #ifndef Y_SERIAL_RX_PIN
-    #define Y_SERIAL_RX_PIN                   -1  // 73
+  #ifndef X_SERIAL_RX_PIN
+    #define X_SERIAL_RX_PIN                   -1  // 71
   #endif
   #ifndef Y_SERIAL_TX_PIN
     #define Y_SERIAL_TX_PIN                   75
   #endif
-  #ifndef Z_SERIAL_RX_PIN
-    #define Z_SERIAL_RX_PIN                   -1  // 78
+  #ifndef Y_SERIAL_RX_PIN
+    #define Y_SERIAL_RX_PIN                   -1  // 73
   #endif
   #ifndef Z_SERIAL_TX_PIN
     #define Z_SERIAL_TX_PIN                   79
   #endif
-  #ifndef E0_SERIAL_RX_PIN
-    #define E0_SERIAL_RX_PIN                  -1  // 76
+  #ifndef Z_SERIAL_RX_PIN
+    #define Z_SERIAL_RX_PIN                   -1  // 78
   #endif
   #ifndef E0_SERIAL_TX_PIN
     #define E0_SERIAL_TX_PIN                  77
   #endif
-  #ifndef E1_SERIAL_RX_PIN
-    #define E1_SERIAL_RX_PIN                  -1  // 80
+  #ifndef E0_SERIAL_RX_PIN
+    #define E0_SERIAL_RX_PIN                  -1  // 76
   #endif
   #ifndef E1_SERIAL_TX_PIN
     #define E1_SERIAL_TX_PIN                  81
   #endif
-  #ifndef E2_SERIAL_RX_PIN
-    #define E2_SERIAL_RX_PIN                  -1  // 22
+  #ifndef E1_SERIAL_RX_PIN
+    #define E1_SERIAL_RX_PIN                  -1  // 80
   #endif
   #ifndef E2_SERIAL_TX_PIN
     #define E2_SERIAL_TX_PIN                  82
+  #endif
+  #ifndef E2_SERIAL_RX_PIN
+    #define E2_SERIAL_RX_PIN                  -1  // 22
   #endif
 #endif
 
@@ -182,7 +185,7 @@
 #define HEATER_2_PIN                           7
 #define HEATER_BED_PIN                         8
 
-#define FAN_PIN                               44
+#define FAN0_PIN                              44
 #define FAN1_PIN                              45
 #define FAN2_PIN                              46
 
@@ -201,7 +204,7 @@
  *               -----                                             -----
  *       5V/D41 | · · | GND                                    5V | · · | GND
  *        RESET | · · | D49 (SD_DETECT)             (LCD_D7)  D29 | · · | D27  (LCD_D6)
- *   (MOSI) D51 | · · | D33 (BTN_EN2)               (LCD_D5)  D25 | · · | D23  (LCD_D4)
+ *   (MOSI) D51 | · ·   D33 (BTN_EN2)               (LCD_D5)  D25 | · ·   D23  (LCD_D4)
  *  (SD_SS) D53 | · · | D31 (BTN_EN1)               (LCD_RS)  D16 | · · | D17  (LCD_EN)
  *    (SCK) D52 | · · | D50 (MISO)                 (BTN_ENC)  D35 | · · | D37  (BEEPER)
  *               -----                                             -----
@@ -226,7 +229,7 @@
   #define DOGLCD_SCK                          17
   #define DOGLCD_A0                  LCD_PINS_DC
 
-  #define KILL_PIN                            -1  // NC
+  #undef KILL_PIN
   #define NEOPIXEL_PIN                        27
 
 #else
@@ -234,7 +237,7 @@
 
   #if ENABLED(FYSETC_MINI_12864)
     //
-    // See https://wiki.fysetc.com/Mini12864_Panel/?fbclid=IwAR1FyjuNdVOOy9_xzky3qqo_WeM5h-4gpRnnWhQr_O1Ef3h0AFnFXmCehK8
+    // See https://wiki.fysetc.com/Mini12864_Panel/
     //
     #define DOGLCD_A0                         16
     #define DOGLCD_CS                         17
@@ -243,11 +246,10 @@
       #define LCD_BACKLIGHT_PIN               27
     #endif
 
-    #define KILL_PIN                          41
     #define LCD_RESET_PIN                     23  // Must be high or open for LCD to operate normally.
                                   // Seems to work best if left open.
 
-    #if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
+    #if ANY(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
       #ifndef RGB_LED_R_PIN
         #define RGB_LED_R_PIN                 25
       #endif
@@ -261,10 +263,10 @@
       #define NEOPIXEL_PIN                    25
     #endif
 
-  #elif HAS_MARLINUI_U8GLIB
+  #elif HAS_MARLINUI_U8GLIB || HAS_MARLINUI_HD44780
 
     #define LCD_PINS_RS                       16
-    #define LCD_PINS_ENABLE                   17
+    #define LCD_PINS_EN                       17
     #define LCD_PINS_D4                       23
     #define LCD_PINS_D5                       25
     #define LCD_PINS_D6                       27
@@ -275,9 +277,13 @@
       #define DOGLCD_A0                       27
     #endif
 
+    #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+      #define BTN_ENC_EN             LCD_PINS_D7  // Detect the presence of the encoder
+    #endif
+
   #endif
 
-  #if ENABLED(NEWPANEL)
+  #if IS_NEWPANEL
     #define BTN_EN1                           31
     #define BTN_EN2                           33
     #define BTN_ENC                           35

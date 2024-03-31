@@ -23,11 +23,11 @@
 
 /**
  * CNControls V15 for HMS434 pin assignments
+ * ATmega2560, ATmega1280
  */
 
-#if NOT_TARGET(__AVR_ATmega1280__, __AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#endif
+#define ALLOW_MEGA1280
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME "CN Controls V15"
 
@@ -87,7 +87,7 @@
 //
 // Fans
 //
-#define FAN_PIN                                8
+#define FAN0_PIN                               8
 
 //
 // Auto fans

@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
- * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ void HAL_timer_init() {
 
 void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
   switch (timer_num) {
-    case 0:
+    case MF_TIMER_STEP:
       LPC_TIM0->MCR = _BV(SBIT_MR0I) | _BV(SBIT_MR0R); // Match on MR0, reset on MR0, interrupts when NVIC enables them
       LPC_TIM0->MR0 = uint32_t(STEPPER_TIMER_RATE) / frequency; // Match value (period) to set frequency
       LPC_TIM0->TCR = _BV(SBIT_CNTEN); // Counter Enable
@@ -49,7 +49,7 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
       NVIC_EnableIRQ(TIMER0_IRQn);
       break;
 
-    case 1:
+    case MF_TIMER_TEMP:
       LPC_TIM1->MCR = _BV(SBIT_MR0I) | _BV(SBIT_MR0R); // Match on MR0, reset on MR0, interrupts when NVIC enables them
       LPC_TIM1->MR0 = uint32_t(TEMP_TIMER_RATE) / frequency;
       LPC_TIM1->TCR = _BV(SBIT_CNTEN); // Counter Enable

@@ -118,7 +118,7 @@
  */
 
 // Waveform Generation Modes
-enum WaveGenMode : char {
+enum WaveGenMode : uint8_t {
   WGM_NORMAL,          //  0
   WGM_PWM_PC_8,        //  1
   WGM_PWM_PC_9,        //  2
@@ -138,19 +138,19 @@ enum WaveGenMode : char {
 };
 
 // Wavefore Generation Modes (Timer 2 only)
-enum WaveGenMode2 : char {
-  WGM2_NORMAL,          // 0
-  WGM2_PWM_PC,          // 1
-  WGM2_CTC_OCR2A,       // 2
-  WGM2_FAST_PWM,        // 3
-  WGM2_reserved_1,      // 4
-  WGM2_PWM_PC_OCR2A,    // 5
-  WGM2_reserved_2,      // 6
-  WGM2_FAST_PWM_OCR2A,  // 7
+enum WaveGenMode2 : uint8_t {
+  WGM2_NORMAL,         // 0
+  WGM2_PWM_PC,         // 1
+  WGM2_CTC_OCR2A,      // 2
+  WGM2_FAST_PWM,       // 3
+  WGM2_reserved_1,     // 4
+  WGM2_PWM_PC_OCR2A,   // 5
+  WGM2_reserved_2,     // 6
+  WGM2_FAST_PWM_OCR2A, // 7
 };
 
 // Compare Modes
-enum CompareMode : char {
+enum CompareMode : uint8_t {
   COM_NORMAL,          //  0
   COM_TOGGLE,          //  1  Non-PWM: OCnx ... Both PWM (WGM 9,11,14,15): OCnA only ... else NORMAL
   COM_CLEAR_SET,       //  2  Non-PWM: OCnx ... Fast PWM: OCnx/Bottom ... PF-FC: OCnx Up/Down
@@ -158,7 +158,7 @@ enum CompareMode : char {
 };
 
 // Clock Sources
-enum ClockSource : char {
+enum ClockSource : uint8_t {
   CS_NONE,             //  0
   CS_PRESCALER_1,      //  1
   CS_PRESCALER_8,      //  2
@@ -170,7 +170,7 @@ enum ClockSource : char {
 };
 
 // Clock Sources (Timer 2 only)
-enum ClockSource2 : char {
+enum ClockSource2 : uint8_t {
   CS2_NONE,            //  0
   CS2_PRESCALER_1,     //  1
   CS2_PRESCALER_8,     //  2
@@ -203,40 +203,33 @@ enum ClockSource2 : char {
     TCCR##T##B = (TCCR##T##B & ~(0x3 << WGM##T##2)) | (((int(V) >> 2) & 0x3) << WGM##T##2); \
   }while(0)
 #define SET_WGM(T,V) _SET_WGM(T,WGM_##V)
-// Runtime (see set_pwm_frequency):
-#define _SET_WGMnQ(TCCRnQ, V) do{ \
-    *(TCCRnQ)[0] = (*(TCCRnQ)[0] & ~(0x3 << 0)) | (( int(V)       & 0x3) << 0); \
-    *(TCCRnQ)[1] = (*(TCCRnQ)[1] & ~(0x3 << 3)) | (((int(V) >> 2) & 0x3) << 3); \
-  }while(0)
 
 // Set Clock Select bits
 // Ex: SET_CS3(PRESCALER_64);
+#ifdef TCCR2
+  #define HAS_TCCR2 1
+#endif
 #define _SET_CS(T,V) (TCCR##T##B = (TCCR##T##B & ~(0x7 << CS##T##0)) | ((int(V) & 0x7) << CS##T##0))
 #define _SET_CS0(V) _SET_CS(0,V)
 #define _SET_CS1(V) _SET_CS(1,V)
-#ifdef TCCR2
-  #define _SET_CS2(V) (TCCR2 = (TCCR2 & ~(0x7 << CS20)) | (int(V) << CS20))
-#else
-  #define _SET_CS2(V) _SET_CS(2,V)
-#endif
 #define _SET_CS3(V) _SET_CS(3,V)
 #define _SET_CS4(V) _SET_CS(4,V)
 #define _SET_CS5(V) _SET_CS(5,V)
 #define SET_CS0(V) _SET_CS0(CS_##V)
 #define SET_CS1(V) _SET_CS1(CS_##V)
-#ifdef TCCR2
+
+#if HAS_TCCR2
+  #define _SET_CS2(V) (TCCR2 = (TCCR2 & ~(0x7 << CS20)) | (int(V) << CS20))
   #define SET_CS2(V) _SET_CS2(CS2_##V)
 #else
+  #define _SET_CS2(V) _SET_CS(2,V)
   #define SET_CS2(V) _SET_CS2(CS_##V)
 #endif
+
 #define SET_CS3(V) _SET_CS3(CS_##V)
 #define SET_CS4(V) _SET_CS4(CS_##V)
 #define SET_CS5(V) _SET_CS5(CS_##V)
 #define SET_CS(T,V) SET_CS##T(V)
-// Runtime (see set_pwm_frequency)
-#define _SET_CSn(TCCRnQ, V) do{ \
-    (*(TCCRnQ)[1] = (*(TCCRnQ[1]) & ~(0x7 << 0)) | ((int(V) & 0x7) << 0)); \
-  }while(0)
 
 // Set Compare Mode bits
 // Ex: SET_COMS(4,CLEAR_SET,CLEAR_SET,CLEAR_SET);
@@ -246,22 +239,6 @@ enum ClockSource2 : char {
 #define SET_COMB(T,V) SET_COM(T,B,V)
 #define SET_COMC(T,V) SET_COM(T,C,V)
 #define SET_COMS(T,V1,V2,V3) do{ SET_COMA(T,V1); SET_COMB(T,V2); SET_COMC(T,V3); }while(0)
-// Runtime (see set_pwm_duty)
-#define _SET_COMnQ(TCCRnQ, Q, V) do{ \
-    (*(TCCRnQ)[0] = (*(TCCRnQ)[0] & ~(0x3 << (6-2*(Q)))) | (int(V) << (6-2*(Q)))); \
-  }while(0)
-
-// Set OCRnQ register
-// Runtime (see set_pwm_duty):
-#define _SET_OCRnQ(OCRnQ, Q, V) do{ \
-    (*(OCRnQ)[(Q)] = (0x0000) | (int(V) & 0xFFFF)); \
-  }while(0)
-
-// Set ICRn register (one per timer)
-// Runtime (see set_pwm_frequency)
-#define _SET_ICRn(ICRn, V) do{ \
-    (*(ICRn) = (0x0000) | (int(V) & 0xFFFF)); \
-  }while(0)
 
 // Set Noise Canceler bit
 // Ex: SET_ICNC(2,1)
@@ -277,84 +254,6 @@ enum ClockSource2 : char {
 #define SET_FOCA(T,V) SET_FOC(T,A,V)
 #define SET_FOCB(T,V) SET_FOC(T,B,V)
 #define SET_FOCC(T,V) SET_FOC(T,C,V)
-
-#if 0
-
-/**
- * PWM availability macros
- */
-
-// Determine which harware PWMs are already in use
-#define _PWM_CHK_FAN_B(P) (P == E0_AUTO_FAN_PIN || P == E1_AUTO_FAN_PIN || P == E2_AUTO_FAN_PIN || P == E3_AUTO_FAN_PIN || P == E4_AUTO_FAN_PIN || P == E5_AUTO_FAN_PIN || P == E6_AUTO_FAN_PIN || P == E7_AUTO_FAN_PIN || P == CHAMBER_AUTO_FAN_PIN)
-#if PIN_EXISTS(CONTROLLER_FAN)
-  #define PWM_CHK_FAN_B(P) (_PWM_CHK_FAN_B(P) || P == CONTROLLER_FAN_PIN)
-#else
-  #define PWM_CHK_FAN_B(P) _PWM_CHK_FAN_B(P)
-#endif
-
-#if ANY_PIN(FAN, FAN1, FAN2, FAN3, FAN4, FAN5, FAN6, FAN7)
-  #if PIN_EXISTS(FAN7)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN || P == FAN2_PIN || P == FAN3_PIN || P == FAN4_PIN || P == FAN5_PIN || P == FAN6_PIN || P == FAN7_PIN)
-  #elif PIN_EXISTS(FAN6)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN || P == FAN2_PIN || P == FAN3_PIN || P == FAN4_PIN || P == FAN5_PIN || P == FAN6_PIN)
-  #elif PIN_EXISTS(FAN5)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN || P == FAN2_PIN || P == FAN3_PIN || P == FAN4_PIN || P == FAN5_PIN)
-  #elif PIN_EXISTS(FAN4)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN || P == FAN2_PIN || P == FAN3_PIN || P == FAN4_PIN)
-  #elif PIN_EXISTS(FAN3)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN || P == FAN2_PIN || P == FAN3_PIN)
-  #elif PIN_EXISTS(FAN2)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN || P == FAN2_PIN)
-  #elif PIN_EXISTS(FAN1)
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN || P == FAN1_PIN)
-  #else
-    #define PWM_CHK_FAN_A(P) (P == FAN0_PIN)
-  #endif
-#else
-  #define PWM_CHK_FAN_A(P) false
-#endif
-
-#if HAS_MOTOR_CURRENT_PWM
-  #if PIN_EXISTS(MOTOR_CURRENT_PWM_XY)
-    #define PWM_CHK_MOTOR_CURRENT(P) (P == MOTOR_CURRENT_PWM_E || P == MOTOR_CURRENT_PWM_Z || P == MOTOR_CURRENT_PWM_XY)
-  #elif PIN_EXISTS(MOTOR_CURRENT_PWM_Z)
-    #define PWM_CHK_MOTOR_CURRENT(P) (P == MOTOR_CURRENT_PWM_E || P == MOTOR_CURRENT_PWM_Z)
-  #else
-    #define PWM_CHK_MOTOR_CURRENT(P) (P == MOTOR_CURRENT_PWM_E)
-  #endif
-#else
-  #define PWM_CHK_MOTOR_CURRENT(P) false
-#endif
-
-#ifdef NUM_SERVOS
-  #if AVR_ATmega2560_FAMILY
-    #define PWM_CHK_SERVO(P) (P == 5 || (NUM_SERVOS > 12 && P == 6) || (NUM_SERVOS > 24 && P == 46))  // PWMS 3A, 4A & 5A
-  #elif AVR_ATmega2561_FAMILY
-    #define PWM_CHK_SERVO(P)   (P == 5)  // PWM3A
-  #elif AVR_ATmega1284_FAMILY
-    #define PWM_CHK_SERVO(P)   false
-  #elif AVR_AT90USB1286_FAMILY
-    #define PWM_CHK_SERVO(P)   (P == 16) // PWM3A
-  #elif AVR_ATmega328_FAMILY
-    #define PWM_CHK_SERVO(P)   false
-  #endif
-#else
-  #define PWM_CHK_SERVO(P) false
-#endif
-
-#if ENABLED(BARICUDA)
-  #if HAS_HEATER_1 && HAS_HEATER_2
-    #define PWM_CHK_HEATER(P) (P == HEATER_1_PIN || P == HEATER_2_PIN)
-  #elif HAS_HEATER_1
-    #define PWM_CHK_HEATER(P) (P == HEATER_1_PIN)
-  #endif
-#else
-    #define PWM_CHK_HEATER(P) false
-#endif
-
-#define PWM_CHK(P) (PWM_CHK_HEATER(P) || PWM_CHK_SERVO(P) || PWM_CHK_MOTOR_CURRENT(P) || PWM_CHK_FAN_A(P) || PWM_CHK_FAN_B(P))
-
-#endif // PWM_CHK is not used in Marlin
 
 // define which hardware PWMs are available for the current CPU
 // all timer 1 PWMS deleted from this list because they are never available

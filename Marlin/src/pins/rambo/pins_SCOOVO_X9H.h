@@ -25,9 +25,7 @@
  * Rambo pin assignments MODIFIED FOR Scoovo X9H
  ************************************************/
 
-#if NOT_TARGET(__AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#endif
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME "Scoovo X9H"
 
@@ -92,7 +90,7 @@
 #define E1_MS2_PIN                            64
 
 #define DIGIPOTSS_PIN                         38
-#define DIGIPOT_CHANNELS {4,5,3,0,1}              // X Y Z E0 E1 digipot channels to stepper driver mapping
+#define DIGIPOT_CHANNELS { 4, 5, 3, 0, 1 }        // X Y Z E0 E1 digipot channels to stepper driver mapping
 
 //
 // Temperature Sensors
@@ -107,8 +105,8 @@
 #define HEATER_1_PIN                           7
 #define HEATER_BED_PIN                         3
 
-#ifndef FAN_PIN
-  #define FAN_PIN                              8
+#ifndef FAN0_PIN
+  #define FAN0_PIN                             8
 #endif
 #define FAN1_PIN                               6
 #define FAN2_PIN                               2
@@ -128,7 +126,7 @@
 // LCD / Controller
 //
 #define LCD_PINS_RS                           70  // Ext2_5
-#define LCD_PINS_ENABLE                       71  // Ext2_7
+#define LCD_PINS_EN                           71  // Ext2_7
 #define LCD_PINS_D4                           72  // Ext2_9 ?
 #define LCD_PINS_D5                           73  // Ext2_11 ?
 #define LCD_PINS_D6                           74  // Ext2_13
@@ -150,10 +148,11 @@
   // Pins for DOGM SPI LCD Support
   #define DOGLCD_A0                           70
   #define DOGLCD_CS                           71
-  #define LCD_SCREEN_ROT_180
 
   #define SD_DETECT_PIN                       -1  // Pin 72 if using easy adapter board
 
   #define STAT_LED_RED_PIN                    22
   #define STAT_LED_BLUE_PIN                   32
-#endif // VIKI2/miniVIKI
+
+  #define LCD_SCREEN_ROTATE                  180  // 0, 90, 180, 270
+#endif

@@ -23,43 +23,34 @@
 
 /**
  * Melzi pin assignments
+ * ATmega644P, ATmega1284P
  */
 
 #define BOARD_INFO_NAME "Melzi (Tronxy)"
 
-#if HAS_MARLINUI_U8GLIB
-  #ifndef BOARD_ST7920_DELAY_1
-    #define BOARD_ST7920_DELAY_1 DELAY_NS(0)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_2
-    #define BOARD_ST7920_DELAY_2 DELAY_NS(125)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_3
-    #define BOARD_ST7920_DELAY_3 DELAY_NS(0)
-  #endif
+#define Z_ENABLE_PIN                          14
+
+#define LCD_SDSS                              -1
+
+#if ANY(CR10_STOCKDISPLAY, LCD_FOR_MELZI)
+  #define LCD_PINS_RS                         30
+  #define LCD_PINS_EN                         28
+  #define LCD_PINS_D4                         16
+  #define LCD_PINS_D5                         17
+  #define LCD_PINS_D6                         27
+  #define LCD_PINS_D7                         29
+  #define BTN_EN1                             10
+  #define BTN_EN2                             11
+  #define BTN_ENC                             26
+
+  #define LCD_PINS_DEFINED
 #endif
 
-#include "pins_MELZI.h"
+// Alter timing for graphical display
+#if IS_U8GLIB_ST7920
+  #define BOARD_ST7920_DELAY_1                 0
+  #define BOARD_ST7920_DELAY_2               125
+  #define BOARD_ST7920_DELAY_3                 0
+#endif
 
-#undef Z_ENABLE_PIN
-#undef LCD_PINS_RS
-#undef LCD_PINS_ENABLE
-#undef LCD_PINS_D4
-#undef LCD_PINS_D5
-#undef LCD_PINS_D6
-#undef LCD_PINS_D7
-#undef BTN_EN1
-#undef BTN_EN2
-#undef BTN_ENC
-#undef LCD_SDSS
-
-#define Z_ENABLE_PIN                          14
-#define LCD_PINS_RS                           30
-#define LCD_PINS_ENABLE                       28
-#define LCD_PINS_D4                           16
-#define LCD_PINS_D5                           17
-#define LCD_PINS_D6                           27
-#define LCD_PINS_D7                           29
-#define BTN_EN1                               10
-#define BTN_EN2                               11
-#define BTN_ENC                               26
+#include "pins_MELZI.h" // ... SANGUINOLOLU_12 ... SANGUINOLOLU_11

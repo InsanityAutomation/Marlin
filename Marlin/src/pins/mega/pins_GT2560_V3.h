@@ -22,21 +22,29 @@
 #pragma once
 
 /**
- * GT2560 RevB + GT2560 V3.0 + GT2560 V3.1 + GT2560 V4.0 pin assignment
+ * Geeetech GT2560 3.0/3.1 pin assignments
+ * Schematic (3.0): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Geeetech%20GT2560%203.0/GT2560_V3.0_SCH.pdf
+ * Origin (3.0): https://github.com/Geeetech3D/Diagram/blob/master/GT2560_V3.0_SCH.pdf
+ * ATmega2560
+ *
+ * Also GT2560 RevB and GT2560 4.0/4.1
  */
 
-#if NOT_TARGET(__AVR_ATmega1280__, __AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
+#define ALLOW_MEGA1280
+#include "env_validate.h"
+
+#if HOTENDS > 3 || E_STEPPERS > 3
+  #error "GT2560 supports up to 3 hotends / E steppers."
 #endif
 
 #ifndef BOARD_INFO_NAME
-  #define BOARD_INFO_NAME "GT2560 V3.0"
+  #define BOARD_INFO_NAME "GT2560 3.x"
 #endif
 
 //
 // Servos
 //
-#define SERVO0_PIN                            11  //13 untested  3Dtouch
+#define SERVO0_PIN                            11  // 13 untested  3Dtouch
 
 //
 // Limit Switches
@@ -82,9 +90,12 @@
 #ifndef FIL_RUNOUT2_PIN
   #define FIL_RUNOUT2_PIN                     67
 #endif
+#ifndef FIL_RUNOUT3_PIN
+  #define FIL_RUNOUT3_PIN                     54
+#endif
 
 //
-// Power Recovery
+// Power Loss Detection
 //
 #define POWER_LOSS_PIN                        69  // Pin to detect power loss
 #define POWER_LOSS_STATE                     LOW
@@ -131,7 +142,7 @@
 #define HEATER_1_PIN                           3
 #define HEATER_2_PIN                           2
 #define HEATER_BED_PIN                         4
-#define FAN_PIN                                9
+#define FAN0_PIN                               9
 #define FAN1_PIN                               8
 #define FAN2_PIN                               7
 
@@ -142,7 +153,10 @@
 #define SDSS                                  53
 #define LED_PIN                               13  // Use 6 (case light) for external LED. 13 is internal (yellow) LED.
 #define PS_ON_PIN                             12
-#define SUICIDE_PIN                           54  // This pin must be enabled at boot to keep power flowing
+
+#if NUM_RUNOUT_SENSORS < 3
+  #define SUICIDE_PIN                         54  // This pin must be enabled at boot to keep power flowing
+#endif
 
 #ifndef CASE_LIGHT_PIN
   #define CASE_LIGHT_PIN                       6  // 21
@@ -153,26 +167,51 @@
 //
 #define BEEPER_PIN                            18
 
-#ifndef LCD_PINS_RS
-  #define LCD_PINS_RS                         20
-#endif
-#ifndef LCD_PINS_ENABLE
-  #define LCD_PINS_ENABLE                     17
-#endif
-#ifndef LCD_PINS_D4
-  #define LCD_PINS_D4                         16
-#endif
-#ifndef LCD_PINS_D5
-  #define LCD_PINS_D5                         21
-#endif
-#ifndef LCD_PINS_D6
-  #define LCD_PINS_D6                          5
-#endif
-#ifndef LCD_PINS_D7
-  #define LCD_PINS_D7                         36
+#if ENABLED(YHCB2004)
+  #ifndef YHCB2004_MOSI_PIN
+    #define YHCB2004_MOSI_PIN                 21
+  #endif
+  #ifndef YHCB2004_MISO_PIN
+    #define YHCB2004_MISO_PIN                 36
+  #endif
+  #ifndef YHCB2004_SCK_PIN
+    #define YHCB2004_SCK_PIN                   5
+  #endif
+  #ifndef YHCB2004_SS_PIN
+    #define YHCB2004_SS_PIN                   SS
+  #endif
+#elif HAS_WIRED_LCD
+  #ifndef LCD_PINS_RS
+    #define LCD_PINS_RS                       20
+  #endif
+  #ifndef LCD_PINS_EN
+    #define LCD_PINS_EN                       17
+  #endif
+  #ifndef LCD_PINS_D4
+    #define LCD_PINS_D4                       16
+  #endif
+  #ifndef LCD_PINS_D5
+    #define LCD_PINS_D5                       21
+  #endif
+  #ifndef LCD_PINS_D6
+    #define LCD_PINS_D6                        5
+  #endif
+  #ifndef LCD_PINS_D7
+    #define LCD_PINS_D7                       36
+  #endif
 #endif
 
-#if ENABLED(NEWPANEL)
+#if ENABLED(YHCB2004)
+  #ifndef BTN_EN1
+    #define BTN_EN1                           16
+  #endif
+  #ifndef BTN_EN2
+    #define BTN_EN2                           17
+  #endif
+  #ifndef BTN_ENC
+    #define BTN_ENC                           19
+  #endif
+#elif IS_NEWPANEL
   #ifndef BTN_EN1
     #define BTN_EN1                           42
   #endif

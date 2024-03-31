@@ -22,13 +22,15 @@
 #pragma once
 
 /**
- * Formbot pin assignments
+ * Formbot T-Rex 2+ pin assignments
+ * ATmega2560
  */
 
-#if NOT_TARGET(__AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#elif HOTENDS > 2 || E_STEPPERS > 2
-  #error "Formbot supports up to 2 hotends / E-steppers. Comment out this line to continue."
+#define REQUIRE_MEGA2560
+#include "env_validate.h"
+
+#if HOTENDS > 2 || E_STEPPERS > 2
+  #error "Formbot supports up to 2 hotends / E steppers."
 #endif
 
 #define BOARD_INFO_NAME      "Formbot"
@@ -110,28 +112,11 @@
 #define TEMP_1_PIN                            15  // Analog Input
 #define TEMP_BED_PIN                           3  // Analog Input
 
-// SPI for Max6675 or Max31855 Thermocouple
-#if DISABLED(SDSUPPORT)
-  #define MAX6675_SS_PIN                      66  // Don't use 53 if using Display/SD card
+// SPI for MAX Thermocouple
+#if !HAS_MEDIA
+  #define TEMP_0_CS_PIN                       66  // Don't use 53 if using Display/SD card
 #else
-  #define MAX6675_SS_PIN                      66  // Don't use 49 (SD_DETECT_PIN)
-#endif
-
-//
-// Augmentation for auto-assigning RAMPS plugs
-//
-#if NONE(IS_RAMPS_EEB, IS_RAMPS_EEF, IS_RAMPS_EFB, IS_RAMPS_EFF, IS_RAMPS_SF) && !PIN_EXISTS(MOSFET_D)
-  #if HAS_MULTI_HOTEND
-    #if TEMP_SENSOR_BED
-      #define IS_RAMPS_EEB
-    #else
-      #define IS_RAMPS_EEF
-    #endif
-  #elif TEMP_SENSOR_BED
-    #define IS_RAMPS_EFB
-  #else
-    #define IS_RAMPS_EFF
-  #endif
+  #define TEMP_0_CS_PIN                       66  // Don't use 49 (SD_DETECT_PIN)
 #endif
 
 //
@@ -141,7 +126,7 @@
 #define HEATER_1_PIN                           7
 #define HEATER_BED_PIN                        58
 
-#define FAN_PIN                                9
+#define FAN0_PIN                               9
 
 #if HAS_FILAMENT_SENSOR
   #define FIL_RUNOUT_PIN                       4
@@ -156,8 +141,8 @@
 //
 #define SDSS                                  53
 #ifndef LED_PIN
-  #define LED_PIN                             13  // The Formbot v 1 board has almost no unassigned pins on it.  The Board's LED
-#endif                          // is a good place to get a signal to control the Max7219 LED Matrix.
+  #define LED_PIN                             13  // The Formbot v 1 board has almost no unassigned pins.
+#endif                                            // The Board's LED is a good place to connect the Max7219 Matrix.
 
 // Use the RAMPS 1.4 Analog input 5 on the AUX2 connector
 #define FILWIDTH_PIN                           5  // Analog Input
@@ -175,7 +160,7 @@
 //
 // Formbot only supports REPRAP_DISCOUNT_SMART_CONTROLLER
 //
-#if ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER)
+#if IS_RRD_SC
   #ifndef BEEPER_PIN
     #define BEEPER_PIN                        37
   #endif
@@ -190,21 +175,16 @@
   #endif
 
   #define LCD_PINS_RS                         16
-  #define LCD_PINS_ENABLE                     17
+  #define LCD_PINS_EN                         17
   #define LCD_PINS_D4                         23
   #define LCD_PINS_D5                         25
   #define LCD_PINS_D6                         27
   #define LCD_PINS_D7                         29
 #endif
 
-#if HAS_MARLINUI_U8GLIB
-  #ifndef BOARD_ST7920_DELAY_1
-    #define BOARD_ST7920_DELAY_1 DELAY_NS(200)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_2
-    #define BOARD_ST7920_DELAY_2 DELAY_NS(200)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_3
-    #define BOARD_ST7920_DELAY_3 DELAY_NS(200)
-  #endif
+// Alter timing for graphical display
+#if IS_U8GLIB_ST7920
+  #define BOARD_ST7920_DELAY_1               200
+  #define BOARD_ST7920_DELAY_2               200
+  #define BOARD_ST7920_DELAY_3               200
 #endif

@@ -26,10 +26,9 @@
 
 #include "../../gcode.h"
 #include "../../../module/planner.h"
-#include "../../../module/stepper.h"
 
-#if ENABLED(EXTRA_LIN_ADVANCE_K)
-  float other_extruder_advance_K[EXTRUDERS];
+#if ENABLED(ADVANCE_K_EXTRA)
+  float other_extruder_advance_K[DISTINCT_E];
   uint8_t lin_adv_slot = 0;
 #endif
 
@@ -37,13 +36,13 @@
  * M900: Get or Set Linear Advance K-factor
  *  T<tool>     Which tool to address
  *  K<factor>   Set current advance K factor (Slot 0).
- *  L<factor>   Set secondary advance K factor (Slot 1). Requires EXTRA_LIN_ADVANCE_K.
- *  S<0/1>      Activate slot 0 or 1. Requires EXTRA_LIN_ADVANCE_K.
+ *  L<factor>   Set secondary advance K factor (Slot 1). Requires ADVANCE_K_EXTRA.
+ *  S<0/1>      Activate slot 0 or 1. Requires ADVANCE_K_EXTRA.
  */
 void GcodeSuite::M900() {
 
   auto echo_value_oor = [](const char ltr, const bool ten=true) {
-    SERIAL_CHAR('?'); SERIAL_CHAR(ltr);
+    SERIAL_CHAR('?', ltr);
     SERIAL_ECHOPGM(" value out of range");
     if (ten) SERIAL_ECHOPGM(" (0-10)");
     SERIAL_ECHOLNPGM(".");
@@ -51,6 +50,7 @@ void GcodeSuite::M900() {
 
   #if EXTRUDERS < 2
     constexpr uint8_t tool_index = 0;
+    UNUSED(tool_index);
   #else
     const uint8_t tool_index = parser.intval('T', active_extruder);
     if (tool_index >= EXTRUDERS) {
@@ -59,12 +59,12 @@ void GcodeSuite::M900() {
     }
   #endif
 
-  float &kref = planner.extruder_advance_K[tool_index], newK = kref;
+  float &kref = planner.extruder_advance_K[E_INDEX_N(tool_index)], newK = kref;
   const float oldK = newK;
 
-  #if ENABLED(EXTRA_LIN_ADVANCE_K)
+  #if ENABLED(ADVANCE_K_EXTRA)
 
-    float &lref = other_extruder_advance_K[tool_index];
+    float &lref = other_extruder_advance_K[E_INDEX_N(tool_index)];
 
     const bool old_slot = TEST(lin_adv_slot, tool_index), // The tool's current slot (0 or 1)
                new_slot = parser.boolval('S', old_slot);  // The passed slot (default = current)
@@ -112,36 +112,45 @@ void GcodeSuite::M900() {
 
   if (!parser.seen_any()) {
 
-    #if ENABLED(EXTRA_LIN_ADVANCE_K)
+    #if ENABLED(ADVANCE_K_EXTRA)
 
-      #if EXTRUDERS < 2
-        SERIAL_ECHOLNPAIR("Advance S", int(new_slot), " K", kref, "(S", int(!new_slot), " K", lref, ")");
+      #if DISTINCT_E < 2
+        SERIAL_ECHOLNPGM("Advance S", new_slot, " K", kref, "(S", !new_slot, " K", lref, ")");
       #else
-        LOOP_L_N(i, EXTRUDERS) {
-          const bool slot = TEST(lin_adv_slot, i);
-          SERIAL_ECHOLNPAIR("Advance T", int(i), " S", int(slot), " K", planner.extruder_advance_K[i],
-                            "(S", int(!slot), " K", other_extruder_advance_K[i], ")");
-          SERIAL_EOL();
+        EXTRUDER_LOOP() {
+          const bool slot = TEST(lin_adv_slot, e);
+          SERIAL_ECHOLNPGM("Advance T", e, " S", slot, " K", planner.extruder_advance_K[e],
+                           "(S", !slot, " K", other_extruder_advance_K[e], ")");
         }
       #endif
 
     #else
 
       SERIAL_ECHO_START();
-      #if EXTRUDERS < 2
-        SERIAL_ECHOLNPAIR("Advance K=", planner.extruder_advance_K[0]);
+      #if DISTINCT_E < 2
+        SERIAL_ECHOLNPGM("Advance K=", planner.extruder_advance_K[0]);
       #else
         SERIAL_ECHOPGM("Advance K");
-        LOOP_L_N(i, EXTRUDERS) {
-          SERIAL_CHAR(' ', '0' + i, ':');
-          SERIAL_DECIMAL(planner.extruder_advance_K[i]);
-        }
+        EXTRUDER_LOOP() SERIAL_ECHO(AS_CHAR(' '), AS_CHAR('0' + e), AS_CHAR(':'), planner.extruder_advance_K[e]);
         SERIAL_EOL();
       #endif
 
     #endif
   }
 
+}
+
+void GcodeSuite::M900_report(const bool forReplay/*=true*/) {
+  report_heading(forReplay, F(STR_LINEAR_ADVANCE));
+  #if DISTINCT_E < 2
+    report_echo_start(forReplay);
+    SERIAL_ECHOLNPGM("  M900 K", planner.extruder_advance_K[0]);
+  #else
+    EXTRUDER_LOOP() {
+      report_echo_start(forReplay);
+      SERIAL_ECHOLNPGM("  M900 T", e, " K", planner.extruder_advance_K[e]);
+    }
+  #endif
 }
 
 #endif // LIN_ADVANCE

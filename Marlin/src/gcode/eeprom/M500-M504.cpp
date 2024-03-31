@@ -25,6 +25,11 @@
 #include "../../core/serial.h"
 #include "../../inc/MarlinConfig.h"
 
+#if ENABLED(CONFIGURATION_EMBEDDING)
+  #include "../../sd/cardreader.h"
+  #include "../../mczip.h"
+#endif
+
 /**
  * M500: Store settings in EEPROM
  */
@@ -50,9 +55,32 @@ void GcodeSuite::M502() {
 
   /**
    * M503: print settings currently in memory
+   *
+   *   S<bool> : Include / exclude header comments in the output. (Default: S1)
+   *
+   * With CONFIGURATION_EMBEDDING:
+   *   C<flag> : Save the full Marlin configuration to SD Card as "mc.zip"
    */
   void GcodeSuite::M503() {
     (void)settings.report(!parser.boolval('S', true));
+
+    #if ENABLED(CONFIGURATION_EMBEDDING)
+      if (parser.seen_test('C')) {
+        MediaFile file;
+        // Need to create the config size on the SD card
+        MediaFile root = card.getroot();
+        if (file.open(&root, "mc.zip", O_WRITE|O_CREAT)) {
+          bool success = true;
+          for (uint16_t i = 0; success && i < sizeof(mc_zip); ++i) {
+            const uint8_t c = pgm_read_byte(&mc_zip[i]);
+            success = (file.write(c) == 1);
+          }
+          success = file.close() && success;
+
+          if (success) SERIAL_ECHO_MSG("Configuration saved as 'mc.zip'");
+        }
+      }
+    #endif
   }
 
 #endif // !DISABLE_M503
@@ -75,14 +103,14 @@ void GcodeSuite::M502() {
         if (dowrite) {
           val = parser.byteval('V');
           persistentStore.write_data(addr, &val);
-          SERIAL_ECHOLNPAIR("Wrote address ", addr, " with ", int(val));
+          SERIAL_ECHOLNPGM("Wrote address ", addr, " with ", val);
         }
         else {
           if (parser.seenval('T')) {
             const int endaddr = parser.value_ushort();
             while (addr <= endaddr) {
               persistentStore.read_data(addr, &val);
-              SERIAL_ECHOLNPAIR("0x", hex_word(addr), ":", hex_byte(val));
+              SERIAL_ECHOLNPGM("0x", hex_word(addr), ":", hex_byte(val));
               addr++;
               safe_delay(10);
             }
@@ -90,7 +118,7 @@ void GcodeSuite::M502() {
           }
           else {
             persistentStore.read_data(addr, &val);
-            SERIAL_ECHOLNPAIR("Read address ", addr, " and got ", int(val));
+            SERIAL_ECHOLNPGM("Read address ", addr, " and got ", val);
           }
         }
         return;

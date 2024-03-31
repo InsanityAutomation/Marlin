@@ -23,15 +23,21 @@
 
 /**
  * MKS BASE 1.0 – Arduino Mega2560 with RAMPS v1.4 pin assignments
+ * Schematics:
+ * - https://green-candy.osdn.jp/external/MarlinFW/board_schematics/RAMPS/MKS%20BASE%201.0/PAGE1.pdf
+ * - https://green-candy.osdn.jp/external/MarlinFW/board_schematics/RAMPS/MKS%20BASE%201.0/PAGE2.pdf
+ * - https://green-candy.osdn.jp/external/MarlinFW/board_schematics/RAMPS/MKS%20BASE%201.0/PAGE3.pdf
+ * Origin: https://reprap.org/wiki/File:MKS_Base_V1.0_source.zip
+ * ATmega2560
  *
  * Rev B - Override pin definitions for CASE_LIGHT and M3/M4/M5 spindle control
  */
 
 #if HOTENDS > 2 || E_STEPPERS > 2
-  #error "MKS BASE 1.0 supports up to 2 hotends / E-steppers. Comment out this line to continue."
+  #error "MKS BASE 1.0 supports up to 2 hotends / E steppers."
 #endif
 
 #define BOARD_INFO_NAME "MKS BASE 1.0"
 #define MKS_BASE_VERSION 10
 
-#include "pins_MKS_BASE_common.h"
+#include "pins_MKS_BASE_common.h" // ... RAMPS

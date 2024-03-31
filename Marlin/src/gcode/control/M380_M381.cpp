@@ -22,7 +22,7 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if EITHER(EXT_SOLENOID, MANUAL_SOLENOID_CONTROL)
+#if ANY(EXT_SOLENOID, MANUAL_SOLENOID_CONTROL)
 
 #include "../gcode.h"
 #include "../../feature/solenoid.h"
@@ -37,7 +37,7 @@ void GcodeSuite::M380() {
   #if ENABLED(MANUAL_SOLENOID_CONTROL)
     enable_solenoid(parser.intval('S', active_extruder));
   #else
-    enable_solenoid_on_active_extruder();
+    enable_solenoid(active_extruder);
   #endif
 }
 

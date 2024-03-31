@@ -23,13 +23,16 @@
 
 /**
  * Dreammaker Overlord v1.1 pin assignments
+ * Schematic: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Dreammaker%20Overlord%20v1.1/Schematic.pdf
+ * Origin: https://github.com/jdpiercy/Overlord-Pro/blob/master/Motherboard/Schematic.pdf
+ * ATmega2560
  */
 
-#if NOT_TARGET(__AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#elif HOTENDS > 2 || E_STEPPERS > 2
-  #error "Overlord Controller supports up to 2 hotends / E-steppers. Comment out this line to continue."
+#if HOTENDS > 2 || E_STEPPERS > 2
+  #error "Overlord supports up to 2 hotends / E steppers."
 #endif
+
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME         "OVERLORD"
 #define DEFAULT_MACHINE_NAME    BOARD_INFO_NAME
@@ -49,7 +52,7 @@
   #define Z_MIN_PROBE_PIN                     46  // JP4, Tfeed1
 #endif
 
-#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+#ifndef FIL_RUNOUT_PIN
   #define FIL_RUNOUT_PIN                      44  // JP3, Tfeed2
 #endif
 
@@ -92,7 +95,7 @@
 #define HEATER_1_PIN                           3
 #define HEATER_BED_PIN                         4
 
-#define FAN_PIN                                7  // material cooling fan
+#define FAN0_PIN                               7  // material cooling fan
 
 //
 // SD Card
@@ -119,11 +122,11 @@
 //
 // LCD / Controller
 //
-#if HAS_MARLINUI_U8GLIB
+#if HAS_WIRED_LCD
   // OVERLORD OLED pins
   #define LCD_PINS_RS                         20
   #define LCD_PINS_D5                         21
-  #define LCD_PINS_ENABLE                     15
+  #define LCD_PINS_EN                         15
   #define LCD_PINS_D4                         14
   #define LCD_PINS_D6                          5
   #define LCD_PINS_D7                          6
@@ -132,10 +135,10 @@
   #endif
 #endif
 
-#if ENABLED(NEWPANEL)
+#if IS_NEWPANEL
   #define BTN_ENC                             16  // Enter Pin
   #define BTN_UP                              19  // Button UP Pin
-  #define BTN_DWN                             17  // Button DOWN Pin
+  #define BTN_DOWN                            17  // Button DOWN Pin
 #endif
 
 // Additional connectors/pins on the Overlord V1.X board

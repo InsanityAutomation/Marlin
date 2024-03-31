@@ -23,11 +23,13 @@
 
 /**
  * Mini-RAMBo pin assignments
+ * Schematic (1.3a): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Mini%20RAMBo/Mini-Rambo.PDF
+ * Origin (1.3a): https://github.com/ultimachine/Mini-Rambo/blob/1.3a/board/Project%20Outputs%20for%20Mini-Rambo/Mini-Rambo.PDF
+ * Schematic (1.0a): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Mini%20RAMBo%201.0a/Mini-Rambo.PDF
+ * Origin (1.0a): https://github.com/ultimachine/Mini-Rambo/blob/v1.1b/board/Project%20Outputs%20for%20Mini-Rambo/Mini-Rambo.PDF
  */
 
-#if NOT_TARGET(__AVR_ATmega2560__)
-  #error "Oops! Select 'RAMBo' in 'Tools > Board' or the Mega2560 environment in PlatformIO."
-#endif
+#include "env_validate.h"
 
 #if MB(MINIRAMBO_10A)
   #define BOARD_INFO_NAME "Mini RAMBo 1.0a"
@@ -71,7 +73,7 @@
 #define E0_DIR_PIN                            43
 #define E0_ENABLE_PIN                         26
 
-// Microstepping pins - Mapping not from fastio.h (?)
+// Microstepping pins
 #define X_MS1_PIN                             40
 #define X_MS2_PIN                             41
 #define Y_MS1_PIN                             69
@@ -107,8 +109,8 @@
 #endif
 #define HEATER_BED_PIN                         4
 
-#ifndef FAN_PIN
-  #define FAN_PIN                              8
+#ifndef FAN0_PIN
+  #define FAN0_PIN                             8
 #endif
 #define FAN1_PIN                               6
 
@@ -124,18 +126,22 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-// use P1 connector for spindle pins
-#define SPINDLE_LASER_PWM_PIN                  9  // Hardware PWM
-#define SPINDLE_LASER_ENA_PIN                 18  // Pullup!
-#define SPINDLE_DIR_PIN                       19
+#if HAS_CUTTER
+  // Use P1 connector for spindle pins
+  #define SPINDLE_LASER_PWM_PIN                9  // Hardware PWM
+  #define SPINDLE_LASER_ENA_PIN               18  // Pullup!
+  #define SPINDLE_DIR_PIN                     19
+#endif
 
 //
 // Průša i3 MK2 Multiplexer Support
 //
-#define E_MUX0_PIN                            17
-#define E_MUX1_PIN                            16
-#if !MB(MINIRAMBO_10A)
-  #define E_MUX2_PIN                          78  // 84 in MK2 Firmware, with BEEPER as 78
+#if HAS_PRUSA_MMU1
+  #define E_MUX0_PIN                          17
+  #define E_MUX1_PIN                          16
+  #if !MB(MINIRAMBO_10A)
+    #define E_MUX2_PIN                        78  // 84 in MK2 Firmware, with BEEPER as 78
+  #endif
 #endif
 
 //
@@ -147,7 +153,7 @@
     #define KILL_PIN                          32
   #endif
 
-  #if ENABLED(ULTIPANEL) || TOUCH_UI_ULTIPANEL
+  #if IS_ULTIPANEL || TOUCH_UI_ULTIPANEL
 
     #if MB(MINIRAMBO_10A)
 
@@ -158,7 +164,7 @@
       #define BTN_ENC                         21
 
       #define LCD_PINS_RS                     38
-      #define LCD_PINS_ENABLE                  5
+      #define LCD_PINS_EN                      5
       #define LCD_PINS_D4                     14
       #define LCD_PINS_D5                     15
       #define LCD_PINS_D6                     32
@@ -166,7 +172,7 @@
 
       #define SD_DETECT_PIN                   72
 
-    #else                                         // !MINIRAMBO_10A
+    #else // !MINIRAMBO_10A
 
       // AUX-4
       #define BEEPER_PIN                      84
@@ -177,7 +183,7 @@
       #define BTN_ENC                          9
 
       #define LCD_PINS_RS                     82
-      #define LCD_PINS_ENABLE                 18
+      #define LCD_PINS_EN                     18
       #define LCD_PINS_D4                     19
       #define LCD_PINS_D5                     70
       #define LCD_PINS_D6                     85
@@ -187,6 +193,16 @@
 
     #endif // !MINIRAMBO_10A
 
-  #endif // ULTIPANEL || TOUCH_UI_ULTIPANEL
+    #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+      #define BTN_ENC_EN             LCD_PINS_D7  // Detect the presence of the encoder
+    #endif
+
+  #endif // IS_ULTIPANEL || TOUCH_UI_ULTIPANEL
 
 #endif // HAS_WIRED_LCD || TOUCH_UI_ULTIPANEL
+
+#if IS_U8GLIB_ST7920
+  #define BOARD_ST7920_DELAY_1                 0
+  #define BOARD_ST7920_DELAY_2               250
+  #define BOARD_ST7920_DELAY_3                 0
+#endif

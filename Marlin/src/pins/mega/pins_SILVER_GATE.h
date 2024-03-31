@@ -21,6 +21,8 @@
  */
 #pragma once
 
+// ATmega2561
+
 #if NOT_TARGET(__AVR_ATmega1281__, __AVR_ATmega2561__)
   #error "Oops! Select 'Silvergate' in 'Tools > Board.'"
 #endif
@@ -55,8 +57,8 @@
   #define FIL_RUNOUT_PIN                      34  // X_MAX unless overridden
 #endif
 
-#ifndef FAN_PIN
-  #define FAN_PIN                              5
+#ifndef FAN0_PIN
+  #define FAN0_PIN                             5
 #endif
 
 #define HEATER_0_PIN                           7
@@ -72,10 +74,10 @@
 #define HEATER_BED_PIN                         8
 #define TEMP_BED_PIN                           6
 
-#if HAS_MARLINUI_U8GLIB
-  #if ENABLED(U8GLIB_ST7920)                      // SPI GLCD 12864 ST7920
+#if HAS_WIRED_LCD
+  #if IS_U8GLIB_ST7920                            // SPI GLCD 12864 ST7920
     #define LCD_PINS_RS                       30
-    #define LCD_PINS_ENABLE                   20
+    #define LCD_PINS_EN                       20
     #define LCD_PINS_D4                       25
     #define BEEPER_PIN                        29
     #define BTN_EN1                           19
@@ -86,6 +88,9 @@
       #define KILL_PIN                        21
       #define HOME_PIN                        28
     #endif
+    #define BOARD_ST7920_DELAY_1               0
+    #define BOARD_ST7920_DELAY_2             250
+    #define BOARD_ST7920_DELAY_3               0
   #endif
 #endif
 

@@ -23,11 +23,13 @@
 
 /**
  * CartesioV11 pin assignments
+ * Comes with an Arduino Mega, see
+ * https://web.archive.org/web/20171024190029/http://mauk.cc/mediawiki/index.php/Electronical_assembly
+ * ATmega2560, ATmega1280
  */
 
-#if NOT_TARGET(__AVR_ATmega1280__, __AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#endif
+#define ALLOW_MEGA1280
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME "CN Controls V11"
 
@@ -91,8 +93,8 @@
 #define HEATER_3_PIN                          46
 #define HEATER_BED_PIN                         2
 
-#ifndef FAN_PIN
-  //#define FAN_PIN                            7  // common PWM pin for all tools
+#ifndef FAN0_PIN
+  //#define FAN0_PIN                           7  // common PWM pin for all tools
 #endif
 
 //
@@ -136,22 +138,25 @@
 //
 // LCD / Controller
 //
-#define BEEPER_PIN                             6
+#if HAS_WIRED_LCD
+  #define BEEPER_PIN                           6
 
-// Pins for DOGM SPI LCD Support
-#define DOGLCD_A0                             26
-#define DOGLCD_CS                             24
-#define DOGLCD_MOSI                           -1
-#define DOGLCD_SCK                            -1
+  #define BTN_EN1                             23
+  #define BTN_EN2                             25
+  #define BTN_ENC                             27
 
-#define BTN_EN1                               23
-#define BTN_EN2                               25
-#define BTN_ENC                               27
+  #if HAS_MARLINUI_U8GLIB
+    #define DOGLCD_A0                         26
+    #define DOGLCD_CS                         24
+    #define DOGLCD_MOSI                       -1  // Prevent auto-define by Conditionals_post.h
+    #define DOGLCD_SCK                        -1
+  #endif
+#endif
 
 // Hardware buttons for manual movement of XYZ
-#define SHIFT_OUT                             19
-#define SHIFT_LD                              18
-#define SHIFT_CLK                             17
+#define SHIFT_OUT_PIN                         19
+#define SHIFT_LD_PIN                          18
+#define SHIFT_CLK_PIN                         17
 
 //#define UI1                                 31
 //#define UI2                                 22

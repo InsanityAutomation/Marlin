@@ -23,11 +23,11 @@
 
 /**
  * Azteeg X5 GT pin assignments
+ * Wiring diagram: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Azteeg%20X5%20GT/X5%20GT%20Wiring%20Diagram.pdf
+ * Origin: https://panucattdevices.freshdesk.com/support/solutions/articles/1000244740-support-files
  */
 
-#if NOT_TARGET(MCU_LPC1769)
-  #error "Oops! Make sure you have the LPC1769 environment selected in your IDE."
-#endif
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME   "Azteeg X5 GT"
 #define BOARD_WEBSITE_URL "tinyurl.com/yx8tdqa3"
@@ -100,15 +100,14 @@
 #define HEATER_BED_PIN                     P2_07
 #define HEATER_0_PIN                       P2_04
 #define HEATER_1_PIN                       P2_05
-#ifndef FAN_PIN
-  #define FAN_PIN                          P0_26
+#ifndef FAN0_PIN
+  #define FAN0_PIN                         P0_26
 #endif
 #define FAN1_PIN                           P1_22
 
 //
 // Display
 //
-
 #if ANY(VIKI2, miniVIKI)
   #define BEEPER_PIN                       P1_31
   #define DOGLCD_A0                        P2_06

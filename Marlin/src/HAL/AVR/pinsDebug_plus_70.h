@@ -2,6 +2,9 @@
  * Marlin 3D Printer Firmware
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -227,7 +230,6 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM_plus_70[] = {
 };
 
 #define digitalPinToBitMask_plus_70(P) ( pgm_read_byte( digital_pin_to_bit_mask_PGM_plus_70 + (P) ) )
-
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM_plus_70[] = {
   // TIMERS

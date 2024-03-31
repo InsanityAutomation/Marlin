@@ -27,7 +27,7 @@
 #include "../gcode.h"
 #include "../../module/motion.h"
 #include "../../module/probe.h"
-#include "../../lcd/ultralcd.h"
+#include "../../lcd/marlinui.h"
 
 #include "../../feature/bedlevel/bedlevel.h"
 
@@ -35,11 +35,15 @@
   #include "../../module/planner.h"
 #endif
 
+#if HAS_PTC
+  #include "../../feature/probe_temp_comp.h"
+#endif
+
 /**
  * M48: Z probe repeatability measurement function.
  *
  * Usage:
- *   M48 <P#> <X#> <Y#> <V#> <E> <L#> <S>
+ *   M48 <P#> <X#> <Y#> <V#> <E> <L#> <S> <C#>
  *     P = Number of sampled points (4-50, default 10)
  *     X = Sample X position
  *     Y = Sample Y position
@@ -47,11 +51,10 @@
  *     E = Engage Z probe for each reading
  *     L = Number of legs of movement before probe
  *     S = Schizoid (Or Star if you prefer)
+ *     C = Enable probe temperature compensation (0 or 1, default 1)
  *
  * This function requires the machine to be homed before invocation.
  */
-
-extern const char SP_Y_STR[];
 
 void GcodeSuite::M48() {
 
@@ -81,7 +84,7 @@ void GcodeSuite::M48() {
   };
 
   if (!probe.can_reach(test_position)) {
-    ui.set_status_P(GET_TEXT(MSG_M48_OUT_OF_BOUNDS), 99);
+    LCD_MESSAGE_MAX(MSG_M48_OUT_OF_BOUNDS);
     SERIAL_ECHOLNPGM("? (X,Y) out of bounds.");
     return;
   }
@@ -109,6 +112,8 @@ void GcodeSuite::M48() {
     set_bed_leveling_enabled(false);
   #endif
 
+  TERN_(HAS_PTC, ptc.set_enabled(parser.boolval('C', true)));
+
   // Work with reasonable feedrates
   remember_feedrate_scaling_off();
 
@@ -119,17 +124,15 @@ void GcodeSuite::M48() {
         max = -99999.9, // Largest value sampled so far
         sample_set[n_samples];  // Storage for sampled values
 
-  auto dev_report = [](const bool verbose, const float &mean, const float &sigma, const float &min, const float &max, const bool final=false) {
+  auto dev_report = [](const bool verbose, const_float_t mean, const_float_t sigma, const_float_t min, const_float_t max, const bool final=false) {
     if (verbose) {
-      SERIAL_ECHOPAIR_F("Mean: ", mean, 6);
-      if (!final) SERIAL_ECHOPAIR_F(" Sigma: ", sigma, 6);
-      SERIAL_ECHOPAIR_F(" Min: ", min, 3);
-      SERIAL_ECHOPAIR_F(" Max: ", max, 3);
-      SERIAL_ECHOPAIR_F(" Range: ", max-min, 3);
+      SERIAL_ECHOPGM("Mean: ", p_float_t(mean, 6));
+      if (!final) SERIAL_ECHOPGM(" Sigma: ", p_float_t(sigma, 6));
+      SERIAL_ECHOPGM(" Min: ", p_float_t(min, 3), " Max: ", p_float_t(max, 3), " Range: ", p_float_t(max-min, 3));
       if (final) SERIAL_EOL();
     }
     if (final) {
-      SERIAL_ECHOLNPAIR_F("Standard Deviation: ", sigma, 6);
+      SERIAL_ECHOLNPGM("Standard Deviation: ", p_float_t(sigma, 6));
       SERIAL_EOL();
     }
   };
@@ -143,10 +146,10 @@ void GcodeSuite::M48() {
 
     float sample_sum = 0.0;
 
-    LOOP_L_N(n, n_samples) {
-      #if HAS_WIRED_LCD
+    for (uint8_t n = 0; n < n_samples; ++n) {
+      #if HAS_STATUS_MESSAGE
         // Display M48 progress in the status bar
-        ui.status_printf_P(0, PSTR(S_FMT ": %d/%d"), GET_TEXT(MSG_M48_POINT), int(n + 1), int(n_samples));
+        ui.status_printf(0, F(S_FMT ": %d/%d"), GET_TEXT(MSG_M48_POINT), int(n + 1), int(n_samples));
       #endif
 
       // When there are "legs" of movement move around the point before probing
@@ -157,20 +160,20 @@ void GcodeSuite::M48() {
         float angle = random(0, 360);
         const float radius = random(
           #if ENABLED(DELTA)
-            int(0.1250000000 * (DELTA_PRINTABLE_RADIUS)),
-            int(0.3333333333 * (DELTA_PRINTABLE_RADIUS))
+            int(0.1250000000 * (PRINTABLE_RADIUS)),
+            int(0.3333333333 * (PRINTABLE_RADIUS))
           #else
             int(5), int(0.125 * _MIN(X_BED_SIZE, Y_BED_SIZE))
           #endif
         );
         if (verbose_level > 3) {
-          SERIAL_ECHOPAIR("Start radius:", radius, " angle:", angle, " dir:");
+          SERIAL_ECHOPGM("Start radius:", radius, " angle:", angle, " dir:");
           if (dir > 0) SERIAL_CHAR('C');
           SERIAL_ECHOLNPGM("CW");
         }
 
         // Move from leg to leg in rapid succession
-        LOOP_L_N(l, n_legs - 1) {
+        for (uint8_t l = 0; l < n_legs - 1; ++l) {
 
           // Move some distance around the perimeter
           float delta_angle;
@@ -202,23 +205,23 @@ void GcodeSuite::M48() {
             while (!probe.can_reach(next_pos)) {
               next_pos *= 0.8f;
               if (verbose_level > 3)
-                SERIAL_ECHOLNPAIR_P(PSTR("Moving inward: X"), next_pos.x, SP_Y_STR, next_pos.y);
+                SERIAL_ECHOLN(F("Moving inward: X"), next_pos.x, FPSTR(SP_Y_STR), next_pos.y);
             }
-          #else
+          #elif HAS_ENDSTOPS
             // For a rectangular bed just keep the probe in bounds
             LIMIT(next_pos.x, X_MIN_POS, X_MAX_POS);
             LIMIT(next_pos.y, Y_MIN_POS, Y_MAX_POS);
           #endif
 
           if (verbose_level > 3)
-            SERIAL_ECHOLNPAIR_P(PSTR("Going to: X"), next_pos.x, SP_Y_STR, next_pos.y);
+            SERIAL_ECHOLN(F("Going to: X"), next_pos.x, FPSTR(SP_Y_STR), next_pos.y);
 
           do_blocking_move_to_xy(next_pos);
         } // n_legs loop
       } // n_legs
 
       // Probe a single point
-      const float pz = probe.probe_at_point(test_position, raise_after, 0);
+      const float pz = probe.probe_at_point(test_position, raise_after);
 
       // Break the loop if the probe fails
       probing_good = !isnan(pz);
@@ -238,13 +241,11 @@ void GcodeSuite::M48() {
       // Calculate the standard deviation so far.
       // The value after the last sample will be the final output.
       float dev_sum = 0.0;
-      LOOP_LE_N(j, n) dev_sum += sq(sample_set[j] - mean);
+      for (uint8_t j = 0; j <= n; ++j) dev_sum += sq(sample_set[j] - mean);
       sigma = SQRT(dev_sum / (n + 1));
 
       if (verbose_level > 1) {
-        SERIAL_ECHO(n + 1);
-        SERIAL_ECHOPAIR(" of ", int(n_samples));
-        SERIAL_ECHOPAIR_F(": z: ", pz, 3);
+        SERIAL_ECHO(n + 1, F(" of "), n_samples, F(": z: "), p_float_t(pz, 3), AS_CHAR(' '));
         dev_report(verbose_level > 2, mean, sigma, min, max);
         SERIAL_EOL();
       }
@@ -258,10 +259,10 @@ void GcodeSuite::M48() {
     SERIAL_ECHOLNPGM("Finished!");
     dev_report(verbose_level > 0, mean, sigma, min, max, true);
 
-    #if HAS_WIRED_LCD
+    #if HAS_STATUS_MESSAGE
       // Display M48 results in the status bar
       char sigma_str[8];
-      ui.status_printf_P(0, PSTR(S_FMT ": %s"), GET_TEXT(MSG_M48_DEVIATION), dtostrf(sigma, 2, 6, sigma_str));
+      ui.status_printf(0, F(S_FMT ": %s"), GET_TEXT(MSG_M48_DEVIATION), dtostrf(sigma, 2, 6, sigma_str));
     #endif
   }
 
@@ -269,6 +270,9 @@ void GcodeSuite::M48() {
 
   // Re-enable bed level correction if it had been on
   TERN_(HAS_LEVELING, set_bed_leveling_enabled(was_enabled));
+
+  // Re-enable probe temperature correction
+  TERN_(HAS_PTC, ptc.set_enabled(true));
 
   report_current_position();
 }

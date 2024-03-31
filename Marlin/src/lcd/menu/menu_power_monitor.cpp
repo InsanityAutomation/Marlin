@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
 
 #include "../../inc/MarlinConfigPre.h"
 
-#if HAS_LCD_MENU && HAS_POWER_MONITOR
+#if HAS_MARLINUI_MENU && HAS_POWER_MONITOR
 
 #include "menu_item.h"
 #include "../../feature/power_monitor.h"
 
 void menu_power_monitor() {
   START_MENU();
-  BACK_ITEM(MSG_MAIN);
+  BACK_ITEM(MSG_MAIN_MENU);
 
   #if ENABLED(POWER_MONITOR_CURRENT)
   {
@@ -42,7 +42,7 @@ void menu_power_monitor() {
   }
   #endif
 
-  #if HAS_POWER_MONITOR_VREF
+  #if ENABLED(POWER_MONITOR_VOLTAGE)
   {
     bool ena = power_monitor.voltage_display_enabled();
     EDIT_ITEM(bool, MSG_VOLTAGE, &ena, power_monitor.toggle_voltage_display);
@@ -59,4 +59,4 @@ void menu_power_monitor() {
   END_MENU();
 }
 
-#endif // HAS_LCD_MENU && HAS_POWER_MONITOR
+#endif // HAS_MARLINUI_MENU && HAS_POWER_MONITOR

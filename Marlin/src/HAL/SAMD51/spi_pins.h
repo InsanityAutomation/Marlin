@@ -1,8 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- *
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- * SAMD51 HAL developed by Giuliano Zaro (AKA GMagician)
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +21,13 @@
  */
 #pragma once
 
+/**
+ * SAMD51 HAL developed by Giuliano Zaro (AKA GMagician)
+ */
+
 #ifdef ADAFRUIT_GRAND_CENTRAL_M4
 
- /*
+ /**
   * AGCM4 Default SPI Pins
   *
   *         SS    SCK   MISO   MOSI
@@ -30,16 +35,16 @@
   *  SPI  | 53    52     50     51  |
   *  SPI1 | 83    81     80     82  |
   *       +-------------------------+
-  * Any pin can be used for Chip Select (SS_PIN)
+  * Any pin can be used for Chip Select (SD_SS_PIN)
   */
-  #ifndef SCK_PIN
-    #define SCK_PIN       52
+  #ifndef SD_SCK_PIN
+    #define SD_SCK_PIN    52
   #endif
-  #ifndef MISO_PIN
-    #define MISO_PIN      50
+  #ifndef SD_MISO_PIN
+    #define SD_MISO_PIN   50
   #endif
-  #ifndef MOSI_PIN
-    #define MOSI_PIN      51
+  #ifndef SD_MOSI_PIN
+    #define SD_MOSI_PIN   51
   #endif
   #ifndef SDSS
     #define SDSS          53
@@ -51,4 +56,4 @@
 
 #endif
 
-#define SS_PIN        SDSS
+#define SD_SS_PIN     SDSS

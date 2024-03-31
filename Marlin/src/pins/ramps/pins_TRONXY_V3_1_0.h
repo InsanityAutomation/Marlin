@@ -23,12 +23,14 @@
 
 /**
  * Arduino Mega for Tronxy X5S-2E, etc.
+ * ATmega2560
  */
 
-#if NOT_TARGET(__AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#elif HOTENDS > 2 || E_STEPPERS > 2
-  #error "TRONXY-V3-1.0 supports only 2 hotends/E-steppers. Comment out this line to continue."
+#define REQUIRE_MEGA2560
+#include "env_validate.h"
+
+#if HOTENDS > 2 || E_STEPPERS > 2
+  #error "TRONXY-V3-1.0 supports up to 2 hotends/E steppers."
 #endif
 
 #define BOARD_INFO_NAME "TRONXY-V3-1.0"
@@ -36,7 +38,7 @@
 //
 // Servos
 //
-#define SERVO1_PIN         12   // 2560 PIN 25/PB6
+#define SERVO1_PIN                            12  // 2560 PIN 25/PB6
 
 //
 // Import RAMPS 1.4 pins

@@ -65,9 +65,9 @@ uint8_t ServoCount = 0;                         // the total number of attached 
 
 /************ static functions common to all instances ***********************/
 
-static boolean isTimerActive(timer16_Sequence_t timer) {
+static bool anyTimerChannelActive(const timer16_Sequence_t timer) {
   // returns true if any servo is active on this timer
-  LOOP_L_N(channel, SERVOS_PER_TIMER) {
+  for (uint8_t channel = 0; channel < SERVOS_PER_TIMER; ++channel) {
     if (SERVO(timer, channel).Pin.isActive)
       return true;
   }
@@ -101,17 +101,18 @@ int8_t Servo::attach(const int inPin, const int inMin, const int inMax) {
   max = (MAX_PULSE_WIDTH - inMax) / 4;
 
   // initialize the timer if it has not already been initialized
-  timer16_Sequence_t timer = SERVO_INDEX_TO_TIMER(servoIndex);
-  if (!isTimerActive(timer)) initISR(timer);
-  servo_info[servoIndex].Pin.isActive = true;  // this must be set after the check for isTimerActive
+  const timer16_Sequence_t timer = SERVO_INDEX_TO_TIMER(servoIndex);
+  if (!anyTimerChannelActive(timer)) initISR(timer);
+  servo_info[servoIndex].Pin.isActive = true;  // this must be set after the check for anyTimerChannelActive
 
   return servoIndex;
 }
 
 void Servo::detach() {
   servo_info[servoIndex].Pin.isActive = false;
-  timer16_Sequence_t timer = SERVO_INDEX_TO_TIMER(servoIndex);
-  if (!isTimerActive(timer)) finISR(timer);
+  const timer16_Sequence_t timer = SERVO_INDEX_TO_TIMER(servoIndex);
+  if (!anyTimerChannelActive(timer)) finISR(timer);
+  //pinMode(servo_info[servoIndex].Pin.nbr, INPUT); // set servo pin to input
 }
 
 void Servo::write(int value) {

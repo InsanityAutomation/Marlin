@@ -27,14 +27,13 @@
  */
 //#include "output_table.h"
 
-/*
+/**
  * Parameters:
  * A: -0.000480634
  * B: 0.00031362
  * C: -2.03978e-07
  */
-#define NUMTEMPS 61
-const short temptable_666[NUMTEMPS][2] PROGMEM = {
+constexpr temp_entry_t temptable_666[] PROGMEM = {
   { OV(  1), 794 },
   { OV( 18), 288 },
   { OV( 35), 234 },

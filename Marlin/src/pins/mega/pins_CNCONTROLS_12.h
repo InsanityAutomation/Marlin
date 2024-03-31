@@ -23,11 +23,13 @@
 
 /**
  * CartesioV12 pin assignments
+ * Comes with an Arduino Mega, see
+ * https://web.archive.org/web/20171024190029/http://mauk.cc/mediawiki/index.php/Electronical_assembly
+ * ATmega2560, ATmega1280
  */
 
-#if NOT_TARGET(__AVR_ATmega1280__, __AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino/Genuino Mega or Mega 2560' in 'Tools > Board.'"
-#endif
+#define ALLOW_MEGA1280
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME "CN Controls V12"
 
@@ -91,8 +93,8 @@
 #define HEATER_3_PIN                           3
 #define HEATER_BED_PIN                        24
 
-#ifndef FAN_PIN
-  #define FAN_PIN                              5  // 5 is PWMtool3 -> 7 is common PWM pin for all tools
+#ifndef FAN0_PIN
+  #define FAN0_PIN                             5  // 5 is PWMtool3 -> 7 is common PWM pin for all tools
 #endif
 
 //
@@ -141,27 +143,30 @@
 //
 // LCD / Controller
 //
-#define BEEPER_PIN                            16
+#if HAS_WIRED_LCD
+  #define BEEPER_PIN                          16
 
-// Pins for DOGM SPI LCD Support
-#define DOGLCD_A0                             39
-#define DOGLCD_CS                             35
-#define DOGLCD_MOSI                           48
-#define DOGLCD_SCK                            49
-#define LCD_SCREEN_ROT_180
+  #define BTN_EN1                             36
+  #define BTN_EN2                             34
+  #define BTN_ENC                             38
 
-// The encoder and click button
-#define BTN_EN1                               36
-#define BTN_EN2                               34
-#define BTN_ENC                               38
+  #if HAS_MARLINUI_U8GLIB
+    #define DOGLCD_A0                         39
+    #define DOGLCD_CS                         35
+    #define DOGLCD_MOSI                       48
+    #define DOGLCD_SCK                        49
+  #endif
+#endif
 
 // Hardware buttons for manual movement of XYZ
-#define SHIFT_OUT                             42
-#define SHIFT_LD                              41
-#define SHIFT_CLK                             40
+#define SHIFT_OUT_PIN                         42
+#define SHIFT_LD_PIN                          41
+#define SHIFT_CLK_PIN                         40
 
 //#define UI1                                 43
 //#define UI2                                 37
 
 #define STAT_LED_BLUE_PIN                     -1
 #define STAT_LED_RED_PIN                      10  // TOOL_0_PWM_PIN
+
+#define LCD_SCREEN_ROTATE                    180  // 0, 90, 180, 270

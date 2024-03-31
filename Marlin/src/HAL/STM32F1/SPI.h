@@ -33,6 +33,15 @@
 #include <stdint.h>
 #include <wirish.h>
 
+// Number of SPI ports
+#ifdef BOARD_SPI3_SCK_PIN
+  #define BOARD_NR_SPI 3
+#elif defined(BOARD_SPI2_SCK_PIN)
+  #define BOARD_NR_SPI 2
+#elif defined(BOARD_SPI1_SCK_PIN)
+  #define BOARD_NR_SPI 1
+#endif
+
 // SPI_HAS_TRANSACTION means SPI has
 //   - beginTransaction()
 //   - endTransaction()
@@ -49,7 +58,7 @@
 #define SPI_CLOCK_DIV128 SPI_BAUD_PCLK_DIV_128
 #define SPI_CLOCK_DIV256 SPI_BAUD_PCLK_DIV_256
 
-/*
+/**
  * Roger Clark. 20150106
  * Commented out redundant AVR defined
  *
@@ -138,13 +147,13 @@ private:
   spi_dev *spi_d;
   dma_channel spiRxDmaChannel, spiTxDmaChannel;
   dma_dev* spiDmaDev;
-  void (*receiveCallback)() = NULL;
-  void (*transmitCallback)() = NULL;
+  void (*receiveCallback)() = nullptr;
+  void (*transmitCallback)() = nullptr;
 
   friend class SPIClass;
 };
 
-/*
+/**
  * Kept for compat.
  */
 static const uint8_t ff = 0xFF;
@@ -162,6 +171,11 @@ public:
    * @param spiPortNumber Number of the SPI port to manage.
    */
   SPIClass(uint32_t spiPortNumber);
+
+  /**
+   * Init using pins
+   */
+  SPIClass(int8_t mosi, int8_t miso, int8_t sclk, int8_t ssel=-1);
 
   /**
    * @brief Equivalent to begin(SPI_1_125MHZ, MSBFIRST, 0).
@@ -219,7 +233,7 @@ public:
   void onReceive(void(*)());
   void onTransmit(void(*)());
 
-  /*
+  /**
    * I/O
    */
 
@@ -300,7 +314,7 @@ public:
   uint8_t dmaSendRepeat(uint16_t length);
 
   uint8_t dmaSendAsync(const void * transmitBuf, uint16_t length, bool minc = 1);
-  /*
+  /**
    * Pin accessors
    */
 
@@ -384,7 +398,7 @@ private:
 
   void updateSettings();
 
-  /*
+  /**
    * Functions added for DMA transfers with Callback.
    * Experimental.
    */
@@ -408,13 +422,5 @@ private:
   BitOrder bitOrder;
   */
 };
-
-/**
- * @brief Wait until TXE (tx empty) flag is set and BSY (busy) flag unset.
- */
-static inline void waitSpiTxEnd(spi_dev *spi_d) {
-  while (spi_is_tx_empty(spi_d) == 0) { /* nada */ } // wait until TXE=1
-  while (spi_is_busy(spi_d) != 0) { /* nada */ }     // wait until BSY=0
-}
 
 extern SPIClass SPI;

@@ -30,7 +30,7 @@
  * MORPHEUS Board pin assignments
  */
 
-#if NOT_TARGET(__STM32F1__)
+#if NOT_TARGET(__STM32F1__, STM32F1xx)
   #error "Oops! Select an STM32F1 board in 'Tools > Board.'"
 #endif
 
@@ -39,9 +39,9 @@
 //
 // Limit Switches
 //
-#define X_MIN_PIN                           PB14
-#define Y_MIN_PIN                           PB13
-#define Z_MIN_PIN                           PB12
+#define X_STOP_PIN                          PB14
+#define Y_STOP_PIN                          PB13
+#define Z_STOP_PIN                          PB12
 
 //
 // Z Probe (when not Z_MIN_PIN)
@@ -82,10 +82,12 @@
 #define HEATER_0_PIN                        PA2   // HOTEND MOSFET
 #define HEATER_BED_PIN                      PA0   // BED MOSFET
 
-#define FAN_PIN                             PA1   // FAN1 header on board - PRINT FAN
+#define FAN0_PIN                            PA1   // FAN1 header on board - PRINT FAN
 
 //
 // Misc.
 //
 #define LED_PIN                             PC13
 #define SDSS                                PA3
+#define TFTGLCD_CS                          PA4
+#define SD_DETECT_PIN                       PC14

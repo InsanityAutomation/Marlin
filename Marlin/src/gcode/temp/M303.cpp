@@ -25,11 +25,14 @@
 #if HAS_PID_HEATING
 
 #include "../gcode.h"
-#include "../../lcd/ultralcd.h"
+#include "../queue.h" // for flush_tx
+#include "../../lcd/marlinui.h"
 #include "../../module/temperature.h"
 
 #if ENABLED(EXTENSIBLE_UI)
   #include "../../lcd/extui/ui_api.h"
+#elif ENABLED(PROUI_PID_TUNE)
+  #include "../../lcd/e3v2/proui/dwin.h"
 #endif
 
 /**
@@ -40,46 +43,51 @@
  *  C<cycles>       Number of times to repeat the procedure. (Minimum: 3, Default: 5)
  *  U<bool>         Flag to apply the result to the current PID values
  *
- * With PID_DEBUG:
+ * With PID_DEBUG, PID_BED_DEBUG, or PID_CHAMBER_DEBUG:
  *  D               Toggle PID debugging and EXIT without further action.
  */
 
-#if ENABLED(PID_DEBUG)
-  bool pid_debug_flag = 0;
-#endif
-
 void GcodeSuite::M303() {
 
-  #if ENABLED(PID_DEBUG)
-    if (parser.seen('D')) {
-      pid_debug_flag = !pid_debug_flag;
+  #if HAS_PID_DEBUG
+    if (parser.seen_test('D')) {
+      thermalManager.pid_debug_flag ^= true;
       SERIAL_ECHO_START();
       SERIAL_ECHOPGM("PID Debug ");
-      serialprintln_onoff(pid_debug_flag);
+      serialprintln_onoff(thermalManager.pid_debug_flag);
       return;
     }
   #endif
 
-  #define SI TERN(PIDTEMPBED, H_BED, H_E0)
-  #define EI TERN(PIDTEMP, HOTENDS - 1, H_BED)
-  const heater_id_t e = (heater_id_t)parser.intval('E');
-  if (!WITHIN(e, SI, EI)) {
-    SERIAL_ECHOLNPGM(STR_PID_BAD_EXTRUDER_NUM);
-    TERN_(EXTENSIBLE_UI, ExtUI::onPidTuning(ExtUI::result_t::PID_BAD_EXTRUDER_NUM));
-    return;
+  const heater_id_t hid = (heater_id_t)parser.intval('E');
+  celsius_t default_temp;
+  switch (hid) {
+    OPTCODE(PIDTEMP,        case 0 ... HOTENDS - 1: default_temp = PREHEAT_1_TEMP_HOTEND;  break)
+    OPTCODE(PIDTEMPBED,     case H_BED:             default_temp = PREHEAT_1_TEMP_BED;     break)
+    OPTCODE(PIDTEMPCHAMBER, case H_CHAMBER:         default_temp = PREHEAT_1_TEMP_CHAMBER; break)
+    default:
+      SERIAL_ECHOPGM(STR_PID_AUTOTUNE);
+      SERIAL_ECHOLNPGM(STR_PID_BAD_HEATER_ID);
+      TERN_(EXTENSIBLE_UI, ExtUI::onPidTuning(ExtUI::result_t::PID_BAD_HEATER_ID));
+      TERN_(PROUI_PID_TUNE, dwinPidTuning(PID_BAD_HEATER_ID));
+      return;
   }
 
-  const int c = parser.intval('C', 5);
+  const bool seenC = parser.seenval('C');
+  const int c = seenC ? parser.value_int() : 5;
+  const bool seenS = parser.seenval('S');
+  const celsius_t temp = seenS ? parser.value_celsius() : default_temp;
   const bool u = parser.boolval('U');
-  const int16_t temp = parser.celsiusval('S', e < 0 ? PREHEAT_1_TEMP_BED : PREHEAT_1_TEMP_HOTEND);
 
-  #if DISABLED(BUSY_WHILE_HEATING)
-    KEEPALIVE_STATE(NOT_BUSY);
-  #endif
+  TERN_(PROUI_PID_TUNE, dwinStartM303(seenC, c, seenS, hid, temp));
 
-  ui.set_status(GET_TEXT(MSG_PID_AUTOTUNE));
-  thermalManager.PID_autotune(temp, e, c, u);
+  IF_DISABLED(BUSY_WHILE_HEATING, KEEPALIVE_STATE(NOT_BUSY));
+
+  LCD_MESSAGE(MSG_PID_AUTOTUNE);
+  thermalManager.PID_autotune(temp, hid, c, u);
   ui.reset_status();
+
+  queue.flush_rx();
 }
 
 #endif // HAS_PID_HEATING

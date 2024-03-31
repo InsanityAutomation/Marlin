@@ -61,9 +61,6 @@ enum MixTool {
 #define MAX_VTOOLS TERN(HAS_MIXER_SYNC_CHANNEL, 254, 255)
 static_assert(NR_MIXING_VIRTUAL_TOOLS <= MAX_VTOOLS, "MIXING_VIRTUAL_TOOLS must be <= " STRINGIFY(MAX_VTOOLS) "!");
 
-#define MIXER_BLOCK_FIELD       mixer_comp_t b_color[MIXING_STEPPERS]
-#define MIXER_POPULATE_BLOCK()  mixer.populate_block(block->b_color)
-#define MIXER_STEPPER_SETUP()   mixer.stepper_setup(current_block->b_color)
 #define MIXER_STEPPER_LOOP(VAR) for (uint_fast8_t VAR = 0; VAR < MIXING_STEPPERS; VAR++)
 
 #if ENABLED(GRADIENT_MIX)
@@ -73,9 +70,11 @@ static_assert(NR_MIXING_VIRTUAL_TOOLS <= MAX_VTOOLS, "MIXING_VIRTUAL_TOOLS must 
     mixer_comp_t color[MIXING_STEPPERS];  // The current gradient color
     float start_z, end_z;                 // Region for gradient
     int8_t start_vtool, end_vtool;        // Start and end virtual tools
-    mixer_perc_t start_mix[MIXING_STEPPERS],   // Start and end mixes from those tools
+    mixer_perc_t start_mix[MIXING_STEPPERS],  // Start and end mixes from those tools
                  end_mix[MIXING_STEPPERS];
-    TERN_(GRADIENT_VTOOL, int8_t vtool_index); // Use this virtual tool number as index
+    #if ENABLED(GRADIENT_VTOOL)
+      int8_t vtool_index;                 // Use this virtual tool number as index
+    #endif
   } gradient_t;
 
 #endif
@@ -109,7 +108,7 @@ class Mixer {
   }
 
   // Used when dealing with blocks
-  FORCE_INLINE static void populate_block(mixer_comp_t b_color[MIXING_STEPPERS]) {
+  FORCE_INLINE static void populate_block(mixer_comp_t (&b_color)[MIXING_STEPPERS]) {
     #if ENABLED(GRADIENT_MIX)
       if (gradient.enabled) {
         MIXER_STEPPER_LOOP(i) b_color[i] = gradient.color[i];
@@ -119,15 +118,15 @@ class Mixer {
     MIXER_STEPPER_LOOP(i) b_color[i] = color[selected_vtool][i];
   }
 
-  FORCE_INLINE static void stepper_setup(mixer_comp_t b_color[MIXING_STEPPERS]) {
+  FORCE_INLINE static void stepper_setup(mixer_comp_t (&b_color)[MIXING_STEPPERS]) {
     MIXER_STEPPER_LOOP(i) s_color[i] = b_color[i];
   }
 
-  #if EITHER(HAS_DUAL_MIXING, GRADIENT_MIX)
+  #if ANY(HAS_DUAL_MIXING, GRADIENT_MIX)
 
     static mixer_perc_t mix[MIXING_STEPPERS];  // Scratch array for the Mix in proportion to 100
 
-    static inline void copy_mix_to_color(mixer_comp_t (&tcolor)[MIXING_STEPPERS]) {
+    static void copy_mix_to_color(mixer_comp_t (&tcolor)[MIXING_STEPPERS]) {
       // Scale each component to the largest one in terms of COLOR_A_MASK
       // So the largest component will be COLOR_A_MASK and the other will be in proportion to it
       const float scale = (COLOR_A_MASK) * RECIPROCAL(_MAX(
@@ -138,26 +137,24 @@ class Mixer {
       MIXER_STEPPER_LOOP(i) tcolor[i] = mix[i] * scale;
 
       #ifdef MIXER_NORMALIZER_DEBUG
-        SERIAL_ECHOPGM("Mix [ ");
-        SERIAL_ECHOLIST_N(MIXING_STEPPERS, int(mix[0]), int(mix[1]), int(mix[2]), int(mix[3]), int(mix[4]), int(mix[5]));
-        SERIAL_ECHOPGM(" ] to Color [ ");
-        SERIAL_ECHOLIST_N(MIXING_STEPPERS, int(tcolor[0]), int(tcolor[1]), int(tcolor[2]), int(tcolor[3]), int(tcolor[4]), int(tcolor[5]));
-        SERIAL_ECHOLNPGM(" ]");
+        SERIAL_ECHOLN(
+          F("Mix [ "), LIST_N(MIXING_STEPPERS, mix[0], mix[1], mix[2], mix[3], mix[4], mix[5]),
+          F(" ] to Color [ "), LIST_N(MIXING_STEPPERS, tcolor[0], tcolor[1], tcolor[2], tcolor[3], tcolor[4], tcolor[5]),
+          F(" ]")
+        );
       #endif
     }
 
-    static inline void update_mix_from_vtool(const uint8_t j=selected_vtool) {
+    static void update_mix_from_vtool(const uint8_t j=selected_vtool) {
       float ctot = 0;
       MIXER_STEPPER_LOOP(i) ctot += color[j][i];
-      //MIXER_STEPPER_LOOP(i) mix[i] = 100.0f * color[j][i] / ctot;
-      MIXER_STEPPER_LOOP(i) mix[i] = mixer_perc_t(100.0f * color[j][i] / ctot);
+      MIXER_STEPPER_LOOP(i) mix[i] = mixer_perc_t(100.0f * color[j][i] / ctot + 0.5f);
 
       #ifdef MIXER_NORMALIZER_DEBUG
-        SERIAL_ECHOPAIR("V-tool ", int(j), " [ ");
-        SERIAL_ECHOLIST_N(MIXING_STEPPERS, int(color[j][0]), int(color[j][1]), int(color[j][2]), int(color[j][3]), int(color[j][4]), int(color[j][5]));
-        SERIAL_ECHOPGM(" ] to Mix [ ");
-        SERIAL_ECHOLIST_N(MIXING_STEPPERS, int(mix[0]), int(mix[1]), int(mix[2]), int(mix[3]), int(mix[4]), int(mix[5]));
-        SERIAL_ECHOLNPGM(" ]");
+        SERIAL_ECHOLN(F("V-tool "), j,
+          F(" [ "), LIST_N(MIXING_STEPPERS, color[j][0], color[j][1], color[j][2], color[j][3], color[j][4], color[j][5]),
+          F(" ] to Mix [ "), LIST_N(MIXING_STEPPERS, mix[0], mix[1], mix[2], mix[3], mix[4], mix[5]), F(" ]")
+        );
       #endif
     }
 
@@ -166,7 +163,7 @@ class Mixer {
   #if HAS_DUAL_MIXING
 
     // Update the virtual tool from an edited mix
-    static inline void update_vtool_from_mix() {
+    static void update_vtool_from_mix() {
       copy_mix_to_color(color[selected_vtool]);
       TERN_(GRADIENT_MIX, refresh_gradient());
       // MIXER_STEPPER_LOOP(i) collector[i] = mix[i];
@@ -181,9 +178,9 @@ class Mixer {
     static float prev_z;
 
     // Update the current mix from the gradient for a given Z
-    static void update_gradient_for_z(const float z);
+    static void update_gradient_for_z(const_float_t z);
     static void update_gradient_for_planner_z();
-    static inline void gradient_control(const float z) {
+    static void gradient_control(const_float_t z) {
       if (gradient.enabled) {
         if (z >= gradient.end_z)
           T(gradient.end_vtool);
@@ -192,17 +189,16 @@ class Mixer {
       }
     }
 
-    static inline void update_mix_from_gradient() {
+    static void update_mix_from_gradient() {
       float ctot = 0;
       MIXER_STEPPER_LOOP(i) ctot += gradient.color[i];
       MIXER_STEPPER_LOOP(i) mix[i] = (mixer_perc_t)CEIL(100.0f * gradient.color[i] / ctot);
 
       #ifdef MIXER_NORMALIZER_DEBUG
-        SERIAL_ECHOPGM("Gradient [ ");
-        SERIAL_ECHOLIST_N(MIXING_STEPPERS, int(gradient.color[0]), int(gradient.color[1]), int(gradient.color[2]), int(gradient.color[3]), int(gradient.color[4]), int(gradient.color[5]));
-        SERIAL_ECHOPGM(" ] to Mix [ ");
-        SERIAL_ECHOLIST_N(MIXING_STEPPERS, int(mix[0]), int(mix[1]), int(mix[2]), int(mix[3]), int(mix[4]), int(mix[5]));
-        SERIAL_ECHOLNPGM(" ]");
+        SERIAL_ECHOLN(
+          F("Gradient [ "), LIST_N(MIXING_STEPPERS, gradient.color[0], gradient.color[1], gradient.color[2], gradient.color[3], gradient.color[4], gradient.color[5]),
+          F(" ] to Mix [ "), LIST_N(MIXING_STEPPERS, mix[0], mix[1], mix[2], mix[3], mix[4], mix[5]), F(" ]")
+        );
       #endif
     }
 
@@ -235,13 +231,7 @@ class Mixer {
     for (;;) {
       if (--runner < 0) runner = MIXING_STEPPERS - 1;
       accu[runner] += s_color[runner];
-      if (
-        #ifdef MIXER_ACCU_SIGNED
-          accu[runner] < 0
-        #else
-          accu[runner] & COLOR_A_MASK
-        #endif
-      ) {
+      if (TERN(MIXER_ACCU_SIGNED, accu[runner] < 0, accu[runner] & COLOR_A_MASK)) {
         accu[runner] &= COLOR_MASK;
         return runner;
       }

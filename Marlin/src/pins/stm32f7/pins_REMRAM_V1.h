@@ -32,8 +32,8 @@
   #define SRAM_EEPROM_EMULATION                   // Emulate the EEPROM using Backup SRAM
 #endif
 
-#if HOTENDS > 1 || E_STEPPERS > 1
-  #error "RemRam supports only one hotend / E-stepper."
+#if HAS_MULTI_HOTEND || E_STEPPERS > 1
+  #error "RemRam only supports 1 hotend / E stepper."
 #endif
 
 //
@@ -44,14 +44,13 @@
   #define X_MAX_PIN                           59
   #define Y_MIN_PIN                           60
   #define Y_MAX_PIN                           61
-  #define Z_MIN_PIN                           62
   #define Z_MAX_PIN                           63
 #else
   #define X_STOP_PIN                          36
   #define Y_STOP_PIN                          39
-  #define Z_MIN_PIN                           62
   #define Z_MAX_PIN                           42
 #endif
+#define Z_MIN_PIN                             62
 
 //
 // Z Probe (when not Z_MIN_PIN)
@@ -96,8 +95,8 @@
 #define HEATER_0_PIN                          33
 #define HEATER_BED_PIN                        31
 
-#ifndef FAN_PIN
-  #define FAN_PIN                             30  // "FAN1"
+#ifndef FAN0_PIN
+  #define FAN0_PIN                            30  // "FAN1"
 #endif
 #define FAN1_PIN                              32  // "FAN2"
 
@@ -121,7 +120,7 @@
 #define SD_DETECT_PIN                         56  // SD_CARD_DET
 #define BEEPER_PIN                            46  // LCD_BEEPER
 #define LCD_PINS_RS                           49  // LCD_RS
-#define LCD_PINS_ENABLE                       48  // LCD_EN
+#define LCD_PINS_EN                           48  // LCD_EN
 #define LCD_PINS_D4                           50  // LCD_D4
 #define LCD_PINS_D5                           51  // LCD_D5
 #define LCD_PINS_D6                           52  // LCD_D6
@@ -134,4 +133,4 @@
 // Timers
 //
 
-#define STEP_TIMER                             2
+#define STEP_TIMER  2

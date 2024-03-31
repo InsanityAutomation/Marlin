@@ -24,8 +24,6 @@
 
 #if ENABLED(MIXING_EXTRUDER)
 
-//#define MIXER_NORMALIZER_DEBUG
-
 #include "mixing.h"
 
 Mixer mixer;
@@ -44,7 +42,7 @@ int_fast8_t   Mixer::runner = 0;
 mixer_comp_t  Mixer::s_color[MIXING_STEPPERS];
 mixer_accu_t  Mixer::accu[MIXING_STEPPERS] = { 0 };
 
-#if EITHER(HAS_DUAL_MIXING, GRADIENT_MIX)
+#if ANY(HAS_DUAL_MIXING, GRADIENT_MIX)
   mixer_perc_t Mixer::mix[MIXING_STEPPERS];
 #endif
 
@@ -62,10 +60,7 @@ void Mixer::normalize(const uint8_t tool_index) {
   }
   #ifdef MIXER_NORMALIZER_DEBUG
     SERIAL_ECHOPGM("Mixer: Old relation : [ ");
-    MIXER_STEPPER_LOOP(i) {
-      SERIAL_ECHO_F(collector[i] / csum, 3);
-      SERIAL_CHAR(' ');
-    }
+    MIXER_STEPPER_LOOP(i) SERIAL_ECHO(collector[i] / csum, AS_CHAR(' '));
     SERIAL_ECHOLNPGM("]");
   #endif
 
@@ -77,16 +72,12 @@ void Mixer::normalize(const uint8_t tool_index) {
     csum = 0;
     SERIAL_ECHOPGM("Mixer: Normalize to : [ ");
     MIXER_STEPPER_LOOP(i) {
-      SERIAL_ECHO(uint16_t(color[tool_index][i]));
-      SERIAL_CHAR(' ');
+      SERIAL_ECHO(uint16_t(color[tool_index][i]), AS_CHAR(' '));
       csum += color[tool_index][i];
     }
     SERIAL_ECHOLNPGM("]");
     SERIAL_ECHOPGM("Mixer: New relation : [ ");
-    MIXER_STEPPER_LOOP(i) {
-      SERIAL_ECHO_F(uint16_t(color[tool_index][i]) / csum, 3);
-      SERIAL_CHAR(' ');
-    }
+    MIXER_STEPPER_LOOP(i) SERIAL_ECHO(p_float_t(uint16_t(color[tool_index][i]) / csum, 3), AS_CHAR(' '));
     SERIAL_ECHOLNPGM("]");
   #endif
 
@@ -96,20 +87,41 @@ void Mixer::normalize(const uint8_t tool_index) {
 void Mixer::reset_vtools() {
   // Virtual Tools 0, 1, 2, 3 = Filament 1, 2, 3, 4, etc.
   // Every virtual tool gets a pure filament
-  LOOP_L_N(t, _MIN(MIXING_VIRTUAL_TOOLS, MIXING_STEPPERS))
+  for (uint8_t t = 0; t < _MIN(MIXING_VIRTUAL_TOOLS, MIXING_STEPPERS); ++t)
     MIXER_STEPPER_LOOP(i)
       color[t][i] = (t == i) ? COLOR_A_MASK : 0;
 
   // Remaining virtual tools are 100% filament 1
   #if MIXING_VIRTUAL_TOOLS > MIXING_STEPPERS
-    LOOP_S_L_N(t, MIXING_STEPPERS, MIXING_VIRTUAL_TOOLS)
+    for (uint8_t t = MIXING_STEPPERS; t < MIXING_VIRTUAL_TOOLS; ++t)
       MIXER_STEPPER_LOOP(i)
         color[t][i] = (i == 0) ? COLOR_A_MASK : 0;
+  #endif
+
+  // MIXING_PRESETS: Set a variety of obvious mixes as presets
+  #if ENABLED(MIXING_PRESETS) && WITHIN(MIXING_STEPPERS, 2, 3)
+    #if MIXING_STEPPERS == 2
+      if (MIXING_VIRTUAL_TOOLS > 2) { collector[0] = 1; collector[1] = 1; mixer.normalize(2); } // 1:1
+      if (MIXING_VIRTUAL_TOOLS > 3) { collector[0] = 3;                   mixer.normalize(3); } // 3:1
+      if (MIXING_VIRTUAL_TOOLS > 4) { collector[0] = 1; collector[1] = 3; mixer.normalize(4); } // 1:3
+      if (MIXING_VIRTUAL_TOOLS > 5) {                   collector[1] = 2; mixer.normalize(5); } // 1:2
+      if (MIXING_VIRTUAL_TOOLS > 6) { collector[0] = 2; collector[1] = 1; mixer.normalize(6); } // 2:1
+      if (MIXING_VIRTUAL_TOOLS > 7) { collector[0] = 3; collector[1] = 2; mixer.normalize(7); } // 3:2
+    #else
+      if (MIXING_VIRTUAL_TOOLS > 3) { collector[0] = 1; collector[1] = 1; collector[2] = 1; mixer.normalize(3); } // 1:1:1
+      if (MIXING_VIRTUAL_TOOLS > 4) {                   collector[1] = 3; collector[2] = 0; mixer.normalize(4); } // 1:3:0
+      if (MIXING_VIRTUAL_TOOLS > 5) { collector[0] = 0;                   collector[2] = 1; mixer.normalize(5); } // 0:3:1
+      if (MIXING_VIRTUAL_TOOLS > 6) {                   collector[1] = 1;                   mixer.normalize(6); } // 0:1:1
+      if (MIXING_VIRTUAL_TOOLS > 7) { collector[0] = 1;                   collector[2] = 0; mixer.normalize(7); } // 1:1:0
+    #endif
+    ZERO(collector);
   #endif
 }
 
 // called at boot
 void Mixer::init() {
+
+  ZERO(collector);
 
   reset_vtools();
 
@@ -119,9 +131,7 @@ void Mixer::init() {
       color[MIXER_AUTORETRACT_TOOL][i] = COLOR_A_MASK;
   #endif
 
-  ZERO(collector);
-
-  #if EITHER(HAS_DUAL_MIXING, GRADIENT_MIX)
+  #if ANY(HAS_DUAL_MIXING, GRADIENT_MIX)
     update_mix_from_vtool();
   #endif
 
@@ -135,11 +145,11 @@ void Mixer::refresh_collector(const float proportion/*=1.0*/, const uint8_t t/*=
     cmax = _MAX(cmax, v);
     csum += v;
   }
-  //SERIAL_ECHOPAIR("Mixer::refresh_collector(", proportion, ", ", int(t), ") cmax=", cmax, "  csum=", csum, "  color");
+  //SERIAL_ECHOPGM("Mixer::refresh_collector(", proportion, ", ", t, ") cmax=", cmax, "  csum=", csum, "  color");
   const float inv_prop = proportion / csum;
   MIXER_STEPPER_LOOP(i) {
     c[i] = color[t][i] * inv_prop;
-    //SERIAL_ECHOPAIR(" [", int(t), "][", int(i), "] = ", int(color[t][i]), " (", c[i], ")  ");
+    //SERIAL_ECHOPGM(" [", t, "][", i, "] = ", color[t][i], " (", c[i], ")  ");
   }
   //SERIAL_EOL();
 }
@@ -150,19 +160,17 @@ void Mixer::refresh_collector(const float proportion/*=1.0*/, const uint8_t t/*=
   #include "../module/planner.h"
 
   gradient_t Mixer::gradient = {
-    false,    // enabled
-    {0},      // color (array)
-    0, 0,     // start_z, end_z
-    0, 1,     // start_vtool, end_vtool
-    {0}, {0}  // start_mix[], end_mix[]
-    #if ENABLED(GRADIENT_VTOOL)
-      , -1    // vtool_index
-    #endif
+    false,                      // enabled
+    {0},                        // color (array)
+    0, 0,                       // start_z, end_z
+    0, 1,                       // start_vtool, end_vtool
+    {0}, {0}                    // start_mix[], end_mix[]
+    OPTARG(GRADIENT_VTOOL, -1)  // vtool_index
   };
 
   float Mixer::prev_z; // = 0
 
-  void Mixer::update_gradient_for_z(const float z) {
+  void Mixer::update_gradient_for_z(const_float_t z) {
     if (z == prev_z) return;
     prev_z = z;
 

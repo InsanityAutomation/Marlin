@@ -22,14 +22,12 @@
 #pragma once
 
 /**
- * MKS SBASE pin assignments
+ * Makerbase MKS SBASE pin assignments
+ * Schematic (V1.3): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/MKS%20SBASE%20V1.3/MKS%20SBASE%20V1.3_002%20SCH.pdf
+ * Origin (V1.3): http://green-candy.osdn.jp/external/MarlinFW/board_schematics/MKS%20SBASE%20V1.3/MKS%20SBASE%20V1.3_002%20SCH.pdf
  */
 
-#if defined(MKS_HAS_LPC1769) && NOT_TARGET(MCU_LPC1769)
-  #error "Oops! Make sure you have the LPC1769 environment selected in your IDE."
-#elif NOT_TARGET(MKS_HAS_LPC1769, MCU_LPC1768)
-  #error "Oops! Make sure you have the LPC1768 environment selected in your IDE."
-#endif
+#include "env_validate.h"
 
 #ifndef BOARD_INFO_NAME
   #define BOARD_INFO_NAME   "MKS SBASE"
@@ -103,8 +101,8 @@
 #define HEATER_BED_PIN                     P2_05
 #define HEATER_0_PIN                       P2_07
 #define HEATER_1_PIN                       P2_06
-#ifndef FAN_PIN
-  #define FAN_PIN                          P2_04
+#ifndef FAN0_PIN
+  #define FAN0_PIN                         P2_04
 #endif
 
 //
@@ -131,23 +129,27 @@
 #define PIN_P2_11                          P2_11  // Interrupt Capable
 
 //
-// Průša i3 MK2 Multi Material Multiplexer Support
+// Průša i3 MMU1 (Multi Material Multiplexer) Support
 //
-#if ENABLED(MK2_MULTIPLEXER)
+#if HAS_PRUSA_MMU1
   #define E_MUX0_PIN                       P1_23  // J8-3
   #define E_MUX1_PIN                       P2_12  // J8-4
   #define E_MUX2_PIN                       P2_11  // J8-5
 #endif
 
 //
-// Misc. Functions
+// Power Supply Control
 //
-#define PS_ON_PIN                          P0_25  // TH3 Connector
+#if ENABLED(MKS_PWC)
+  #define PS_ON_PIN                        P0_25  // SERVO
+  #define KILL_PIN                         P1_29  // Z+
+  #define KILL_PIN_STATE                    HIGH
+#endif
 
 //
 // Ethernet pins
 //
-#ifndef ULTIPANEL
+#if !IS_ULTIPANEL
   #define ENET_MDIO                        P1_17  // J12-4
   #define ENET_RX_ER                       P1_14  // J12-6
   #define ENET_RXD1                        P1_10  // J12-8
@@ -165,8 +167,6 @@
   #define SDCARD_CONNECTION              ONBOARD
 #endif
 
-#define ONBOARD_SD_CS_PIN                  P0_06  // Chip select for "System" SD card
-
 #if SD_CONNECTION_IS(CUSTOM_CABLE)
 
   /**
@@ -182,26 +182,26 @@
    * SD_DETECT_PIN entirely and remove that wire from the the custom cable.
    */
   #define SD_DETECT_PIN                    P2_11  // J8-5 (moved from EXP2 P0.27)
-  #define SCK_PIN                          P1_22  // J8-2 (moved from EXP2 P0.7)
-  #define MISO_PIN                         P1_23  // J8-3 (moved from EXP2 P0.8)
-  #define MOSI_PIN                         P2_12  // J8-4 (moved from EXP2 P0.9)
-  #define SS_PIN                           P0_28
-  #define LPC_SOFTWARE_SPI                        // With a custom cable we need software SPI because the
+  #define SD_SCK_PIN                       P1_22  // J8-2 (moved from EXP2 P0.7)
+  #define SD_MISO_PIN                      P1_23  // J8-3 (moved from EXP2 P0.8)
+  #define SD_MOSI_PIN                      P2_12  // J8-4 (moved from EXP2 P0.9)
+  #define SD_SS_PIN                        P0_28
+  #define SOFTWARE_SPI                            // With a custom cable we need software SPI because the
                                                   // selected pins are not on a hardware SPI controller
-#elif SD_CONNECTION_IS(LCD)
-  // use standard cable and header, SPI and SD detect sre shared with on-board SD card
-  // hardware SPI is used for both SD cards. The detect pin is shred between the
-  // LCD and onboard SD readers so we disable it.
-  #define SCK_PIN                          P0_07
-  #define MISO_PIN                         P0_08
-  #define MOSI_PIN                         P0_09
-  #define SS_PIN                           P0_28
-#elif SD_CONNECTION_IS(ONBOARD)
-  #define SD_DETECT_PIN                    P0_27
-  #define SCK_PIN                          P0_07
-  #define MISO_PIN                         P0_08
-  #define MOSI_PIN                         P0_09
-  #define SS_PIN               ONBOARD_SD_CS_PIN
+#elif SD_CONNECTION_IS(LCD) || SD_CONNECTION_IS(ONBOARD)
+  #define SD_SCK_PIN                       P0_07
+  #define SD_MISO_PIN                      P0_08
+  #define SD_MOSI_PIN                      P0_09
+  #if SD_CONNECTION_IS(LCD)
+    // Use standard cable and header, SPI and SD detect are shared with onboard SD card.
+    // Hardware SPI is used for both SD cards. The detect pin is shared between the
+    // LCD and onboard SD readers so we disable it.
+    #define SD_SS_PIN                      P0_28
+  #else
+    #define SD_DETECT_PIN                  P0_27
+    #define ONBOARD_SD_CS_PIN              P0_06  // Chip select for "System" SD card
+    #define SD_SS_PIN          ONBOARD_SD_CS_PIN
+  #endif
 #endif
 
 /**
@@ -217,10 +217,13 @@
  * that the garbage/lines are erased immediately after the SD card accesses are completed.
  */
 
+//
+// LCD / Controller
+//
 #if IS_TFTGLCD_PANEL
 
   #if ENABLED(TFTGLCD_PANEL_SPI)
-    #define   TFTGLCD_CS                   P3_25  // EXP2.3
+    #define TFTGLCD_CS                     P3_25  // EXP2.3
   #endif
 
   #if SD_CONNECTION_IS(LCD)
@@ -235,11 +238,11 @@
   #define BTN_EN2                          P3_25  // EXP2.3
   #define LCD_PINS_RS                      P0_16  // EXP1.4
   #define LCD_SDSS                         P0_28  // EXP2.4
-  #define LCD_PINS_ENABLE                  P0_18  // EXP1.3
+  #define LCD_PINS_EN                      P0_18  // EXP1.3
   #define LCD_PINS_D4                      P0_15  // EXP1.5
   #if ANY(VIKI2, miniVIKI)
-    #define DOGLCD_SCK                   SCK_PIN
-    #define DOGLCD_MOSI                 MOSI_PIN
+    #define DOGLCD_SCK                SD_SCK_PIN
+    #define DOGLCD_MOSI              SD_MOSI_PIN
   #endif
 
   #if ENABLED(FYSETC_MINI_12864)
@@ -254,15 +257,15 @@
      * Pins 6, 7 & 8 on EXP2 are no connects. That means a second special
      * cable will be needed if the RGB LEDs are to be active.
      */
-    #define DOGLCD_CS            LCD_PINS_ENABLE  // EXP1.3  (LCD_EN on FYSETC schematic)
-    #define DOGLCD_A0                LCD_PINS_RS  // EXP1.4  (LCD_A0 on FYSETC schematic)
+    #define DOGLCD_CS                      P0_18  // EXP1.3  (LCD_EN on FYSETC schematic)
+    #define DOGLCD_A0                      P0_16  // EXP1.4  (LCD_A0 on FYSETC schematic)
     #define DOGLCD_SCK                     P2_11  // J8-5  (SCK on FYSETC schematic)
     #define DOGLCD_MOSI                    P4_28  // J8-6  (MOSI on FYSETC schematic)
 
     //#define FORCE_SOFT_SPI                      // Use this if default of hardware SPI causes display problems
                                                   //   results in LCD soft SPI mode 3, SD soft SPI mode 0
 
-    #if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
+    #if ANY(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
       #ifndef RGB_LED_R_PIN
         #define RGB_LED_R_PIN              P2_12  // J8-4  (LCD_D6 on FYSETC schematic)
       #endif
@@ -277,11 +280,7 @@
     #endif
 
   #elif ENABLED(MINIPANEL)
-    // GLCD features
-    // Uncomment screen orientation
-    //#define LCD_SCREEN_ROT_90
-    //#define LCD_SCREEN_ROT_180
-    //#define LCD_SCREEN_ROT_270
+    //#define LCD_SCREEN_ROTATE              180  // 0, 90, 180, 270
   #endif
 
 #endif // HAS_WIRED_LCD
@@ -303,16 +302,14 @@
   // Hardware SPI is on EXP2. See if you can make it work:
   // https://github.com/makerbase-mks/MKS-SBASE/issues/25
   #define TMC_USE_SW_SPI
-  #if ENABLED(TMC_USE_SW_SPI)
-    #ifndef TMC_SW_MOSI
-      #define TMC_SW_MOSI                  P0_03  // AUX1
-    #endif
-    #ifndef TMC_SW_MISO
-      #define TMC_SW_MISO                  P0_02  // AUX1
-    #endif
-    #ifndef TMC_SW_SCK
-      #define TMC_SW_SCK                   P0_26  // TH4
-    #endif
+  #ifndef TMC_SPI_MOSI
+    #define TMC_SPI_MOSI                   P0_03  // AUX1
+  #endif
+  #ifndef TMC_SPI_MISO
+    #define TMC_SPI_MISO                   P0_02  // AUX1
+  #endif
+  #ifndef TMC_SPI_SCK
+    #define TMC_SPI_SCK                    P0_26  // TH4
   #endif
 
 #endif
@@ -328,22 +325,26 @@
    */
   #define X_SERIAL_TX_PIN                  P1_22  // J8-2
   #define X_SERIAL_RX_PIN                  P2_12  // J8-4 Interrupt Capable
+
   #define Y_SERIAL_TX_PIN                  P1_23  // J8-3
   #define Y_SERIAL_RX_PIN                  P2_11  // J8-5 Interrupt Capable
+
   #define Z_SERIAL_TX_PIN                  P2_12  // J8-4
   #define Z_SERIAL_RX_PIN                  P0_25  // TH3
+
   #define E0_SERIAL_TX_PIN                 P4_28  // J8-6
   #define E0_SERIAL_RX_PIN                 P0_26  // TH4
 
   // Reduce baud rate to improve software serial reliability
-  #define TMC_BAUD_RATE                    19200
-#endif
+  #ifndef TMC_BAUD_RATE
+    #define TMC_BAUD_RATE                  19200
+  #endif
+
+#endif // HAS_TMC_UART
 
 // UNUSED
-#define PIN_P0_27                          P0_27  // EXP2/Onboard SD
-#define PIN_P0_28                          P0_28  // EXP2
-#define PIN_P0_02                          P0_02  // AUX1 (Interrupt Capable/ADC/Serial Port 0)
-#define PIN_P0_03                          P0_03  // AUX1 (Interrupt Capable/ADC/Serial Port 0)
+//#define PIN_P0_02                        P0_02  // AUX1 (Interrupt Capable/ADC/Serial Port 0)
+//#define PIN_P0_03                        P0_03  // AUX1 (Interrupt Capable/ADC/Serial Port 0)
 
 /**
  *  PWMs
@@ -361,9 +362,9 @@
  *  PWM1.4   P1_23   SDSS(SSEL0)      J3-5  AUX-3
  *  PWM1.4   P2_03   Z_STEP_PIN
  *  PWM1.5   P1_24   X_MIN_PIN        10K PULLUP TO 3.3v, 1K SERIES
- *  PWM1.5   P2_04   RAMPS_D9_PIN
+ *  PWM1.5   P2_04   MOSFET_B_PIN
  *  PWM1.6   P1_26   Y_MIN_PIN        10K PULLUP TO 3.3v, 1K SERIES
- *  PWM1.6   P2_05   RAMPS_D10_PIN
+ *  PWM1.6   P2_05   MOSFET_A_PIN
  */
 
 /**

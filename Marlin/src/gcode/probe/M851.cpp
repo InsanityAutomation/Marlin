@@ -28,25 +28,12 @@
 #include "../../feature/bedlevel/bedlevel.h"
 #include "../../module/probe.h"
 
-extern const char SP_Y_STR[], SP_Z_STR[];
-
 /**
  * M851: Set the nozzle-to-probe offsets in current units
  */
 void GcodeSuite::M851() {
-
-  // Show usage with no parameters
-  if (!parser.seen("XYZ")) {
-    SERIAL_ECHOLNPAIR_P(
-      #if HAS_PROBE_XY_OFFSET
-        PSTR(STR_PROBE_OFFSET " X"), probe.offset_xy.x, SP_Y_STR, probe.offset_xy.y, SP_Z_STR
-      #else
-        PSTR(STR_PROBE_OFFSET " X0 Y0 Z")
-      #endif
-      , probe.offset.z
-    );
-    return;
-  }
+  // No parameters? Show current state.
+  if (!parser.seen("XYZ")) return M851_report();
 
   // Start with current offsets and modify
   xyz_pos_t offs = probe.offset;
@@ -57,43 +44,59 @@ void GcodeSuite::M851() {
   if (parser.seenval('X')) {
     const float x = parser.value_float();
     #if HAS_PROBE_XY_OFFSET
-      if (WITHIN(x, -(X_BED_SIZE), X_BED_SIZE))
+      if (WITHIN(x, PROBE_OFFSET_XMIN, PROBE_OFFSET_XMAX))
         offs.x = x;
       else {
-        SERIAL_ECHOLNPAIR("?X out of range (-", int(X_BED_SIZE), " to ", int(X_BED_SIZE), ")");
+        SERIAL_ECHOLNPGM("?X out of range (", PROBE_OFFSET_XMIN, " to ", PROBE_OFFSET_XMAX, ")");
         ok = false;
       }
     #else
-      if (x) SERIAL_ECHOLNPAIR("?X must be 0 (NOZZLE_AS_PROBE)."); // ...but let 'ok' stay true
+      if (x) SERIAL_ECHOLNPGM("?X must be 0 (NOZZLE_AS_PROBE)."); // ...but let 'ok' stay true
     #endif
   }
 
   if (parser.seenval('Y')) {
     const float y = parser.value_float();
     #if HAS_PROBE_XY_OFFSET
-      if (WITHIN(y, -(Y_BED_SIZE), Y_BED_SIZE))
+      if (WITHIN(y, PROBE_OFFSET_YMIN, PROBE_OFFSET_YMAX))
         offs.y = y;
       else {
-        SERIAL_ECHOLNPAIR("?Y out of range (-", int(Y_BED_SIZE), " to ", int(Y_BED_SIZE), ")");
+        SERIAL_ECHOLNPGM("?Y out of range (", PROBE_OFFSET_YMIN, " to ", PROBE_OFFSET_YMAX, ")");
         ok = false;
       }
     #else
-      if (y) SERIAL_ECHOLNPAIR("?Y must be 0 (NOZZLE_AS_PROBE)."); // ...but let 'ok' stay true
+      if (y) SERIAL_ECHOLNPGM("?Y must be 0 (NOZZLE_AS_PROBE)."); // ...but let 'ok' stay true
     #endif
   }
 
   if (parser.seenval('Z')) {
     const float z = parser.value_float();
-    if (WITHIN(z, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX))
+    if (WITHIN(z, PROBE_OFFSET_ZMIN, PROBE_OFFSET_ZMAX))
       offs.z = z;
     else {
-      SERIAL_ECHOLNPAIR("?Z out of range (", int(Z_PROBE_OFFSET_RANGE_MIN), " to ", int(Z_PROBE_OFFSET_RANGE_MAX), ")");
+      SERIAL_ECHOLNPGM("?Z out of range (", PROBE_OFFSET_ZMIN, " to ", PROBE_OFFSET_ZMAX, ")");
       ok = false;
     }
   }
 
   // Save the new offsets
   if (ok) probe.offset = offs;
+}
+
+void GcodeSuite::M851_report(const bool forReplay/*=true*/) {
+  report_heading_etc(forReplay, F(STR_Z_PROBE_OFFSET));
+  SERIAL_ECHOPGM_P(
+    #if HAS_PROBE_XY_OFFSET
+      PSTR("  M851 X"), LINEAR_UNIT(probe.offset_xy.x),
+              SP_Y_STR, LINEAR_UNIT(probe.offset_xy.y),
+              SP_Z_STR
+    #else
+      PSTR("  M851 X0 Y0 Z")
+    #endif
+    , LINEAR_UNIT(probe.offset.z)
+    , PSTR(" ;")
+  );
+  say_units();
 }
 
 #endif // HAS_BED_PROBE

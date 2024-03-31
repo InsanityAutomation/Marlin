@@ -27,6 +27,10 @@
 #include "../gcode.h"
 #include "../../module/temperature.h"
 
+#if ENABLED(DWIN_LCD_PROUI)
+  #include "../../lcd/e3v2/proui/dwin.h"
+#endif
+
 /**
  * M302: Allow cold extrudes, or set the minimum extrude temperature
  *
@@ -47,6 +51,7 @@ void GcodeSuite::M302() {
   if (seen_S) {
     thermalManager.extrude_min_temp = parser.value_celsius();
     thermalManager.allow_cold_extrude = (thermalManager.extrude_min_temp == 0);
+    TERN_(DWIN_LCD_PROUI, hmiData.extMinT = thermalManager.extrude_min_temp);
   }
 
   if (parser.seen('P'))
@@ -54,9 +59,7 @@ void GcodeSuite::M302() {
   else if (!seen_S) {
     // Report current state
     SERIAL_ECHO_START();
-    SERIAL_ECHOPGM("Cold extrudes are ");
-    serialprintPGM(thermalManager.allow_cold_extrude ? PSTR("en") : PSTR("dis"));
-    SERIAL_ECHOLNPAIR("abled (min temp ", thermalManager.extrude_min_temp, "C)");
+    SERIAL_ECHOLN(F("Cold extrudes are "), thermalManager.allow_cold_extrude ? F("en") : F("dis"), F("abled (min temp "), thermalManager.extrude_min_temp, F("C)"));
   }
 }
 

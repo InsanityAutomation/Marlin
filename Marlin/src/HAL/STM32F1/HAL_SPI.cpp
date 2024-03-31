@@ -4,7 +4,6 @@
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
- * Copyright (c) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +60,8 @@
  * @details Only configures SS pin since libmaple creates and initialize the SPI object
  */
 void spiBegin() {
-  #if PIN_EXISTS(SS)
-    OUT_WRITE(SS_PIN, HIGH);
+  #if PIN_EXISTS(SD_SS)
+    OUT_WRITE(SD_SS_PIN, HIGH);
   #endif
 }
 
@@ -110,7 +109,7 @@ void spiInit(uint8_t spiRate) {
  * @details
  */
 uint8_t spiRec() {
-  uint8_t returnByte = SPI.transfer(ff);
+  uint8_t returnByte = SPI.transfer(0xFF);
   return returnByte;
 }
 
@@ -123,7 +122,7 @@ uint8_t spiRec() {
  *
  * @details Uses DMA
  */
-void spiRead(uint8_t* buf, uint16_t nbyte) {
+void spiRead(uint8_t *buf, uint16_t nbyte) {
   SPI.dmaTransfer(0, const_cast<uint8_t*>(buf), nbyte);
 }
 
@@ -146,7 +145,7 @@ void spiSend(uint8_t b) {
  *
  * @details Use DMA
  */
-void spiSendBlock(uint8_t token, const uint8_t* buf) {
+void spiSendBlock(uint8_t token, const uint8_t *buf) {
   SPI.send(token);
   SPI.dmaSend(const_cast<uint8_t*>(buf), 512);
 }
@@ -154,13 +153,13 @@ void spiSendBlock(uint8_t token, const uint8_t* buf) {
 #if ENABLED(SPI_EEPROM)
 
 // Read single byte from specified SPI channel
-uint8_t spiRec(uint32_t chan) { return SPI.transfer(ff); }
+uint8_t spiRec(uint32_t chan) { return SPI.transfer(0xFF); }
 
 // Write single byte to specified SPI channel
 void spiSend(uint32_t chan, byte b) { SPI.send(b); }
 
 // Write buffer to specified SPI channel
-void spiSend(uint32_t chan, const uint8_t* buf, size_t n) {
+void spiSend(uint32_t chan, const uint8_t *buf, size_t n) {
   for (size_t p = 0; p < n; p++) spiSend(chan, buf[p]);
 }
 

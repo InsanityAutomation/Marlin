@@ -23,6 +23,8 @@
 
 /**
  * Anet V1.0 board pin assignments
+ * Schematic: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Anet%20V1.0/ANET3D_Board_Schematic.pdf
+ * Origin: https://github.com/ralf-e/ANET-3D-Board-V1.0/blob/master/ANET3D_Board_Schematic.pdf
  */
 
 /**
@@ -86,8 +88,24 @@
  *   Many thanks to Hans Raaf (@oderwat) for developing the Anet-specific software and supporting the Anet community.
  */
 
+/**
+ * OptiBoot Bootloader:
+ *   Optiboot is an alternative bootloader that can be flashed on the board to free up space for a larger firmware build.
+ *   See https://github.com/Optiboot/optiboot for more information.
+ *
+ * Install Marlin with Arduino IDE:
+ *   For a board with the stock bootloader, select 'Sanguino' in 'Tools > Board' and 'ATmega1284P' in 'Tools > Processor.'
+ *   For a board with OptiBoot, select 'Sanguino (Optiboot)' in 'Tools > Board' and 'ATmega1284P' in 'Tools > Processor.'
+ *
+ * Install Marlin with PlatformIO IDE:
+ *   (NOTE: You can set a default build environment by editing the value of 'default_env' in 'platformio.ini'.
+ *          For the best user experience install the "Auto Build Marlin" extension.)
+ *   For a board with the stock bootloader use Build / Upload under the 'sanguino1284p' or 'sanguino1284p_optimized' target.
+ *   For a board with OptiBoot, use Build / Upload under the 'melzi_optiboot' target.
+ */
+
 #if NOT_TARGET(__AVR_ATmega1284P__)
-  #error "Oops! Select 'Sanguino' in 'Tools > Board' and 'ATmega1284P' in 'Tools > Processor.' (For PlatformIO, use 'melzi' or 'melzi_optiboot.')"
+  #error "Oops! Select 'Sanguino' in 'Tools > Board' and 'ATmega1284P' in 'Tools > Processor.' (For PlatformIO, use 'sanguino1284p' or 'sanguino1284p_optimized'. With optiboot, use 'melzi_optiboot.')"
 #endif
 
 #define BOARD_INFO_NAME "Anet 1.0"
@@ -130,8 +148,8 @@
 #define HEATER_0_PIN                          13  // (extruder)
 #define HEATER_BED_PIN                        12  // (bed)
 
-#ifndef FAN_PIN
-  #define FAN_PIN                              4
+#ifndef FAN0_PIN
+  #define FAN0_PIN                             4
 #endif
 
 //
@@ -145,41 +163,65 @@
  *
  * Only the following displays are supported:
  *  ZONESTAR_LCD
- *  ANET_FULL_GRAPHICS_LCD
+ *  ANET_FULL_GRAPHICS_LCD(_ALT_WIRING)?
  *  REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
  */
 
 #if HAS_WIRED_LCD
+
   #define LCD_SDSS                            28
-  #if ENABLED(ADC_KEYPAD)
+
+  #if HAS_ADC_BUTTONS
+
     #define SERVO0_PIN                        27  // free for BLTouch/3D-Touch
     #define LCD_PINS_RS                       28
-    #define LCD_PINS_ENABLE                   29
+    #define LCD_PINS_EN                       29
     #define LCD_PINS_D4                       10
     #define LCD_PINS_D5                       11
     #define LCD_PINS_D6                       16
     #define LCD_PINS_D7                       17
     #define ADC_KEYPAD_PIN                     1
-  #elif ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+
+  #elif IS_RRD_FG_SC
+
     // Pin definitions for the Anet A6 Full Graphics display and the RepRapDiscount Full Graphics
     // display using an adapter board  // https://go.aisler.net/benlye/anet-lcd-adapter/pcb
     // See below for alternative pin definitions for use with https://www.thingiverse.com/thing:2103748
-    #define SERVO0_PIN                        29  // free for BLTouch/3D-Touch
-    #define BEEPER_PIN                        17
-    #define LCD_PINS_RS                       27
-    #define LCD_PINS_ENABLE                   28
-    #define LCD_PINS_D4                       30
-    #define BTN_EN1                           11
-    #define BTN_EN2                           10
-    #define BTN_ENC                           16
-    #define BOARD_ST7920_DELAY_1 DELAY_NS(0)
-    #define BOARD_ST7920_DELAY_2 DELAY_NS(63)
-    #define BOARD_ST7920_DELAY_3 DELAY_NS(125)
-    #define STD_ENCODER_PULSES_PER_STEP        4
-    #define STD_ENCODER_STEPS_PER_MENU_ITEM    1
+
+    #if ENABLED(ANET_FULL_GRAPHICS_LCD_ALT_WIRING)
+      #define SERVO0_PIN                      30
+      #define BEEPER_PIN                      27
+      #define LCD_PINS_RS                     29
+      #define LCD_PINS_EN                     16
+      #define LCD_PINS_D4                     11
+      #define BTN_EN1                         28
+      #define BTN_EN2                         10
+      #define BTN_ENC                         17
+      #define BOARD_ST7920_DELAY_1           250
+      #define BOARD_ST7920_DELAY_2           250
+      #define BOARD_ST7920_DELAY_3           250
+    #else
+      #define SERVO0_PIN                      29  // free for BLTouch/3D-Touch
+      #define BEEPER_PIN                      17
+      #define LCD_PINS_RS                     27
+      #define LCD_PINS_EN                     28
+      #define LCD_PINS_D4                     30
+      #define BTN_EN1                         11
+      #define BTN_EN2                         10
+      #define BTN_ENC                         16
+      #define BOARD_ST7920_DELAY_1           125
+      #define BOARD_ST7920_DELAY_2            63
+      #define BOARD_ST7920_DELAY_3           125
+    #endif
+
   #endif
+
 #else
   #define SERVO0_PIN                          27
+#endif
+
+#ifndef FIL_RUNOUT_PIN
+  #define FIL_RUNOUT_PIN              SERVO0_PIN
 #endif
 
 /**
@@ -191,11 +233,11 @@
  * published by oderwat on Thingiverse at https://www.thingiverse.com/thing:2103748.
  *
  * Using that adapter requires changing the pin definition as follows:
- *   #define SERVO0_PIN        27   // free for BLTouch/3D-Touch
- *   #define BEEPER_PIN        28
- *   #define LCD_PINS_RS       30
- *   #define LCD_PINS_ENABLE   29
- *   #define LCD_PINS_D4       17
+ *   #define SERVO0_PIN   27   // free for BLTouch/3D-Touch
+ *   #define BEEPER_PIN   28
+ *   #define LCD_PINS_RS  30
+ *   #define LCD_PINS_EN  29
+ *   #define LCD_PINS_D4  17
  *
  * The BLTouch pin becomes LCD:3
  */
@@ -205,32 +247,32 @@
  * ===================== LCD PINOUTS ==================================
  * ====================================================================
  *
- *   Anet V1.0 controller           | ZONESTAR_LCD      | ANET_FULL_      | RepRapDiscount Full      | Thingiverse RepRap wiring
- *   physical   logical   alt       |                   | GRAPHICS_LCD    | Graphics Display Wiring  | https://www.thingiverse
- *     pin        pin     functions |                   |                 |                          | .com/thing:2103748
- *------------------------------------------------------------------------------------------------------------------------
- *   ANET-J3.1    8 ***             | N/A               | J3_TX ***       |                          |
- *   ANET-J3.2    9 ***             | N/A               | J3_RX ***       |                          |
- *   ANET-J3.3    6       MISO      | N/A               | MISO ***        | EXP2.1   MISO            | EXP2.1   MISO
- *   ANET-J3.4    +5V               | N/A               | +5V             |                          |
- *   ANET-J3.5    7       SCK       | N/A               | SCK ***         | EXP2.2   SCK             | EXP2.2   SCK
- *   ANET-J3.6    5       MOSI      | N/A               | MOSI ***        | EXP2.6   MOSI            | EXP2.6   MOSI
- *   ANET-J3.7    !RESET            | N/A               | button          | EXP2.8   panel button    | EXP2.8   panel button
- *   ANET-J3.8    GND               | N/A               | GND             | EXP2.9   GND             | EXP2.9   GND
- *   ANET-J3.9    4       Don't use | N/A               | N/C             |                          |
- *   ANET-J3.10   +3.3V             | N/A               | +3.3V ***       |                          |
- *                                  |                   |                 |                          |
- *                                  |                   |                 |                          |
- *   ANET-LCD.1   GND               | GND               | GND             | EXP1.9   GND             | EXP1.9   GND
- *   ANET-LCD.2   +5V               | +5V               | +5V             | EXP1.10  +5V             | EXP1.10  +5V
- *   ANET-LCD.3   27      A4        | N/C *             | LCD_PINS_RS     | EXP1.4   LCD_PINS_RS     | EXP2.4   SDSS or N/C *
- *   ANET-LCD.4   10                | LCD_PINS_D4       | BTN_EN2         | EXP2.3   BTN_EN2         | EXP2.3   BTN_EN2
- *   ANET-LCD.5   28      A3        | LCD_PINS_RS       | LCD_PINS_ENABLE | EXP1.3   LCD_PINS_ENABLE | EXP1.1   BEEPER_PIN
- *   ANET-LCD.6   11                | LCD_PINS_D5       | BTN_EN1         | EXP2.5   BTN_EN1         | EXP2.5   BTN_EN1
- *   ANET-LCD.7   29      A2        | LCD_PINS_ENABLE   | N/C *           | EXP2.4   SDSS or N/C *   | EXP1.3   LCD_PINS_ENABLE
- *   ANET-LCD.8   16      SCL       | LCD_PINS_D6       | BTN_ENC         | EXP1.2   BTN_ENC         | EXP1.2   BTN_ENC
- *   ANET-LCD.9   30      A1        | ADC_KEYPAD_PIN ** | LCD_PINS_D4     | EXP1.5   LCD_PINS_D4     | EXP1.4   LCD_PINS_RS
- *   ANET-LCD.10  17      SDA       | LCD_PINS_D7       | BEEPER_PIN      | EXP1.1   BEEPER_PIN      | EXP1.5   LCD_PINS_D4
+ *   Anet V1.0 controller           | ZONESTAR_LCD      | ANET_FULL_   | RepRapDiscount Full     | Thingiverse RepRap wiring
+ *   physical   logical   alt       |                   | GRAPHICS_LCD | Graphics Display Wiring | https://www.thingiverse
+ *     pin        pin     functions |                   |              |                         | .com/thing:2103748
+ *--------------------------------------------------------------------------------------------------------------------
+ *   ANET-J3.1    8 ***             | N/A               | J3_TX ***    |                         |
+ *   ANET-J3.2    9 ***             | N/A               | J3_RX ***    |                         |
+ *   ANET-J3.3    6       MISO      | N/A               | MISO ***     | EXP2.1   MISO           | EXP2.1   MISO
+ *   ANET-J3.4    +5V               | N/A               | +5V          |                         |
+ *   ANET-J3.5    7       SCK       | N/A               | SCK ***      | EXP2.2   SCK            | EXP2.2   SCK
+ *   ANET-J3.6    5       MOSI      | N/A               | MOSI ***     | EXP2.6   MOSI           | EXP2.6   MOSI
+ *   ANET-J3.7    !RESET            | N/A               | button       | EXP2.8   panel button   | EXP2.8   panel button
+ *   ANET-J3.8    GND               | N/A               | GND          | EXP2.9   GND            | EXP2.9   GND
+ *   ANET-J3.9    4       Don't use | N/A               | N/C          |                         |
+ *   ANET-J3.10   +3.3V             | N/A               | +3.3V ***    |                         |
+ *                                  |                   |              |                         |
+ *                                  |                   |              |                         |
+ *   ANET-LCD.1   GND               | GND               | GND          | EXP1.9   GND            | EXP1.9   GND
+ *   ANET-LCD.2   +5V               | +5V               | +5V          | EXP1.10  +5V            | EXP1.10  +5V
+ *   ANET-LCD.3   27      A4        | N/C *             | LCD_PINS_RS  | EXP1.4   LCD_PINS_RS    | EXP2.4   SDSS or N/C *
+ *   ANET-LCD.4   10                | LCD_PINS_D4       | BTN_EN2      | EXP2.3   BTN_EN2        | EXP2.3   BTN_EN2
+ *   ANET-LCD.5   28      A3        | LCD_PINS_RS       | LCD_PINS_EN  | EXP1.3   LCD_PINS_EN    | EXP1.1   BEEPER_PIN
+ *   ANET-LCD.6   11                | LCD_PINS_D5       | BTN_EN1      | EXP2.5   BTN_EN1        | EXP2.5   BTN_EN1
+ *   ANET-LCD.7   29      A2        | LCD_PINS_EN       | N/C *        | EXP2.4   SDSS or N/C *  | EXP1.3   LCD_PINS_EN
+ *   ANET-LCD.8   16      SCL       | LCD_PINS_D6       | BTN_ENC      | EXP1.2   BTN_ENC        | EXP1.2   BTN_ENC
+ *   ANET-LCD.9   30      A1        | ADC_KEYPAD_PIN ** | LCD_PINS_D4  | EXP1.5   LCD_PINS_D4    | EXP1.4   LCD_PINS_RS
+ *   ANET-LCD.10  17      SDA       | LCD_PINS_D7       | BEEPER_PIN   | EXP1.1   BEEPER_PIN     | EXP1.5   LCD_PINS_D4
  *
  *                 N/C * - if not connected to the LCD can be used for BLTouch servo input
  *                 ** - analog pin -WITHOUT a pullup
@@ -242,7 +284,7 @@
  *   physical pin  function
  *   EXP1.1        BEEPER
  *   EXP1.2        BTN_ENC
- *   EXP1.3        LCD_PINS_ENABLE
+ *   EXP1.3        LCD_PINS_EN
  *   EXP1.4        LCD_PINS_RS
  *   EXP1.5        LCD_PINS_D4
  *   EXP1.6        LCD_PINS_D5 (not used)

@@ -22,12 +22,12 @@
 #pragma once
 
 /**
- * Smoothieboard pin assignments
+ * Smoothieware Smoothieboard pin assignments
+ * Schematic: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Smoothieware%20Smoothieboard%20V1/http.i.imgur.com.oj4zqs3.png
+ * Origin: http://smoothieware.org/_media///external/http.i.imgur.com.oj4zqs3.png
  */
 
-#if NOT_TARGET(MCU_LPC1769)
-  #error "Oops! Make sure you have the LPC1769 environment selected in your IDE."
-#endif
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME   "Smoothieboard"
 #define BOARD_WEBSITE_URL "smoothieware.org/smoothieboard"
@@ -85,8 +85,8 @@
 #define HEATER_BED_PIN                     P2_05
 #define HEATER_0_PIN                       P2_07
 #define HEATER_1_PIN                       P1_23
-#ifndef FAN_PIN
-  #define FAN_PIN                          P2_06
+#ifndef FAN0_PIN
+  #define FAN0_PIN                         P2_06
 #endif
 #define FAN1_PIN                           P2_04
 
@@ -124,10 +124,10 @@
    */
   #define SD_DETECT_PIN                    P0_27  // EXP2 Pin 7 (SD_CD, SD_DET)
 
-  #define MISO_PIN                         P0_08  // EXP2 Pin 1 (PB3, SD_MISO)
-  #define SCK_PIN                          P0_07  // EXP2 Pin 2 (SD_SCK)
-  #define SS_PIN                           P0_28  // EXP2 Pin 4 (SD_CSEL, SD_CS)
-  #define MOSI_PIN                         P0_09  // EXP2 Pin 6 (PB2, SD_MOSI)
+  #define SD_MISO_PIN                      P0_08  // EXP2 Pin 1 (PB3, SD_MISO)
+  #define SD_SCK_PIN                       P0_07  // EXP2 Pin 2 (SD_SCK)
+  #define SD_SS_PIN                        P0_28  // EXP2 Pin 4 (SD_CSEL, SD_CS)
+  #define SD_MOSI_PIN                      P0_09  // EXP2 Pin 6 (PB2, SD_MOSI)
 
   /**
    * The Smoothieboard supports the REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER with either
@@ -138,11 +138,11 @@
    * http://chibidibidiwah.wdfiles.com/local--files/panel/smoothieboard2sd.jpg
    * http://smoothieware.org/panel
    */
-  #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+  #if IS_RRD_FG_SC
     //  EXP1 Pins
     #define BEEPER_PIN                     P1_31  // EXP1 Pin 1
     #define BTN_ENC                        P1_30  // EXP1 Pin 2
-    #define LCD_PINS_ENABLE                P0_18  // EXP1 Pin 3 (MOSI)
+    #define LCD_PINS_EN                    P0_18  // EXP1 Pin 3 (MOSI)
     #define LCD_PINS_RS                    P0_16  // EXP1 Pin 4 (CS)
     #define LCD_PINS_D4                    P0_15  // EXP1 Pin 5 (SCK)
     //  EXP2 Pins
@@ -169,7 +169,7 @@
  * Set from 0 - 127 with stop bit.
  * (Ex. 3F << 1 | 1)
  */
-#define DIGIPOTS_I2C_SCL                   P0_0
+#define DIGIPOTS_I2C_SCL                   P0_00
 #define DIGIPOTS_I2C_SDA_X                 P0_04
 #define DIGIPOTS_I2C_SDA_Y                 P0_10
 #define DIGIPOTS_I2C_SDA_Z                 P0_19

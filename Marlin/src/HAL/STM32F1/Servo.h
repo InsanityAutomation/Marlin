@@ -4,7 +4,6 @@
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
- * Copyright (c) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +34,8 @@
 #define SERVO_DEFAULT_MIN_ANGLE         0
 #define SERVO_DEFAULT_MAX_ANGLE         180
 
-#define HAL_SERVO_LIB libServo
+class libServo;
+typedef libServo hal_servo_t;
 
 class libServo {
   public:

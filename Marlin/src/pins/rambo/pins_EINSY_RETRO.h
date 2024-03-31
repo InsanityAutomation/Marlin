@@ -23,11 +23,13 @@
 
 /**
  * Einsy-Retro pin assignments
+ * Schematic (1.0b): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Einsy-Retro/Schematic%20Prints_EinsyRetro_1.0b.PDF
+ * Origin (1.0b): https://github.com/ultimachine/EinsyRetro/blob/master/board/Project%20Outputs/Schematic%20Prints_EinsyRetro_1.0b.PDF
+ * Schematic (1.0c): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Einsy-Retro/Schematic%20Prints_EinsyRetro_1.0c.PDF
+ * Origin (1.0c): https://github.com/ultimachine/EinsyRetro/blob/master/board/Project%20Outputs/Schematic%20Prints_EinsyRetro_1.0c.PDF
  */
 
-#if NOT_TARGET(__AVR_ATmega2560__)
-  #error "Oops! Select 'Arduino Mega 2560 or Rambo' in 'Tools > Board.'"
-#endif
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME "Einsy Retro"
 
@@ -57,13 +59,12 @@
 
   #define X_MIN_PIN                           12  // X-
   #define Y_MIN_PIN                           11  // Y-
-  #define Z_MIN_PIN                           10  // Z-
   #define X_MAX_PIN                           81  // X+
   #define Y_MAX_PIN                           57  // Y+
 
 #else
 
-  #if X_HOME_DIR < 0
+  #if X_HOME_TO_MIN
     #define X_MIN_PIN                 X_DIAG_PIN
     #define X_MAX_PIN                         81  // X+
   #else
@@ -71,7 +72,7 @@
     #define X_MAX_PIN                 X_DIAG_PIN
   #endif
 
-  #if Y_HOME_DIR < 0
+  #if Y_HOME_TO_MIN
     #define Y_MIN_PIN                 Y_DIAG_PIN
     #define Y_MAX_PIN                         57  // Y+
   #else
@@ -80,15 +81,16 @@
   #endif
 
   #if ENABLED(BLTOUCH)
-    #define Z_MIN_PIN                         11  // Y-MIN
-    #define SERVO0_PIN                        10  // Z-MIN
-  #else
-    #define Z_MIN_PIN                         10
+    #define Z_MIN_PIN                         11  // Y-
+    #define SERVO0_PIN                        10  // Z-
   #endif
 
 #endif
 
 #define Z_MAX_PIN                              7
+#ifndef Z_MIN_PIN
+  #define Z_MIN_PIN                           10  // Z-
+#endif
 
 //
 // Z Probe (when not Z_MIN_PIN)
@@ -133,8 +135,8 @@
 #define HEATER_0_PIN                           3
 #define HEATER_BED_PIN                         4
 
-#ifndef FAN_PIN
-  #define FAN_PIN                              8
+#ifndef FAN0_PIN
+  #define FAN0_PIN                             8
 #endif
 #define FAN1_PIN                               6
 
@@ -151,17 +153,21 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-// use P1 connector for spindle pins
-#define SPINDLE_LASER_PWM_PIN                  9  // Hardware PWM
-#define SPINDLE_LASER_ENA_PIN                 18  // Pullup!
-#define SPINDLE_DIR_PIN                       19
+#if HAS_CUTTER
+  // Use P1 connector for spindle pins
+  #define SPINDLE_LASER_PWM_PIN                9  // Hardware PWM
+  #define SPINDLE_LASER_ENA_PIN               18  // Pullup!
+  #define SPINDLE_DIR_PIN                     19
+#endif
 
 //
 // Průša i3 MK2 Multiplexer Support
 //
-#define E_MUX0_PIN                            17
-#define E_MUX1_PIN                            16
-#define E_MUX2_PIN                            78  // 84 in MK2 Firmware, with BEEPER as 78
+#if HAS_PRUSA_MMU1
+  #define E_MUX0_PIN                          17
+  #define E_MUX1_PIN                          16
+  #define E_MUX2_PIN                          78  // 84 in MK2 Firmware, with BEEPER as 78
+#endif
 
 //
 // LCD / Controller
@@ -170,17 +176,17 @@
 
   #define KILL_PIN                            32
 
-  #if ANY(ULTIPANEL, TOUCH_UI_ULTIPANEL, TOUCH_UI_FTDI_EVE)
+  #if ANY(IS_ULTIPANEL, TOUCH_UI_ULTIPANEL, TOUCH_UI_FTDI_EVE)
 
     #if ENABLED(CR10_STOCKDISPLAY)
       #define LCD_PINS_RS                     85
-      #define LCD_PINS_ENABLE                 71
+      #define LCD_PINS_EN                     71
       #define LCD_PINS_D4                     70
       #define BTN_EN1                         18
       #define BTN_EN2                         19
     #else
       #define LCD_PINS_RS                     82
-      #define LCD_PINS_ENABLE                 18  // On 0.6b, use 61
+      #define LCD_PINS_EN                     18  // On 0.6b, use 61
       #define LCD_PINS_D4                     19  // On 0.6b, use 59
       #define LCD_PINS_D5                     70
       #define LCD_PINS_D6                     85
@@ -194,6 +200,17 @@
 
     #define SD_DETECT_PIN                     15
 
-  #endif // ULTIPANEL || TOUCH_UI_ULTIPANEL || TOUCH_UI_FTDI_EVE
+    #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+      #define BTN_ENC_EN             LCD_PINS_D7  // Detect the presence of the encoder
+    #endif
+
+  #endif // IS_ULTIPANEL || TOUCH_UI_ULTIPANEL || TOUCH_UI_FTDI_EVE
 
 #endif // HAS_WIRED_LCD || TOUCH_UI_ULTIPANEL || TOUCH_UI_FTDI_EVE
+
+// Alter timing for graphical display
+#if IS_U8GLIB_ST7920
+  #define BOARD_ST7920_DELAY_1                 0
+  #define BOARD_ST7920_DELAY_2               250
+  #define BOARD_ST7920_DELAY_3                 0
+#endif

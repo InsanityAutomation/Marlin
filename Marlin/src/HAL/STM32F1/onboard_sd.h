@@ -1,14 +1,34 @@
-/*-----------------------------------------------------------------------
-/ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
-/ * Copyright (c) 2019 BigTreeTech [https://github.com/bigtreetech]
-/ * Low level disk interface module include file   (C)ChaN, 2015
-/-----------------------------------------------------------------------*/
-
+/**
+ * Marlin 3D Printer Firmware
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 #pragma once
 
+/*-----------------------------------------------------------------------
+/ * Copyright (c) 2019 BigTreeTech [https://github.com/bigtreetech]
+/ * Low level disk interface module include file (c) ChaN, 2015
+/-----------------------------------------------------------------------*/
+
 #define _DISKIO_WRITE   1   /* 1: Enable disk_write function */
-#define _DISKIO_IOCTL   1   /* 1: Enable disk_ioctl fucntion */
-#define _DISKIO_ISDIO   0   /* 1: Enable iSDIO control fucntion */
+#define _DISKIO_IOCTL   1   /* 1: Enable disk_ioctl function */
+#define _DISKIO_ISDIO   0   /* 1: Enable iSDIO control function */
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
@@ -48,7 +68,7 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
   DRESULT disk_write(BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
 #endif
 #if _DISKIO_IOCTL
-  DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff);
+  DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void *buff);
 #endif
 
 /* Disk Status Bits (DSTATUS) */
@@ -56,7 +76,7 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
 #define STA_NODISK      0x02    /* No medium in the drive */
 #define STA_PROTECT     0x04    /* Write protected */
 
-/* Command code for disk_ioctrl fucntion */
+/* Command code for disk_ioctrl function */
 
 /* Generic command (Used by FatFs) */
 #define CTRL_SYNC        0  /* Complete pending write process (needed at _FS_READONLY == 0) */

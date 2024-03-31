@@ -23,19 +23,15 @@
 
 /**
  * MKS BASE v1.4 with A4982 stepper drivers and digital micro-stepping
+ * ATmega2560
  */
 
 #if HOTENDS > 2 || E_STEPPERS > 2
-  #error "MKS BASE 1.4 only supports up to 2 hotends / E-steppers. Comment out this line to continue."
+  #error "MKS BASE 1.4 supports up to 2 hotends / E steppers."
 #endif
 
 #define BOARD_INFO_NAME "MKS BASE 1.4"
 #define MKS_BASE_VERSION                      14
-
-//
-// Heaters / Fans
-//
-#define FAN_PIN                                9  // PH6 ** Pin18 ** PWM9
 
 // Other Mods
 
@@ -58,7 +54,7 @@
   #define CASE_LIGHT_PIN                      11  // PB5 ** Pin24 ** PWM11
 #endif
 
-#include "pins_MKS_BASE_common.h"
+#include "pins_MKS_BASE_common.h" // ... RAMPS
 
 /*
   Available connectors on MKS BASE v1.4

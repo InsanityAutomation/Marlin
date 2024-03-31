@@ -2,6 +2,9 @@
  * Marlin 3D Printer Firmware
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,10 +22,9 @@
 #pragma once
 
 //
-//  some of the pin mapping functions of the Teensduino extension to the Arduino IDE
-//  do not function the same as the other Arduino extensions
+// Some of the pin mapping functions of the Arduino IDE Teensduino extension
+// function differently from other Arduino extensions.
 //
-
 
 #define TEENSYDUINO_IDE
 
@@ -44,8 +46,6 @@
 #define PD 4
 #define PE 5
 #define PF 6
-
-#undef digitalPinToPort
 
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
   PD, // 0  - PD0 - INT0 - PWM
@@ -98,7 +98,7 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
   PE, // 47 - PE3 (not defined in teensyduino)
 };
 
-#define digitalPinToPort(P) ( pgm_read_byte( digital_pin_to_port_PGM + (P) ) )
+#define digitalPinToPort(P) pgm_read_byte(digital_pin_to_port_PGM[P])
 
 // digitalPinToBitMask(pin) is OK
 

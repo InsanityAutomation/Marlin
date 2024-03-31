@@ -29,6 +29,13 @@
 
 #if ENABLED(EEPROM_SETTINGS)
   #include "../HAL/shared/eeprom_api.h"
+  enum EEPROM_Error : uint8_t {
+    ERR_EEPROM_NOERR,
+    ERR_EEPROM_VERSION,
+    ERR_EEPROM_SIZE,
+    ERR_EEPROM_CRC,
+    ERR_EEPROM_CORRUPT
+  };
 #endif
 
 class MarlinSettings {
@@ -59,7 +66,7 @@ class MarlinSettings {
       static bool load();      // Return 'true' if data was loaded ok
       static bool validate();  // Return 'true' if EEPROM data is ok
 
-      static inline void first_load() {
+      static void first_load() {
         static bool loaded = false;
         if (!loaded && load()) loaded = true;
       }
@@ -76,12 +83,15 @@ class MarlinSettings {
         //static void delete_mesh();    // necessary if we have a MAT
         //static void defrag_meshes();  // "
       #endif
-    #else
+
+    #else // !EEPROM_SETTINGS
+
       FORCE_INLINE
       static bool load() { reset(); report(); return true; }
       FORCE_INLINE
       static void first_load() { (void)load(); }
-    #endif
+
+    #endif // !EEPROM_SETTINGS
 
     #if DISABLED(DISABLE_M503)
       static void report(const bool forReplay=false);
@@ -95,7 +105,7 @@ class MarlinSettings {
 
     #if ENABLED(EEPROM_SETTINGS)
 
-      static bool eeprom_error, validating;
+      static bool validating;
 
       #if ENABLED(AUTO_BED_LEVELING_UBL)  // Eventually make these available if any leveling system
                                           // That can store is enabled
@@ -103,9 +113,44 @@ class MarlinSettings {
                                           // live at the very end of the eeprom
       #endif
 
-      static bool _load();
-      static bool size_error(const uint16_t size);
-    #endif
+      static EEPROM_Error _load();
+      static EEPROM_Error size_error(const uint16_t size);
+
+      static int eeprom_index;
+      static uint16_t working_crc;
+
+      static bool EEPROM_START(int eeprom_offset) {
+        if (!persistentStore.access_start()) { SERIAL_ECHO_MSG("No EEPROM."); return false; }
+        eeprom_index = eeprom_offset;
+        working_crc = 0;
+        return true;
+      }
+
+      static void EEPROM_FINISH(void) { persistentStore.access_finish(); }
+
+      template<typename T>
+      static void EEPROM_SKIP(const T &VAR) { eeprom_index += sizeof(VAR); }
+
+      template<typename T>
+      static void EEPROM_WRITE(const T &VAR) {
+        persistentStore.write_data(eeprom_index, (const uint8_t *) &VAR, sizeof(VAR), &working_crc);
+      }
+
+      template<typename T>
+      static void EEPROM_READ_(T &VAR) {
+        persistentStore.read_data(eeprom_index, (uint8_t *) &VAR, sizeof(VAR), &working_crc, !validating);
+      }
+
+      static void EEPROM_READ_(uint8_t *VAR, size_t sizeof_VAR) {
+        persistentStore.read_data(eeprom_index, VAR, sizeof_VAR, &working_crc, !validating);
+      }
+
+      template<typename T>
+      static void EEPROM_READ_ALWAYS_(T &VAR) {
+        persistentStore.read_data(eeprom_index, (uint8_t *) &VAR, sizeof(VAR), &working_crc);
+      }
+
+    #endif // EEPROM_SETTINGS
 };
 
 extern MarlinSettings settings;

@@ -1,6 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +20,11 @@
  *
  */
 
+#ifdef TARGET_LPC1768
+
 #include "../../../inc/MarlinConfig.h"
 
-#if HAS_TFT_XPT2046 || HAS_TOUCH_XPT2046
+#if HAS_TFT_XPT2046 || HAS_RES_TOUCH_BUTTONS
 
 #include "xpt2046.h"
 #include <SPI.h>
@@ -40,10 +45,12 @@ uint16_t delta(uint16_t a, uint16_t b) { return a > b ? a - b : b - a; }
   }
 #endif
 
-void XPT2046::Init() {
-  SET_INPUT(TOUCH_MISO_PIN);
-  SET_OUTPUT(TOUCH_MOSI_PIN);
-  SET_OUTPUT(TOUCH_SCK_PIN);
+void XPT2046::init() {
+  #if DISABLED(TOUCH_BUTTONS_HW_SPI)
+    SET_INPUT(TOUCH_MISO_PIN);
+    SET_OUTPUT(TOUCH_MOSI_PIN);
+    SET_OUTPUT(TOUCH_SCK_PIN);
+  #endif
   OUT_WRITE(TOUCH_CS_PIN, HIGH);
 
   #if PIN_EXISTS(TOUCH_INT)
@@ -67,9 +74,8 @@ bool XPT2046::isTouched() {
   );
 }
 
-bool XPT2046::getRawPoint(int16_t *x, int16_t *y) {
-  if (isBusy()) return false;
-  if (!isTouched()) return false;
+bool XPT2046::getRawPoint(int16_t * const x, int16_t * const y) {
+  if (isBusy() || !isTouched()) return false;
   *x = getRawData(XPT2046_X);
   *y = getRawData(XPT2046_Y);
   return isTouched();
@@ -78,7 +84,7 @@ bool XPT2046::getRawPoint(int16_t *x, int16_t *y) {
 uint16_t XPT2046::getRawData(const XPTCoordinate coordinate) {
   uint16_t data[3];
 
-  DataTransferBegin();
+  dataTransferBegin();
   TERN_(TOUCH_BUTTONS_HW_SPI, SPIx.begin());
 
   for (uint16_t i = 0; i < 3 ; i++) {
@@ -87,7 +93,7 @@ uint16_t XPT2046::getRawData(const XPTCoordinate coordinate) {
   }
 
   TERN_(TOUCH_BUTTONS_HW_SPI, SPIx.end());
-  DataTransferEnd();
+  dataTransferEnd();
 
   uint16_t delta01 = delta(data[0], data[1]),
            delta02 = delta(data[0], data[2]),
@@ -100,18 +106,18 @@ uint16_t XPT2046::getRawData(const XPTCoordinate coordinate) {
 }
 
 uint16_t XPT2046::IO(uint16_t data) {
-  return TERN(TOUCH_BUTTONS_HW_SPI, HardwareIO, SoftwareIO)(data);
+  return TERN(TOUCH_BUTTONS_HW_SPI, hardwareIO, softwareIO)(data);
 }
 
 extern uint8_t spiTransfer(uint8_t b);
 
 #if ENABLED(TOUCH_BUTTONS_HW_SPI)
-  uint16_t XPT2046::HardwareIO(uint16_t data) {
+  uint16_t XPT2046::hardwareIO(uint16_t data) {
     return SPIx.transfer(data & 0xFF);
   }
 #endif
 
-uint16_t XPT2046::SoftwareIO(uint16_t data) {
+uint16_t XPT2046::softwareIO(uint16_t data) {
   uint16_t result = 0;
 
   for (uint8_t j = 0x80; j; j >>= 1) {
@@ -125,4 +131,5 @@ uint16_t XPT2046::SoftwareIO(uint16_t data) {
   return result;
 }
 
-#endif // HAS_TFT_XPT2046
+#endif // HAS_TFT_XPT2046 || HAS_RES_TOUCH_BUTTONS
+#endif // TARGET_LPC1768

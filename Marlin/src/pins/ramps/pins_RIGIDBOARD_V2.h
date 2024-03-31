@@ -23,18 +23,19 @@
 
 /**
  * RIGIDBOARD V2 Arduino Mega with RAMPS v1.4 pin assignments
+ * ATmega2560, ATmega1280
  */
 
 #define BOARD_INFO_NAME "RigidBoard V2"
 
-#include "pins_RIGIDBOARD.h"
+#include "pins_RIGIDBOARD.h" // ... RAMPS
 
 //
 // Steppers
 //
 
 // I2C based DAC like on the Printrboard REVF
-#define DAC_STEPPER_CURRENT
+#define HAS_MOTOR_CURRENT_DAC 1
 
 // Channels available for DAC, For Rigidboard there are 4
 #define DAC_STEPPER_ORDER { 0, 1, 2, 3 }

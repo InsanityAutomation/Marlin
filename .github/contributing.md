@@ -26,16 +26,20 @@ The following is a set of guidelines for contributing to Marlin, hosted by the [
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [Marlin Code of Conduct](code_of_conduct.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [marlinfirmware@github.com](mailto:marlinfirmware@github.com).
+This project and everyone participating in it is governed by the [Marlin Code of Conduct](code_of_conduct.md). By participating, you are expected to uphold this code. Please report unacceptable behavior by following GitHub's [reporting abuse or spam article](https://docs.github.com/en/communities/maintaining-your-safety-on-github/reporting-abuse-or-spam).
 
 ## I don't want to read this whole thing I just have a question!!!
 
-> **Note:** Please don't file an issue to ask a question. You'll get faster results by using the resources below.
+> [!NOTE]
+> Please don't file an issue to ask a question. You'll get faster results by using the resources below.
 
 We have a Message Board and a Facebook group where our knowledgable user community can provide helpful advice if you have questions.
 
-* [Marlin RepRap forum](https://reprap.org/forum/list.php?415)
-* [MarlinFirmware on Facebook](https://www.facebook.com/groups/1049718498464482/)
+- [Marlin Documentation](https://marlinfw.org) - Official Marlin documentation
+- Facebook Group ["Marlin Firmware"](https://www.facebook.com/groups/1049718498464482/)
+- RepRap.org [Marlin Forum](https://forums.reprap.org/list.php?415)
+- Facebook Group ["Marlin Firmware for 3D Printers"](https://www.facebook.com/groups/3Dtechtalk/)
+- [Marlin Configuration](https://www.youtube.com/results?search_query=marlin+configuration) on YouTube
 
 If chat is more your speed, you can join the MarlinFirmware Discord server:
 
@@ -50,13 +54,14 @@ If chat is more your speed, you can join the MarlinFirmware Discord server:
 
 This section guides you through submitting a Bug Report for Marlin. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
 
-Before creating a Bug Report, please test the "nightly" development branch, as you might find out that you don't need to create one. When you are creating a Bug Report, please [include as many details as possible](#how-do-i-submit-a-good-bug-report). Fill out [the required template](issue_template.md), the information it asks for helps us resolve issues faster.
+Before creating a Bug Report, please test the "nightly" development branch, as you might find out that you don't need to create one. When you are creating a Bug Report, please [include as many details as possible](#how-do-i-submit-a-good-bug-report). Fill out [the required template](ISSUE_TEMPLATE/bug_report.yml), the information it asks for helps us resolve issues faster.
 
-> **Note:** Regressions can happen. If you find a **Closed** issue that seems like your issue, go ahead and open a new issue and include a link to the original issue in the body of your new one. All you need to create a link is the issue number, preceded by #. For example, #8888.
+> [!NOTE]
+> Regressions can happen. If you find a **Closed** issue that seems like your issue, go ahead and open a new issue and include a link to the original issue in the body of your new one. All you need to create a link is the issue number, preceded by #. For example, #8888.
 
 #### How Do I Submit A (Good) Bug Report?
 
-Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/). Use the New Issue button to create an issue and provide the following information by filling in [the template](issue_template.md).
+Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/). Use the New Issue button to create an issue and provide the following information by filling in [the template](ISSUE_TEMPLATE/bug_report.yml).
 
 Explain the problem and include additional details to help maintainers reproduce the problem:
 
@@ -88,12 +93,12 @@ Include details about your configuration and environment:
 
 This section guides you through submitting a suggestion for Marlin, including completely new features and minor improvements to existing functionality. Following these guidelines helps maintainers and the community understand your suggestion and find related suggestions.
 
-Before creating a suggestion, please check [this list](#before-submitting-a-suggestion) as you might find out that you don't need to create one. When you are creating an enhancement suggestion, please [include as many details as possible](#how-do-i-submit-a-good-enhancement-suggestion). Fill in [the template](issue_template.md), including the steps that you imagine you would take if the feature you're requesting existed.
+Before creating a suggestion, please check [this list](https://github.com/MarlinFirmware/Marlin/issues?q=is%3Aopen+is%3Aissue+label%3A%22T%3A+Feature+Request%22) as you might find out that you don't need to create one. When you are creating an enhancement suggestion, please [include as many details as possible](#how-do-i-submit-a-good-feature-request). Fill in [the template](ISSUE_TEMPLATE/feature_request.yml), including the steps that you imagine you would take if the feature you're requesting existed.
 
 #### Before Submitting a Feature Request
 
 * **Check the [Marlin website](https://marlinfw.org/)** for tips — you might discover that the feature is already included. Most importantly, check if you're using [the latest version of Marlin](https://github.com/MarlinFirmware/Marlin/releases) and if you can get the desired behavior by changing [Marlin's config settings](https://marlinfw.org/docs/configuration/configuration.html).
-* **Perform a [cursory search](https://github.com/MarlinFirmware/Marlin/issues?q=is%3Aissue)** to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
+* **Perform a [cursory search](https://github.com/MarlinFirmware/Marlin/issues?q=is%3Aopen+is%3Aissue+label%3A%22T%3A+Feature+Request%22)** to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Feature Request?
 
@@ -116,7 +121,7 @@ Unsure where to begin contributing to Marlin? You can start by looking through t
 
 ### Pull Requests
 
-Pull Requests should always be targeted to working branches (e.g., `bugfix-1.1.x` and/or `bugfix-2.0.x`) and never to release branches (e.g., `1.1.x`). If this is your first Pull Request, please read our [Guide to Pull Requests](https://marlinfw.org/docs/development/getting_started_pull_requests.html) and Github's [Pull Request](https://help.github.com/articles/creating-a-pull-request/) documentation.
+Pull Requests should always be targeted to working branches (e.g., `bugfix-2.1.x` and/or `bugfix-1.1.x`) and never to release branches (e.g., `2.0.x` and/or `1.1.x`). If this is your first Pull Request, please read our [Guide to Pull Requests](https://marlinfw.org/docs/development/getting_started_pull_requests.html) and Github's [Pull Request](https://help.github.com/articles/creating-a-pull-request/) documentation.
 
 * Fill in [the required template](pull_request_template.md).
 * Don't include issue numbers in the PR title.

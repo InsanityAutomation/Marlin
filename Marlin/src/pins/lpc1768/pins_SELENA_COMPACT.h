@@ -23,11 +23,11 @@
 
 /**
  * Selena Compact pin assignments
+ * Pinout: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Selena%20Compact/Compact%20Pinout.pdf
+ * Origin: https://github.com/f61/Selena/blob/master/Compact%20Pinout.pdf
  */
 
-#if NOT_TARGET(MCU_LPC1768)
-  #error "Oops! Make sure you have the LPC1768 environment selected in your IDE."
-#endif
+#include "env_validate.h"
 
 #define BOARD_INFO_NAME   "Selena Compact"
 #define BOARD_WEBSITE_URL "github.com/Ales2-k/Selena"
@@ -42,11 +42,11 @@
 //
 #define X_MIN_PIN                          P1_28
 #define X_MAX_PIN                          P1_25
-#define Y_MIN_PIN                          P2_11
-#define Y_MAX_PIN                          -1
-#define Z_MIN_PIN                          P1_27
-#define Z_MAX_PIN                          -1
-#define Z_PROBE                            P1_22
+#define Y_STOP_PIN                         P2_11
+#define Z_STOP_PIN                         P1_27
+#ifndef Z_MIN_PROBE_PIN
+  #define Z_MIN_PROBE_PIN                  P1_22
+#endif
 
 //
 // Steppers
@@ -87,8 +87,8 @@
 #define HEATER_BED2_PIN                    P2_04
 #define HEATER_0_PIN                       P2_07
 #define HEATER_1_PIN                       P2_06
-#ifndef FAN_PIN
-  #define FAN_PIN                          P1_24
+#ifndef FAN0_PIN
+  #define FAN0_PIN                         P1_24
 #endif
 #define FAN1_PIN                           P1_26
 
@@ -96,18 +96,23 @@
 // Display
 //
 
-#if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
-    #define LCD_PINS_RS                    P0_16
-    #define LCD_PINS_ENABLE                P0_18
-    #define LCD_PINS_D4                    P0_15
-    #define LCD_PINS_D5                    P1_00
-    #define LCD_PINS_D6                    P1_01
-    #define LCD_PINS_D7                    P1_04
-    #define BEEPER_PIN                     P1_31
+#if IS_RRD_FG_SC
+  #define LCD_PINS_RS                      P0_16
+  #define LCD_PINS_EN                      P0_18
+  #define LCD_PINS_D4                      P0_15
+  #define LCD_PINS_D5                      P1_00
+  #define LCD_PINS_D6                      P1_01
+  #define LCD_PINS_D7                      P1_04
+  #define BEEPER_PIN                       P1_31
 
-    #define BTN_EN1                        P3_25
-    #define BTN_EN2                        P3_26
-    #define BTN_ENC                        P1_30
+  #define BTN_EN1                          P3_25
+  #define BTN_EN2                          P3_26
+  #define BTN_ENC                          P1_30
 
-    #define SD_DETECT_PIN                  -1
-#endif // REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
+  #define SD_DETECT_PIN                    -1
+
+  #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+    #define BTN_ENC_EN               LCD_PINS_D7  // Detect the presence of the encoder
+  #endif
+
+#endif // IS_RRD_FG_SC
