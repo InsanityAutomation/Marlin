@@ -58,16 +58,10 @@
  *
  *                           time ----->
  *
- *  The speed over time graph forms a TRAPEZOID. The slope of acceleration is calculated by
- *    v = u + t
- *  where 't' is the accumulated timer values of the steps so far.
- *
- *  The Stepper ISR dynamically executes acceleration, deceleration, and cruising according to the block parameters.
- *    - Start at block->initial_rate.
- *    - Accelerate while step_events_completed < block->accelerate_before.
- *    - Cruise while step_events_completed < block->decelerate_start.
- *    - Decelerate after that, until all steps are completed.
- *    - Reset the trapezoid generator.
+ *  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
+ *  while step_events_completed < block->accelerate_before, then starts cruising at constant speed while
+ *  step_events_completed < block->decelerate_start, then it decelerates until the trapezoid generator is reset.
+ *  The slope of acceleration is calculated using v = u + at where t is the accumulated timer values of the steps so far.
  */
 
 /**
@@ -2600,6 +2594,25 @@ hal_timer_t Stepper::block_phase_isr() {
         // The timer interval is just the nominal value for the nominal speed
         interval = ticks_nominal;
       }
+
+      /**
+       * Adjust Laser Power - Cruise
+       * power - direct or floor adjusted active laser power.
+       */
+      #if ENABLED(LASER_POWER_TRAP)
+        if (cutter.cutter_mode == CUTTER_MODE_CONTINUOUS) {
+          if (step_events_completed + 1 == accelerate_before) {
+            if (planner.laser_inline.status.isPowered && planner.laser_inline.status.isEnabled) {
+              if (current_block->laser.trap_ramp_entry_incr > 0) {
+                current_block->laser.trap_ramp_active_pwr = current_block->laser.power;
+                cutter.apply_power(current_block->laser.power);
+              }
+            }
+            // Not a powered move.
+            else cutter.apply_power(0);
+          }
+        }
+      #endif
     }
 
     #if ENABLED(LASER_FEATURE)
@@ -2691,8 +2704,85 @@ hal_timer_t Stepper::block_phase_isr() {
         }
       #endif
 
-      // Set flags for all moving axes, accounting for kinematics
-      set_axis_moved_for_current_block();
+      // Flag all moving axes for proper endstop handling
+
+      #if IS_CORE
+        // Define conditions for checking endstops
+        #define S_(N) current_block->steps[CORE_AXIS_##N]
+        #define D_(N) current_block->direction_bits[CORE_AXIS_##N]
+      #endif
+
+      #if CORE_IS_XY || CORE_IS_XZ
+        /**
+         * Head direction in -X axis for CoreXY and CoreXZ bots.
+         *
+         * If steps differ, both axes are moving.
+         * If DeltaA == -DeltaB, the movement is only in the 2nd axis (Y or Z, handled below)
+         * If DeltaA ==  DeltaB, the movement is only in the 1st axis (X)
+         */
+        #if ANY(COREXY, COREXZ)
+          #define X_CMP(A,B) ((A)==(B))
+        #else
+          #define X_CMP(A,B) ((A)!=(B))
+        #endif
+        #define X_MOVE_TEST ( S_(1) != S_(2) || (S_(1) > 0 && X_CMP(D_(1),D_(2))) )
+      #elif ENABLED(MARKFORGED_XY)
+        #define X_MOVE_TEST (current_block->steps.a != current_block->steps.b)
+      #else
+        #define X_MOVE_TEST !!current_block->steps.a
+      #endif
+
+      #if CORE_IS_XY || CORE_IS_YZ
+        /**
+         * Head direction in -Y axis for CoreXY / CoreYZ bots.
+         *
+         * If steps differ, both axes are moving
+         * If DeltaA ==  DeltaB, the movement is only in the 1st axis (X or Y)
+         * If DeltaA == -DeltaB, the movement is only in the 2nd axis (Y or Z)
+         */
+        #if ANY(COREYX, COREYZ)
+          #define Y_CMP(A,B) ((A)==(B))
+        #else
+          #define Y_CMP(A,B) ((A)!=(B))
+        #endif
+        #define Y_MOVE_TEST ( S_(1) != S_(2) || (S_(1) > 0 && Y_CMP(D_(1),D_(2))) )
+      #elif ENABLED(MARKFORGED_YX)
+        #define Y_MOVE_TEST (current_block->steps.a != current_block->steps.b)
+      #else
+        #define Y_MOVE_TEST !!current_block->steps.b
+      #endif
+
+      #if CORE_IS_XZ || CORE_IS_YZ
+        /**
+         * Head direction in -Z axis for CoreXZ or CoreYZ bots.
+         *
+         * If steps differ, both axes are moving
+         * If DeltaA ==  DeltaB, the movement is only in the 1st axis (X or Y, already handled above)
+         * If DeltaA == -DeltaB, the movement is only in the 2nd axis (Z)
+         */
+        #if ANY(COREZX, COREZY)
+          #define Z_CMP(A,B) ((A)==(B))
+        #else
+          #define Z_CMP(A,B) ((A)!=(B))
+        #endif
+        #define Z_MOVE_TEST ( S_(1) != S_(2) || (S_(1) > 0 && Z_CMP(D_(1),D_(2))) )
+      #else
+        #define Z_MOVE_TEST !!current_block->steps.c
+      #endif
+
+      AxisBits didmove;
+      NUM_AXIS_CODE(
+        if (X_MOVE_TEST)              didmove.a = true,
+        if (Y_MOVE_TEST)              didmove.b = true,
+        if (Z_MOVE_TEST)              didmove.c = true,
+        if (!!current_block->steps.i) didmove.i = true,
+        if (!!current_block->steps.j) didmove.j = true,
+        if (!!current_block->steps.k) didmove.k = true,
+        if (!!current_block->steps.u) didmove.u = true,
+        if (!!current_block->steps.v) didmove.v = true,
+        if (!!current_block->steps.w) didmove.w = true
+      );
+      axis_did_move = didmove;
 
       #if ENABLED(ADAPTIVE_STEP_SMOOTHING)
         // Nonlinear Extrusion needs at least 2x oversampling to permit increase of E step rate
