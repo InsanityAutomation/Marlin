@@ -790,14 +790,11 @@ block_t* Planner::get_current_block() {
  */
 void Planner::calculate_trapezoid_for_block(block_t * const block, const_float_t entry_factor, const_float_t exit_factor) {
 
-  uint32_t initial_rate = LROUND(block->nominal_rate * entry_factor),
-           final_rate = LROUND(block->nominal_rate * exit_factor); // (steps per second)
-
-  if (initial_rate == 0) {
-    initial_rate = block->initial_rate;
-  }
-
+  uint32_t initial_rate = LROUND(block->nominal_rate * entry_factor); // (steps per second)
+  if (initial_rate == 0) initial_rate = block->initial_rate;
   NOMORE(initial_rate, block->nominal_rate);
+
+  uint32_t final_rate = LROUND(block->nominal_rate * exit_factor);    // (steps per second)
   NOMORE(final_rate, block->nominal_rate);
 
   #if ANY(S_CURVE_ACCELERATION, LIN_ADVANCE)
