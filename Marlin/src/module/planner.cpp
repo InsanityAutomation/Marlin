@@ -794,8 +794,8 @@ void Planner::calculate_trapezoid_for_block(block_t * const block, const_float_t
   if (initial_rate == 0) initial_rate = block->initial_rate;
   NOMORE(initial_rate, block->nominal_rate);
 
-  uint32_t final_rate = LROUND(block->nominal_rate * exit_factor);    // (steps per second)
-  NOMORE(final_rate, block->nominal_rate);
+  uint32_t final_rate = block->nominal_rate;                          // (steps per second)
+  if (exit_factor < 1.0f) final_rate *= exit_factor;
 
   #if ANY(S_CURVE_ACCELERATION, LIN_ADVANCE)
     // If we have some plateau time, the cruise rate will be the nominal rate
@@ -1128,9 +1128,8 @@ void Planner::recalculate_trapezoids(const_float_t safe_exit_speed_sqr) {
           else {
             // Block is not BUSY: we won the race against the ISR or recalculate was already set
 
-            if (next->entry_speed_sqr != next->min_entry_speed_sqr) {
+            if (next->entry_speed_sqr != next->min_entry_speed_sqr)
               forward_pass_kernel(block, next);
-            }
 
             const float current_entry_speed = next_entry_speed;
             next_entry_speed = SQRT(next->entry_speed_sqr);
