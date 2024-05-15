@@ -1858,32 +1858,35 @@ bool Planner::_populate_block(
 
   // Compute direction bit-mask for this block
   AxisBits dm;
-  #if ANY(CORE_IS_XY, MARKFORGED_XY, MARKFORGED_YX)
-    dm.hx = (dist.a > 0);                       // Save the toolhead's true direction in X
-    dm.hy = (dist.b > 0);                       // ...and Y
-    TERN_(HAS_Z_AXIS, dm.z = (dist.c > 0));
+  #if ANY(CORE_IS_XY, CORE_IS_XZ, MARKFORGED_XY, MARKFORGED_YX)
+    dm.hx = (dist.a > 0);                       // True direction in X
+  #endif
+  #if ANY(CORE_IS_XY, CORE_IS_YZ, MARKFORGED_XY, MARKFORGED_YX)
+    dm.hy = (dist.b > 0);                       // True direction in Y
+  #endif
+  #if ANY(CORE_IS_XZ, CORE_IS_YZ)
+    dm.hz = (dist.c > 0);                       // True direction in Z
   #endif
   #if CORE_IS_XY
-    dm.a = (dist.a + dist.b > 0);               // Motor A direction
-    dm.b = (CORESIGN(dist.a - dist.b) > 0);     // Motor B direction
+    dm.a  = (dist.a + dist.b > 0);              // Motor A direction
+    dm.b  = (CORESIGN(dist.a - dist.b) > 0);    // Motor B direction
+    TERN_(HAS_Z_AXIS, dm.z = (dist.c > 0));     // Axis  Z direction
   #elif CORE_IS_XZ
-    dm.hx = (dist.a > 0);                       // Save the toolhead's true direction in X
-    dm.y  = (dist.b > 0);
-    dm.hz = (dist.c > 0);                       // ...and Z
     dm.a  = (dist.a + dist.c > 0);              // Motor A direction
+    dm.y  = (dist.b > 0);                       // Axis  Y direction
     dm.c  = (CORESIGN(dist.a - dist.c) > 0);    // Motor C direction
   #elif CORE_IS_YZ
-    dm.x  = (dist.a > 0);
-    dm.hy = (dist.b > 0);                       // Save the toolhead's true direction in Y
-    dm.hz = (dist.c > 0);                       // ...and Z
+    dm.x  = (dist.a > 0);                       // Axis  X direction
     dm.b  = (dist.b + dist.c > 0);              // Motor B direction
     dm.c  = (CORESIGN(dist.b - dist.c) > 0);    // Motor C direction
   #elif ENABLED(MARKFORGED_XY)
     dm.a = (dist.a TERN(MARKFORGED_INVERSE, -, +) dist.b > 0); // Motor A direction
     dm.b = (dist.b > 0);                        // Motor B direction
+    TERN_(HAS_Z_AXIS, dm.z = (dist.c > 0));     // Axis  Z direction
   #elif ENABLED(MARKFORGED_YX)
     dm.a = (dist.a > 0);                        // Motor A direction
     dm.b = (dist.b TERN(MARKFORGED_INVERSE, -, +) dist.a > 0); // Motor B direction
+    TERN_(HAS_Z_AXIS, dm.z = (dist.c > 0));     // Axis  Z direction
   #else
     XYZ_CODE(
       dm.x = (dist.a > 0),
@@ -2274,14 +2277,12 @@ bool Planner::_populate_block(
     #endif
 
     const feedRate_t cs = ABS(current_speed.e),
-                 max_fr = settings.max_feedrate_mm_s[E_AXIS_N(extruder)]
-                          * TERN(HAS_MIXER_SYNC_CHANNEL, MIXING_STEPPERS, 1);
+                 max_fr = MUL_TERN(HAS_MIXER_SYNC_CHANNEL, settings.max_feedrate_mm_s[E_AXIS_N(extruder)], MIXING_STEPPERS);
 
-    if (cs > max_fr) NOMORE(speed_factor, max_fr / cs); //respect max feedrate on any movement (doesn't matter if E axes only or not)
+    if (cs > max_fr) NOMORE(speed_factor, max_fr / cs); // Respect max feedrate on any move (travel and print)
 
     #if ENABLED(VOLUMETRIC_EXTRUDER_LIMIT)
-      const feedRate_t max_vfr = volumetric_extruder_feedrate_limit[extruder]
-                                 * TERN(HAS_MIXER_SYNC_CHANNEL, MIXING_STEPPERS, 1);
+      const feedRate_t max_vfr = MUL_TERN(HAS_MIXER_SYNC_CHANNEL, volumetric_extruder_feedrate_limit[extruder], MIXING_STEPPERS);
 
       // TODO: Doesn't work properly for joined segments. Set MIN_STEPS_PER_SEGMENT 1 as workaround.
 
@@ -2453,7 +2454,7 @@ bool Planner::_populate_block(
   // Formula for the average speed over a 1 step worth of distance if starting from zero and
   // accelerating at the current limit. Since we can only change the speed every step this is a
   // good lower limit for the entry and exit speeds. Note that for calculate_trapezoid_for_block()
-  // to work correctly this must be accurately set and propagated.
+  // to work correctly, this must be accurately set and propagated.
   minimum_planner_speed_sqr = 0.5f * block->acceleration / steps_per_mm;
   // Go straight to/from nominal speed if block->acceleration is too high for it.
   NOMORE(minimum_planner_speed_sqr, sq(block->nominal_speed));
@@ -2727,7 +2728,7 @@ bool Planner::_populate_block(
   #endif // CLASSIC_JERK
 
   // High acceleration limits override low jerk/junction deviation limits (as fixing trapezoids
-  // or reducing acceleration introduces too much complexity and/or too much compute).
+  // or reducing acceleration introduces too much complexity and/or too much compute)
   NOLESS(vmax_junction_sqr, minimum_planner_speed_sqr);
 
   // Max entry speed of this block equals the max exit speed of the previous block.
@@ -2776,10 +2777,12 @@ void Planner::buffer_sync_block(const BlockFlagBit sync_flag/*=BLOCK_BIT_SYNC_PO
   block->flag.apply(sync_flag);
 
   block->position = position;
+
   #if ENABLED(BACKLASH_COMPENSATION)
     LOOP_NUM_AXES(axis) block->position[axis] += backlash.get_applied_steps((AxisEnum)axis);
   #endif
-  #if ALL(HAS_FAN, LASER_SYNCHRONOUS_M106_M107)
+
+  #if ENABLED(LASER_SYNCHRONOUS_M106_M107)
     FANS_LOOP(i) block->fan_speed[i] = thermalManager.fan_speed[i];
   #endif
 
@@ -3108,6 +3111,10 @@ bool Planner::buffer_line(const xyze_pos_t &cart, const_feedRate_t fr_mm_s
  * The provided ABCE position is in machine units.
  */
 void Planner::set_machine_position_mm(const abce_pos_t &abce) {
+
+  // When FT Motion is enabled, call synchronize() here instead of generating a sync block
+  if (TERN0(FT_MOTION, ftMotion.cfg.mode)) synchronize();
+
   TERN_(DISTINCT_E_FACTORS, last_extruder = active_extruder);
   TERN_(HAS_POSITION_FLOAT, position_float = abce);
   position.set(
