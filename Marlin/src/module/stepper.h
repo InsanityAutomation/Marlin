@@ -391,8 +391,8 @@ class Stepper {
     static xyze_long_t advance_dividend;
     static uint32_t advance_divisor,
                     step_events_completed,  // The number of step events executed in the current block
-                    accelerate_until,       // The point from where we need to stop acceleration
-                    decelerate_after,       // The point from where we need to start decelerating
+                    accelerate_before,       // The point from where we need to stop acceleration
+                    decelerate_start,       // The point from where we need to start decelerating
                     step_event_count;       // The total event count for the current block
 
     #if ANY(HAS_MULTI_EXTRUDER, MIXING_EXTRUDER)
