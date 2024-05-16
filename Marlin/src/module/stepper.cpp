@@ -58,16 +58,10 @@
  *
  *                           time ----->
  *
- *  The speed over time graph forms a TRAPEZOID. The slope of acceleration is calculated by
- *    v = u + t
- *  where 't' is the accumulated timer values of the steps so far.
- *
- *  The Stepper ISR dynamically executes acceleration, deceleration, and cruising according to the block parameters.
- *    - Start at block->initial_rate.
- *    - Accelerate while step_events_completed < block->accelerate_before.
- *    - Cruise while step_events_completed < block->decelerate_start.
- *    - Decelerate after that, until all steps are completed.
- *    - Reset the trapezoid generator.
+ *  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
+ *  while step_events_completed < block->accelerate_before, then starts cruising at constant speed while
+ *  step_events_completed < block->decelerate_start, then it decelerates until the trapezoid generator is reset.
+ *  The slope of acceleration is calculated using v = u + at where t is the accumulated timer values of the steps so far.
  */
 
 /**
