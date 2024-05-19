@@ -58,10 +58,16 @@
  *
  *                           time ----->
  *
- *  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
- *  while step_events_completed < block->accelerate_before, then starts cruising at constant speed while
- *  step_events_completed < block->decelerate_start, then it decelerates until the trapezoid generator is reset.
- *  The slope of acceleration is calculated using v = u + at where t is the accumulated timer values of the steps so far.
+ *  The speed over time graph forms a TRAPEZOID. The slope of acceleration is calculated by
+ *    v = u + t
+ *  where 't' is the accumulated timer values of the steps so far.
+ *
+ *  The Stepper ISR dynamically executes acceleration, deceleration, and cruising according to the block parameters.
+ *    - Start at block->initial_rate.
+ *    - Accelerate while step_events_completed < block->accelerate_before.
+ *    - Cruise while step_events_completed < block->decelerate_start.
+ *    - Decelerate after that, until all steps are completed.
+ *    - Reset the trapezoid generator.
  */
 
 /**
@@ -2569,25 +2575,6 @@ hal_timer_t Stepper::block_phase_isr() {
         // The timer interval is just the nominal value for the nominal speed
         interval = ticks_nominal;
       }
-
-      /**
-       * Adjust Laser Power - Cruise
-       * power - direct or floor adjusted active laser power.
-       */
-      #if ENABLED(LASER_POWER_TRAP)
-        if (cutter.cutter_mode == CUTTER_MODE_CONTINUOUS) {
-          if (step_events_completed + 1 == accelerate_before) {
-            if (planner.laser_inline.status.isPowered && planner.laser_inline.status.isEnabled) {
-              if (current_block->laser.trap_ramp_entry_incr > 0) {
-                current_block->laser.trap_ramp_active_pwr = current_block->laser.power;
-                cutter.apply_power(current_block->laser.power);
-              }
-            }
-            // Not a powered move.
-            else cutter.apply_power(0);
-          }
-        }
-      #endif
     }
 
     #if ENABLED(LASER_FEATURE)
