@@ -143,7 +143,7 @@
  *        R<temp> Wait for extruder current temp to reach target temp. ** Wait for heating or cooling. **
  *        If AUTOTEMP is enabled, S<mintemp> B<maxtemp> F<factor>. Exit autotemp by any M109 without F
  *
- * M110 - Set the current line number. (Used by host printing)
+ * M110 - Get or set the current line number. (Used by host printing)
  * M111 - Set debug flags: "M111 S<flagbits>". See flag bits defined in enum.h.
  * M112 - Full Shutdown.
  *
@@ -339,6 +339,12 @@
 
 #if ANY(IS_SCARA, POLAR) || defined(G0_FEEDRATE)
   #define HAS_FAST_MOVES 1
+#endif
+
+#if ENABLED(MARLIN_SMALL_BUILD)
+  #define GCODE_ERR_MSG(V...) "?"
+#else
+  #define GCODE_ERR_MSG(V...) "?" V
 #endif
 
 enum AxisRelative : uint8_t {
