@@ -165,14 +165,13 @@
 //  * @brief Wait until TXE (tx empty) flag is set and BSY (busy) flag unset.
 //  */
 static inline void waitSpiTxEnd(void *spi_d) {
-  #warning unimplemented
   // while (SSP_GetStatus(spi_d, SSP_STAT_TXFIFO_EMPTY) == RESET) { /* nada */ } // wait until TXE=1
   // while (SSP_GetStatus(spi_d, SSP_STAT_BUSY) == SET) { /* nada */ }     // wait until BSY=0
 }
 
 // // Retain the pin init state of the SPI, to avoid init more than once,
 // // even if more instances of SPIClass exist
-static bool spiInitialised[BOARD_NR_SPI] = { false };
+static bool spiInitialised[BOARD_NR_SPI] = {};
 
 SPIClass::SPIClass(uint8_t device) {
 //   // Init things specific to each SPI device
@@ -184,6 +183,12 @@ SPIClass::SPIClass(uint8_t device) {
     _settings[0].m_config.pin_mosi = BOARD_SPI1_MOSI_PIN;
     _settings[0].m_config.pin_sck  = BOARD_SPI1_SCK_PIN;
     _settings[0].m_config.pin_ssel = BOARD_SPI1_NSS_PIN;
+    _settings[0].m_config.frequency = 100000;
+    _settings[0].m_config.data_bits = 8;
+    _settings[0].m_config.mode = 0;
+    _settings[0].m_config.format = MCUI::SSP::Config::Format::SPI;
+
+
 //     _settings[0].dataMode = SPI_MODE0;
 //     _settings[0].dataSize = DATA_SIZE_8BIT;
 //     _settings[0].clock = SPI_CLOCK_MAX;
@@ -196,6 +201,18 @@ SPIClass::SPIClass(uint8_t device) {
     _settings[1].m_config.pin_mosi = BOARD_SPI2_MOSI_PIN;
     _settings[1].m_config.pin_sck  = BOARD_SPI2_SCK_PIN;
     _settings[1].m_config.pin_ssel = BOARD_SPI2_NSS_PIN;
+//     _settings[1].dataMode = SPI_MODE0;
+//     _settings[1].dataSize = DATA_SIZE_8BIT;
+//     _settings[1].clock = SPI_CLOCK_MAX;
+//     //_settings[1].clockDivider = determine_baud_rate(_settings[1].spi_d, _settings[1].clock);
+  #endif
+
+  #if BOARD_NR_SPI >= 3
+    _settings[2].device_id = 1;
+    _settings[2].m_config.pin_miso = BOARD_SPI3_MISO_PIN;
+    _settings[2].m_config.pin_mosi = BOARD_SPI3_MOSI_PIN;
+    _settings[2].m_config.pin_sck  = BOARD_SPI3_SCK_PIN;
+    _settings[2].m_config.pin_ssel = BOARD_SPI3_NSS_PIN;
 //     _settings[1].dataMode = SPI_MODE0;
 //     _settings[1].dataSize = DATA_SIZE_8BIT;
 //     _settings[1].clock = SPI_CLOCK_MAX;
@@ -215,6 +232,9 @@ SPIClass::SPIClass(pin_t mosi, pin_t miso, pin_t sclk, pin_t ssel) {
   #endif
   #if BOARD_NR_SPI >= 2
     if (mosi == BOARD_SPI2_MOSI_PIN) SPIClass(2);
+  #endif
+  #if BOARD_NR_SPI >= 3
+    if (mosi == BOARD_SPI3_MOSI_PIN) SPIClass(3);
   #endif
 }
 
@@ -341,7 +361,9 @@ void SPIClass::setDataSize(uint32_t dataSize) { _currentSetting->dataSize = data
 // /**
 //  * Set up/tear down
 //  */
-void SPIClass::updateSettings() { }
+void SPIClass::updateSettings() {
+  MCUI::SSP::configure(_currentSetting->device_id, _currentSetting->m_config);
+}
 
 SPIClass SPI(1);
 
