@@ -804,7 +804,6 @@ void Planner::calculate_trapezoid_for_block(block_t * const block, const_float_t
   NOLESS(block->nominal_rate, MINIMAL_STEP_RATE);
   NOMORE(initial_rate, block->nominal_rate);          // NOTE: The nominal rate may be less than MINIMAL_STEP_RATE!
   NOMORE(final_rate, block->nominal_rate);
-  if (exit_factor < 1.0f) final_rate *= exit_factor;
 
   #if ANY(S_CURVE_ACCELERATION, LIN_ADVANCE)
     // If we have some plateau time, the cruise rate will be the nominal rate
