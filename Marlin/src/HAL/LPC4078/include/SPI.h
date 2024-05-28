@@ -120,6 +120,8 @@ private:
     bitOrder = inBitOrder;
     dataMode = inDataMode;
     dataSize = inDataSize;
+    m_config = {};
+    m_config.frequency = 400000;
   }
 
   MCUI::SSP::Config m_config;
