@@ -149,7 +149,7 @@ planner_settings_t Planner::settings;           // Initialized by settings.load(
   const uint8_t laser_power_floor = cutter.pct_to_ocr(SPEED_POWER_MIN);
 #endif
 
-uint32_t Planner::max_acceleration_steps_per_s2[DISTINCT_AXES]; // (steps/s^2) Derived from mm_per_s2
+uint64_t Planner::max_acceleration_steps_per_s2[DISTINCT_AXES]; // (steps/s^2) Derived from mm_per_s2
 
 #if HAS_JUNCTION_DEVIATION
   float Planner::junction_deviation_mm;         // (mm) M205 J
@@ -169,7 +169,7 @@ uint32_t Planner::max_acceleration_steps_per_s2[DISTINCT_AXES]; // (steps/s^2) D
 #endif
 
 #if ENABLED(DIRECT_STEPPING)
-  uint32_t Planner::last_page_step_rate = 0;
+  uint64_t Planner::last_page_step_rate = 0;
   AxisBits Planner::last_page_dir; // = 0
 #endif
 
@@ -219,7 +219,7 @@ uint32_t Planner::max_acceleration_steps_per_s2[DISTINCT_AXES]; // (steps/s^2) D
 
 xyze_long_t Planner::position{0};
 
-uint32_t Planner::acceleration_long_cutoff;
+uint64_t Planner::acceleration_long_cutoff;
 
 xyze_float_t Planner::previous_speed;
 float Planner::previous_nominal_speed;
@@ -247,7 +247,7 @@ float Planner::previous_nominal_speed;
 #endif
 
 #if HAS_WIRED_LCD
-  volatile uint32_t Planner::block_buffer_runtime_us = 0;
+  volatile uint64_t Planner::block_buffer_runtime_us = 0;
 #endif
 
 /**
@@ -337,7 +337,7 @@ void Planner::init() {
      *  // Compute initial estimation of 0x1000000/x -
      *  // Get most significant bit set on divider
      *  uint8_t idx = 0;
-     *  uint32_t nr = d;
+     *  uint64_t nr = d;
      *  if (!(nr & 0xFF0000)) {
      *    nr <<= 8; idx += 8;
      *    if (!(nr & 0xFF0000)) { nr <<= 8; idx += 8; }
@@ -347,16 +347,16 @@ void Planner::init() {
      *  if (!(nr & 0x800000)) { nr <<= 1; idx += 1; }
      *
      *  // Isolate top 9 bits of the denominator, to be used as index into the initial estimation table
-     *  uint32_t tidx = nr >> 15,                                       // top 9 bits. bit8 is always set
+     *  uint64_t tidx = nr >> 15,                                       // top 9 bits. bit8 is always set
      *           ie = inv_tab[tidx & 0xFF] + 256,                       // Get the table value. bit9 is always set
      *           x = idx <= 8 ? (ie >> (8 - idx)) : (ie << (idx - 8));  // Position the estimation at the proper place
      *
-     *  x = uint32_t((x * uint64_t(_BV(25) - x * d)) >> 24);            // Refine estimation by newton-raphson. 1 iteration is enough
-     *  const uint32_t r = _BV(24) - x * d;                             // Estimate remainder
+     *  x = uint64_t((x * uint64_t(_BV(25) - x * d)) >> 24);            // Refine estimation by newton-raphson. 1 iteration is enough
+     *  const uint64_t r = _BV(24) - x * d;                             // Estimate remainder
      *  if (r >= d) x++;                                                // Check whether to adjust result
-     *  return uint32_t(x);                                             // x holds the proper estimation
+     *  return uint64_t(x);                                             // x holds the proper estimation
      */
-    static uint32_t get_period_inverse(uint32_t d) {
+    static uint64_t get_period_inverse(uint64_t d) {
 
       static const uint8_t inv_tab[256] PROGMEM = {
         255,253,252,250,248,246,244,242,240,238,236,234,233,231,229,227,
@@ -380,7 +380,7 @@ void Planner::init() {
       // For small denominators, it is cheaper to directly store the result.
       //  For bigger ones, just ONE Newton-Raphson iteration is enough to get
       //  maximum precision we need
-      static const uint32_t small_inv_tab[111] PROGMEM = {
+      static const uint64_t small_inv_tab[111] PROGMEM = {
         16777216,16777216,8388608,5592405,4194304,3355443,2796202,2396745,2097152,1864135,1677721,1525201,1398101,1290555,1198372,1118481,
         1048576,986895,932067,883011,838860,798915,762600,729444,699050,671088,645277,621378,599186,578524,559240,541200,
         524288,508400,493447,479349,466033,453438,441505,430185,419430,409200,399457,390167,381300,372827,364722,356962,
@@ -717,13 +717,13 @@ void Planner::init() {
       );
 
       // Return the result
-      return r11 | (uint16_t(r12) << 8) | (uint32_t(r13) << 16);
+      return r11 | (uint16_t(r12) << 8) | (uint64_t(r13) << 16);
     }
   #else
     // All other 32-bit MPUs can easily do inverse using hardware division,
     // so we don't need to reduce precision or to use assembly language at all.
     // This routine, for all other archs, returns 0x100000000 / d ~= 0xFFFFFFFF / d
-    FORCE_INLINE static uint32_t get_period_inverse(const uint32_t d) {
+    FORCE_INLINE static uint64_t get_period_inverse(const uint64_t d) {
       return d ? 0xFFFFFFFF / d : 0xFFFFFFFF;
     }
   #endif
@@ -791,15 +791,15 @@ block_t* Planner::get_current_block() {
 void Planner::calculate_trapezoid_for_block(block_t * const block, const_float_t entry_speed, const_float_t exit_speed) {
 
   const float spmm = block->steps_per_mm;
-  uint32_t initial_rate = entry_speed ? _MAX(long(MINIMAL_STEP_RATE), LROUND(entry_speed * spmm)) : block->initial_rate,
+  uint64_t initial_rate = entry_speed ? _MAX(long(MINIMAL_STEP_RATE), LROUND(entry_speed * spmm)) : block->initial_rate,
            final_rate = _MAX(long(MINIMAL_STEP_RATE), LROUND(exit_speed * spmm));
 
   // Legacy check against supposed timer overflow. However Stepper::calc_timer_interval() already
   // should protect against it. But removing this code produces judder in direction-switching
   // moves. This is because the current discrete stepping math diverges from physical motion under
   // constant acceleration when acceleration_steps_per_s2 is large compared to initial/final_rate.
-  NOLESS(initial_rate, uint32_t(MINIMAL_STEP_RATE));  // Enforce the minimum speed
-  NOLESS(final_rate, uint32_t(MINIMAL_STEP_RATE));
+  NOLESS(initial_rate, uint64_t(MINIMAL_STEP_RATE));  // Enforce the minimum speed
+  NOLESS(final_rate, uint64_t(MINIMAL_STEP_RATE));
 
   NOLESS(block->nominal_rate, MINIMAL_STEP_RATE);
   NOMORE(initial_rate, block->nominal_rate);          // NOTE: The nominal rate may be less than MINIMAL_STEP_RATE!
@@ -807,7 +807,7 @@ void Planner::calculate_trapezoid_for_block(block_t * const block, const_float_t
 
   #if ANY(S_CURVE_ACCELERATION, LIN_ADVANCE)
     // If we have some plateau time, the cruise rate will be the nominal rate
-    uint32_t cruise_rate = block->nominal_rate;
+    uint64_t cruise_rate = block->nominal_rate;
   #endif
 
   // Steps for acceleration, plateau and deceleration
@@ -849,7 +849,7 @@ void Planner::calculate_trapezoid_for_block(block_t * const block, const_float_t
   #if ENABLED(S_CURVE_ACCELERATION)
     const float rate_factor = inverse_accel * (STEPPER_TIMER_RATE);
     // Jerk controlled speed requires to express speed versus time, NOT steps
-    uint32_t acceleration_time = rate_factor * float(cruise_rate - initial_rate),
+    uint64_t acceleration_time = rate_factor * float(cruise_rate - initial_rate),
              deceleration_time = rate_factor * float(cruise_rate - final_rate),
     // And to offload calculations from the ISR, we also calculate the inverse of those times here
              acceleration_time_inverse = get_period_inverse(acceleration_time),
@@ -1909,9 +1909,9 @@ bool Planner::_populate_block(
   #if HAS_EXTRUDERS
     dm.e = (dist.e > 0);
     const float esteps_float = dist.e * e_factor[extruder];
-    const uint32_t esteps = ABS(esteps_float);
+    const uint64_t esteps = ABS(esteps_float);
   #else
-    constexpr uint32_t esteps = 0;
+    constexpr uint64_t esteps = 0;
   #endif
 
   // Clear all flags, including the "busy" bit
@@ -2351,7 +2351,7 @@ bool Planner::_populate_block(
   // Compute and limit the acceleration rate for the trapezoid generator.
   const float steps_per_mm = block->step_event_count * inverse_millimeters;
   block->steps_per_mm = steps_per_mm;
-  uint32_t accel;
+  uint64_t accel;
   #if ENABLED(LIN_ADVANCE)
     bool use_advance_lead = false;
   #endif
@@ -2361,7 +2361,7 @@ bool Planner::_populate_block(
   else {
     #define LIMIT_ACCEL_LONG(AXIS,INDX) do{ \
       if (block->steps[AXIS] && max_acceleration_steps_per_s2[AXIS+INDX] < accel) { \
-        const uint32_t max_possible = max_acceleration_steps_per_s2[AXIS+INDX] * block->step_event_count / block->steps[AXIS]; \
+        const uint64_t max_possible = max_acceleration_steps_per_s2[AXIS+INDX] * block->step_event_count / block->steps[AXIS]; \
         NOMORE(accel, max_possible); \
       } \
     }while(0)
@@ -2405,7 +2405,7 @@ bool Planner::_populate_block(
           use_advance_lead = false;
         else {
           // Scale E acceleration so that it will be possible to jump to the advance speed.
-          const uint32_t max_accel_steps_per_s2 = MAX_E_JERK(extruder) / (extruder_advance_K[E_INDEX_N(extruder)] * e_D_ratio) * steps_per_mm;
+          const uint64_t max_accel_steps_per_s2 = MAX_E_JERK(extruder) / (extruder_advance_K[E_INDEX_N(extruder)] * e_D_ratio) * steps_per_mm;
           if (accel > max_accel_steps_per_s2) {
             accel = max_accel_steps_per_s2;
             if (ENABLED(LA_DEBUG)) SERIAL_ECHOLNPGM("Acceleration limited.");
@@ -2435,7 +2435,7 @@ bool Planner::_populate_block(
   block->acceleration_steps_per_s2 = accel;
   block->acceleration = accel / steps_per_mm;
   #if DISABLED(S_CURVE_ACCELERATION)
-    block->acceleration_rate = (uint32_t)(accel * (float(1UL << 24) / (STEPPER_TIMER_RATE)));
+    block->acceleration_rate = (uint64_t)(accel * (float(1UL << 24) / (STEPPER_TIMER_RATE)));
   #endif
 
   #if ENABLED(LIN_ADVANCE)
@@ -2448,7 +2448,7 @@ bool Planner::_populate_block(
 
       // reduce LA ISR frequency by calling it only often enough to ensure that there will
       // never be more than four extruder steps per call
-      for (uint32_t dividend = block->steps.e << 1; dividend <= (block->step_event_count >> 2); dividend <<= 1)
+      for (uint64_t dividend = block->steps.e << 1; dividend <= (block->step_event_count >> 2); dividend <<= 1)
         block->la_scaling++;
 
       #if ENABLED(LA_DEBUG)
@@ -2687,7 +2687,7 @@ bool Planner::_populate_block(
       // Advance affects E_AXIS speed and therefore jerk. Add a speed correction whenever
       // LA is turned OFF. No correction is applied when LA is turned ON (because it didn't
       // perform well; it takes more time/effort to push/melt filament than the reverse).
-      static uint32_t previous_advance_rate;
+      static uint64_t previous_advance_rate;
       static float previous_e_mm_per_step;
       if (dist.e < 0 && previous_advance_rate) {
         // Retract move after a segment with LA that ended with an E speed decrease.
@@ -3192,7 +3192,7 @@ void Planner::set_position_mm(const xyze_pos_t &xyze) {
 
 // Recalculate the steps/s^2 acceleration rates, based on the mm/s^2
 void Planner::refresh_acceleration_rates() {
-  uint32_t highest_rate = 1;
+  uint64_t highest_rate = 1;
   LOOP_DISTINCT_AXES(i) {
     max_acceleration_steps_per_s2[i] = settings.max_acceleration_mm_per_s2[i] * settings.axis_steps_per_mm[i];
     if (TERN1(DISTINCT_E_FACTORS, i < E_AXIS || i == E_AXIS_N(active_extruder)))
@@ -3305,7 +3305,7 @@ void Planner::set_max_feedrate(const AxisEnum axis, float inMaxFeedrateMMS) {
       const bool was_enabled = stepper.suspend();
     #endif
 
-    uint32_t bbru = block_buffer_runtime_us;
+    uint64_t bbru = block_buffer_runtime_us;
 
     #ifdef __AVR__
       // Reenable Stepper ISR

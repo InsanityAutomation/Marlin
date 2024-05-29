@@ -309,11 +309,11 @@ class Stepper {
         #endif
         #define MOTOR_CURRENT_COUNT 3
       #elif HAS_MOTOR_CURRENT_SPI
-        static constexpr uint32_t digipot_count[] = DIGIPOT_MOTOR_CURRENT;
+        static constexpr uint64_t digipot_count[] = DIGIPOT_MOTOR_CURRENT;
         #define MOTOR_CURRENT_COUNT COUNT(Stepper::digipot_count)
       #endif
       static bool initialized;
-      static uint32_t motor_current_setting[MOTOR_CURRENT_COUNT]; // Initialized by settings.load()
+      static uint64_t motor_current_setting[MOTOR_CURRENT_COUNT]; // Initialized by settings.load()
     #endif
 
     // Last-moved extruder, as set when the last movement was fetched from planner
@@ -363,7 +363,7 @@ class Stepper {
                   ;
     #endif
 
-    static uint32_t acceleration_time, deceleration_time; // time measured in Stepper Timer ticks
+    static uint64_t acceleration_time, deceleration_time; // time measured in Stepper Timer ticks
 
     #if MULTISTEPPING_LIMIT == 1
       static constexpr uint8_t steps_per_isr = 1; // Count of steps to perform per Stepper ISR call
@@ -384,7 +384,7 @@ class Stepper {
     // Delta error variables for the Bresenham line tracer
     static xyze_long_t delta_error;
     static xyze_long_t advance_dividend;
-    static uint32_t advance_divisor,
+    static uint64_t advance_divisor,
                     step_events_completed,  // The number of step events executed in the current block
                     accelerate_before,       // The point from where we need to stop acceleration
                     decelerate_start,       // The point from where we need to start decelerating
@@ -400,7 +400,7 @@ class Stepper {
       static int32_t bezier_A,     // A coefficient in Bézier speed curve
                      bezier_B,     // B coefficient in Bézier speed curve
                      bezier_C;     // C coefficient in Bézier speed curve
-      static uint32_t bezier_F,    // F/free coefficient in Bézier speed curve
+      static uint64_t bezier_F,    // F/free coefficient in Bézier speed curve
                       bezier_AV;   // AV coefficient in Bézier speed curve
       #ifdef __AVR__
         static bool A_negative;    // If A coefficient was negative
@@ -432,7 +432,7 @@ class Stepper {
 
     #if ENABLED(NONLINEAR_EXTRUSION)
       static int32_t ne_edividend;
-      static uint32_t ne_scale;
+      static uint64_t ne_scale;
       static ne_fix_t ne_fix;
     #endif
 
@@ -447,7 +447,7 @@ class Stepper {
 
     static hal_timer_t ticks_nominal;
     #if DISABLED(S_CURVE_ACCELERATION)
-      static uint32_t acc_step_rate; // needed for deceleration start point
+      static uint64_t acc_step_rate; // needed for deceleration start point
     #endif
 
     // Exact steps at which an endstop was triggered
@@ -677,21 +677,21 @@ class Stepper {
     static void _set_position(const abce_long_t &spos);
 
     // Calculate the timing interval for the given step rate
-    static hal_timer_t calc_timer_interval(uint32_t step_rate);
+    static hal_timer_t calc_timer_interval(uint64_t step_rate);
 
     // Calculate timing interval and steps-per-ISR for the given step rate
-    static hal_timer_t calc_multistep_timer_interval(uint32_t step_rate);
+    static hal_timer_t calc_multistep_timer_interval(uint64_t step_rate);
 
     // Evaluate axis motions and set bits in axis_did_move
     static void set_axis_moved_for_current_block();
 
     #if ENABLED(NONLINEAR_EXTRUSION)
-      static void calc_nonlinear_e(uint32_t step_rate);
+      static void calc_nonlinear_e(uint64_t step_rate);
     #endif
 
     #if ENABLED(S_CURVE_ACCELERATION)
-      static void _calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av);
-      static int32_t _eval_bezier_curve(const uint32_t curr_step);
+      static void _calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint64_t av);
+      static int32_t _eval_bezier_curve(const uint64_t curr_step);
     #endif
 
     #if HAS_MOTOR_CURRENT_SPI || HAS_MOTOR_CURRENT_PWM

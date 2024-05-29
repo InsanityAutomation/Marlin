@@ -78,7 +78,7 @@
   #include "../feature/closedloop.h"
 #endif
 
-constexpr uint32_t MINIMAL_STEP_RATE = (
+constexpr uint64_t MINIMAL_STEP_RATE = (
   #ifdef CPU_32_BIT
     _MAX((STEPPER_TIMER_RATE) / HAL_TIMER_TYPE_MAX, 1U) // 32-bit shouldn't go below 1
   #else
@@ -234,7 +234,7 @@ typedef struct PlannerBlock {
     abce_ulong_t steps;                     // Step count along each axis
     abce_long_t position;                   // New position to force when this sync block is executed
   };
-  uint32_t step_event_count;                // The number of step events required to complete this block
+  uint64_t step_event_count;                // The number of step events required to complete this block
 
   #if HAS_MULTI_EXTRUDER
     uint8_t extruder;                       // The extruder to move (if E move)
@@ -247,30 +247,30 @@ typedef struct PlannerBlock {
   #endif
 
   // Settings for the trapezoid generator
-  uint32_t accelerate_before,               // The index of the step event on which to start cruising
+  uint64_t accelerate_before,               // The index of the step event on which to start cruising
            decelerate_start;                // The index of the step event on which to start decelerating
 
   #if ENABLED(S_CURVE_ACCELERATION)
-    uint32_t cruise_rate,                   // The actual cruise rate to use, between end of the acceleration phase and start of deceleration phase
+    uint64_t cruise_rate,                   // The actual cruise rate to use, between end of the acceleration phase and start of deceleration phase
              acceleration_time,             // Acceleration time and deceleration time in STEP timer counts
              deceleration_time,
              acceleration_time_inverse,     // Inverse of acceleration and deceleration periods, expressed as integer. Scale depends on CPU being used
              deceleration_time_inverse;
   #else
-    uint32_t acceleration_rate;             // Acceleration rate in (2^24 steps)/timer_ticks*s
+    uint64_t acceleration_rate;             // Acceleration rate in (2^24 steps)/timer_ticks*s
   #endif
 
   AxisBits direction_bits;                  // Direction bits set for this block, where 1 is negative motion
 
   // Advance extrusion
   #if ENABLED(LIN_ADVANCE)
-    uint32_t la_advance_rate;               // The rate at which steps are added whilst accelerating
+    uint64_t la_advance_rate;               // The rate at which steps are added whilst accelerating
     uint8_t  la_scaling;                    // Scale ISR frequency down and step frequency up by 2 ^ la_scaling
     uint16_t max_adv_steps,                 // Max advance steps to get cruising speed pressure
              final_adv_steps;               // Advance steps for exit speed pressure
   #endif
 
-  uint32_t nominal_rate,                    // The nominal step rate for this block in step_events/sec
+  uint64_t nominal_rate,                    // The nominal step rate for this block in step_events/sec
            initial_rate,                    // The jerk-adjusted step rate at start of block
            final_rate,                      // The minimal rate at exit
            acceleration_steps_per_s2;       // acceleration steps/sec^2
@@ -292,11 +292,11 @@ typedef struct PlannerBlock {
   #endif
 
   #if HAS_WIRED_LCD
-    uint32_t segment_time_us;
+    uint64_t segment_time_us;
   #endif
 
   #if ENABLED(POWER_LOSS_RECOVERY)
-    uint32_t sdpos;
+    uint64_t sdpos;
     xyze_pos_t start_position;
   #endif
 
@@ -347,7 +347,7 @@ constexpr uint8_t block_inc_mod(const uint8_t v1, const uint8_t v2) {
 #endif
 
 typedef struct PlannerSettings {
-   uint32_t max_acceleration_mm_per_s2[DISTINCT_AXES], // (mm/s^2) M201 XYZE
+   uint64_t max_acceleration_mm_per_s2[DISTINCT_AXES], // (mm/s^2) M201 XYZE
             min_segment_time_us;                // (µs) M205 B
 
   // (steps) M92 XYZE - Steps per millimeter
@@ -460,7 +460,7 @@ class Planner {
     #endif
 
     #if ENABLED(DIRECT_STEPPING)
-      static uint32_t last_page_step_rate;          // Last page step rate given
+      static uint64_t last_page_step_rate;          // Last page step rate given
       static AxisBits last_page_dir;                // Last page direction given, where 1 represents forward or positive motion
     #endif
 
@@ -487,7 +487,7 @@ class Planner {
       static laser_state_t laser_inline;
     #endif
 
-    static uint32_t max_acceleration_steps_per_s2[DISTINCT_AXES]; // (steps/s^2) Derived from mm_per_s2
+    static uint64_t max_acceleration_steps_per_s2[DISTINCT_AXES]; // (steps/s^2) Derived from mm_per_s2
 
     #if ENABLED(EDITABLE_STEPS_PER_UNIT)
       static float mm_per_step[DISTINCT_AXES];        // Millimeters per step
@@ -577,7 +577,7 @@ class Planner {
     /**
      * Limit where 64bit math is necessary for acceleration calculation
      */
-    static uint32_t acceleration_long_cutoff;
+    static uint64_t acceleration_long_cutoff;
 
     #ifdef MAX7219_DEBUG_SLOWDOWN
       friend class Max7219;
@@ -594,7 +594,7 @@ class Planner {
     #endif
 
     #if HAS_WIRED_LCD
-      volatile static uint32_t block_buffer_runtime_us; // Theoretical block buffer runtime in µs
+      volatile static uint64_t block_buffer_runtime_us; // Theoretical block buffer runtime in µs
     #endif
 
   public:

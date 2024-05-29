@@ -154,9 +154,9 @@ Stepper stepper; // Singleton
 
 #if HAS_MOTOR_CURRENT_SPI || HAS_MOTOR_CURRENT_PWM
   bool Stepper::initialized; // = false
-  uint32_t Stepper::motor_current_setting[MOTOR_CURRENT_COUNT]; // Initialized by settings.load()
+  uint64_t Stepper::motor_current_setting[MOTOR_CURRENT_COUNT]; // Initialized by settings.load()
   #if HAS_MOTOR_CURRENT_SPI
-    constexpr uint32_t Stepper::digipot_count[];
+    constexpr uint64_t Stepper::digipot_count[];
   #endif
 #endif
 
@@ -194,7 +194,7 @@ bool Stepper::abort_current_block;
 #endif
 
 // In timer_ticks
-uint32_t Stepper::acceleration_time, Stepper::deceleration_time;
+uint64_t Stepper::acceleration_time, Stepper::deceleration_time;
 
 #if MULTISTEPPING_LIMIT > 1
   uint8_t Stepper::steps_per_isr = 1; // Count of steps to perform per Stepper ISR call
@@ -223,7 +223,7 @@ uint32_t Stepper::acceleration_time, Stepper::deceleration_time;
 xyze_long_t Stepper::delta_error{0};
 
 xyze_long_t Stepper::advance_dividend{0};
-uint32_t Stepper::advance_divisor = 0,
+uint64_t Stepper::advance_divisor = 0,
          Stepper::step_events_completed = 0, // The number of step events executed in the current block
          Stepper::accelerate_before,         // The count at which to start cruising
          Stepper::decelerate_start,          // The count at which to start decelerating
@@ -239,8 +239,8 @@ uint32_t Stepper::advance_divisor = 0,
   int32_t __attribute__((used)) Stepper::bezier_A __asm__("bezier_A");    // A coefficient in Bézier speed curve with alias for assembler
   int32_t __attribute__((used)) Stepper::bezier_B __asm__("bezier_B");    // B coefficient in Bézier speed curve with alias for assembler
   int32_t __attribute__((used)) Stepper::bezier_C __asm__("bezier_C");    // C coefficient in Bézier speed curve with alias for assembler
-  uint32_t __attribute__((used)) Stepper::bezier_F __asm__("bezier_F");   // F coefficient in Bézier speed curve with alias for assembler
-  uint32_t __attribute__((used)) Stepper::bezier_AV __asm__("bezier_AV"); // AV coefficient in Bézier speed curve with alias for assembler
+  uint64_t __attribute__((used)) Stepper::bezier_F __asm__("bezier_F");   // F coefficient in Bézier speed curve with alias for assembler
+  uint64_t __attribute__((used)) Stepper::bezier_AV __asm__("bezier_AV"); // AV coefficient in Bézier speed curve with alias for assembler
   #ifdef __AVR__
     bool __attribute__((used)) Stepper::A_negative __asm__("A_negative"); // If A coefficient was negative
   #endif
@@ -260,7 +260,7 @@ uint32_t Stepper::advance_divisor = 0,
   ne_coeff_t Stepper::ne;
   ne_fix_t Stepper::ne_fix;
   int32_t Stepper::ne_edividend;
-  uint32_t Stepper::ne_scale;
+  uint64_t Stepper::ne_scale;
 #endif
 
 #if HAS_ZV_SHAPING
@@ -297,7 +297,7 @@ uint32_t Stepper::advance_divisor = 0,
 
 hal_timer_t Stepper::ticks_nominal = 0;
 #if DISABLED(S_CURVE_ACCELERATION)
-  uint32_t Stepper::acc_step_rate; // needed for deceleration start point
+  uint64_t Stepper::acc_step_rate; // needed for deceleration start point
 #endif
 
 xyz_long_t Stepper::endstops_trigsteps;
@@ -789,34 +789,34 @@ void Stepper::apply_directions() {
    *
    *    And for each point, evaluate the curve with the following sequence:
    *
-   *      void lsrs(uint32_t& d, uint32_t s, int cnt) {
+   *      void lsrs(uint64_t& d, uint64_t s, int cnt) {
    *        d = s >> cnt;
    *      }
-   *      void lsls(uint32_t& d, uint32_t s, int cnt) {
+   *      void lsls(uint64_t& d, uint64_t s, int cnt) {
    *        d = s << cnt;
    *      }
-   *      void lsrs(int32_t& d, uint32_t s, int cnt) {
-   *        d = uint32_t(s) >> cnt;
+   *      void lsrs(int32_t& d, uint64_t s, int cnt) {
+   *        d = uint64_t(s) >> cnt;
    *      }
-   *      void lsls(int32_t& d, uint32_t s, int cnt) {
-   *        d = uint32_t(s) << cnt;
+   *      void lsls(int32_t& d, uint64_t s, int cnt) {
+   *        d = uint64_t(s) << cnt;
    *      }
-   *      void umull(uint32_t& rlo, uint32_t& rhi, uint32_t op1, uint32_t op2) {
+   *      void umull(uint64_t& rlo, uint64_t& rhi, uint64_t op1, uint64_t op2) {
    *        uint64_t res = uint64_t(op1) * op2;
-   *        rlo = uint32_t(res & 0xFFFFFFFF);
-   *        rhi = uint32_t((res >> 32) & 0xFFFFFFFF);
+   *        rlo = uint64_t(res & 0xFFFFFFFF);
+   *        rhi = uint64_t((res >> 32) & 0xFFFFFFFF);
    *      }
    *      void smlal(int32_t& rlo, int32_t& rhi, int32_t op1, int32_t op2) {
    *        int64_t mul = int64_t(op1) * op2;
-   *        int64_t s = int64_t(uint32_t(rlo) | ((uint64_t(uint32_t(rhi)) << 32U)));
+   *        int64_t s = int64_t(uint64_t(rlo) | ((uint64_t(uint64_t(rhi)) << 32U)));
    *        mul += s;
    *        rlo = int32_t(mul & 0xFFFFFFFF);
    *        rhi = int32_t((mul >> 32) & 0xFFFFFFFF);
    *      }
-   *      int32_t _eval_bezier_curve_arm(uint32_t curr_step) {
-   *        uint32_t flo = 0;
-   *        uint32_t fhi = bezier_AV * curr_step;
-   *        uint32_t t = fhi;
+   *      int32_t _eval_bezier_curve_arm(uint64_t curr_step) {
+   *        uint64_t flo = 0;
+   *        uint64_t fhi = bezier_AV * curr_step;
+   *        uint64_t t = fhi;
    *        int32_t alo = bezier_F;
    *        int32_t ahi = 0;
    *        int32_t A = bezier_A;
@@ -866,7 +866,7 @@ void Stepper::apply_directions() {
    *
    *    And for each curve, estimate its coefficients with:
    *
-   *      void _calc_bezier_curve_coeffs(int32_t v0, int32_t v1, uint32_t av) {
+   *      void _calc_bezier_curve_coeffs(int32_t v0, int32_t v1, uint64_t av) {
    *       // Calculate the Bézier coefficients
    *       if (v1 < v0) {
    *         A_negative = true;
@@ -891,14 +891,14 @@ void Stepper::apply_directions() {
    *      }
    *      // unsigned multiplication of 16 bits x 16bits, return upper 16 bits
    *      void umul16x16to16hi(uint16_t& r, uint16_t op1, uint16_t op2) {
-   *        r = (uint32_t(op1) * op2) >> 16;
+   *        r = (uint64_t(op1) * op2) >> 16;
    *      }
    *      // unsigned multiplication of 16 bits x 24bits, return upper 24 bits
    *      void umul16x24to24hi(uint24_t& r, uint16_t op1, uint24_t op2) {
    *        r = uint24_t((uint64_t(op1) * op2) >> 16);
    *      }
    *
-   *      int32_t _eval_bezier_curve(uint32_t curr_step) {
+   *      int32_t _eval_bezier_curve(uint64_t curr_step) {
    *        // To save computing, the first step is always the initial speed
    *        if (!curr_step)
    *          return bezier_F;
@@ -940,7 +940,7 @@ void Stepper::apply_directions() {
   #ifdef __AVR__
 
     // For AVR we use assembly to maximize speed
-    void Stepper::_calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av) {
+    void Stepper::_calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint64_t av) {
 
       // Store advance
       bezier_AV = av;
@@ -1042,7 +1042,7 @@ void Stepper::apply_directions() {
       );
     }
 
-    FORCE_INLINE int32_t Stepper::_eval_bezier_curve(const uint32_t curr_step) {
+    FORCE_INLINE int32_t Stepper::_eval_bezier_curve(const uint64_t curr_step) {
 
       // If dealing with the first step, save expensive computing and return the initial speed
       if (!curr_step)
@@ -1424,13 +1424,13 @@ void Stepper::apply_directions() {
         :
         :"cc","r0","r1"
       );
-      return (r2 | (uint16_t(r3) << 8)) | (uint32_t(r4) << 16);
+      return (r2 | (uint16_t(r3) << 8)) | (uint64_t(r4) << 16);
     }
 
   #else
 
     // For all the other 32bit CPUs
-    FORCE_INLINE void Stepper::_calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av) {
+    FORCE_INLINE void Stepper::_calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint64_t av) {
       // Calculate the Bézier coefficients
       #ifndef S_CURVE_FACTOR
         bezier_A =  768 * (v1 - v0);
@@ -1447,13 +1447,13 @@ void Stepper::apply_directions() {
       bezier_AV = av;
     }
 
-    FORCE_INLINE int32_t Stepper::_eval_bezier_curve(const uint32_t curr_step) {
+    FORCE_INLINE int32_t Stepper::_eval_bezier_curve(const uint64_t curr_step) {
       #if (defined(__arm__) || defined(__thumb__)) && __ARM_ARCH >= 6 && !defined(STM32G0B1xx) // TODO: Test define STM32G0xx versus STM32G0B1xx
 
         // For ARM Cortex M3/M4 CPUs, we have the optimized assembler version, that takes 43 cycles to execute
-        uint32_t flo = 0;
-        uint32_t fhi = bezier_AV * curr_step;
-        uint32_t t = fhi;
+        uint64_t flo = 0;
+        uint64_t fhi = bezier_AV * curr_step;
+        uint64_t t = fhi;
         int32_t alo = bezier_F;
         int32_t ahi = 0;
         int32_t A = bezier_A;
@@ -1495,7 +1495,7 @@ void Stepper::apply_directions() {
         // For non ARM targets, we provide a fallback implementation. Really doubt it
         // will be useful, unless the processor is fast and 32bit
 
-        uint32_t t = bezier_AV * curr_step;               // t: Range 32 bits
+        uint64_t t = bezier_AV * curr_step;               // t: Range 32 bits
         uint64_t f = t;
         #ifndef S_CURVE_FACTOR
           f *= t;                                         // Range 32*2 = 64 bits (unsigned)
@@ -1504,13 +1504,13 @@ void Stepper::apply_directions() {
           f >>= 32;                                       // Range 32 bits : f = t^3  (unsigned)
         #endif
         int64_t acc = (int64_t) bezier_F << 31;           // Range 63 bits (signed)
-        acc += ((uint32_t) f >> 1) * (int64_t) bezier_C;  // Range 29bits + 31 = 60bits (plus sign)
+        acc += ((uint64_t) f >> 1) * (int64_t) bezier_C;  // Range 29bits + 31 = 60bits (plus sign)
         f *= t;                                           // Range 32*2 = 64 bits
         f >>= 32;                                         // Range 32 bits : f = t^3  (unsigned)
-        acc += ((uint32_t) f >> 1) * (int64_t) bezier_B;  // Range 29bits + 31 = 60bits (plus sign)
+        acc += ((uint64_t) f >> 1) * (int64_t) bezier_B;  // Range 29bits + 31 = 60bits (plus sign)
         f *= t;                                           // Range 32*2 = 64 bits
         f >>= 32;                                         // Range 32 bits : f = t^3  (unsigned)
-        acc += ((uint32_t) f >> 1) * (int64_t) bezier_A;  // Range 28bits + 31 = 59bits (plus sign)
+        acc += ((uint64_t) f >> 1) * (int64_t) bezier_A;  // Range 28bits + 31 = 59bits (plus sign)
         acc >>= (31 + 7);                                 // Range 24bits (plus sign)
         return (int32_t) acc;
 
@@ -1636,7 +1636,7 @@ void Stepper::isr() {
       #endif
 
       // Get the interval to the next ISR call
-      interval = _MIN(nextMainISR, uint32_t(HAL_TIMER_TYPE_MAX));         // Time until the next Pulse / Block phase
+      interval = _MIN(nextMainISR, uint64_t(HAL_TIMER_TYPE_MAX));         // Time until the next Pulse / Block phase
       TERN_(INPUT_SHAPING_X, NOMORE(interval, ShapingQueue::peek_x()));   // Time until next input shaping echo for X
       TERN_(INPUT_SHAPING_Y, NOMORE(interval, ShapingQueue::peek_y()));   // Time until next input shaping echo for Y
       TERN_(INPUT_SHAPING_Z, NOMORE(interval, ShapingQueue::peek_z()));   // Time until next input shaping echo for Z
@@ -1799,7 +1799,7 @@ void Stepper::pulse_phase_isr() {
   if (TERN0(FREEZE_FEATURE, frozen)) return;
 
   // Count of pending loops and events for this iteration
-  const uint32_t pending_events = step_event_count - step_events_completed;
+  const uint64_t pending_events = step_event_count - step_events_completed;
   uint8_t events_to_do = _MIN(pending_events, steps_per_isr);
 
   // Just update the value we will get at the end of the loop
@@ -1996,7 +1996,7 @@ void Stepper::pulse_phase_isr() {
 
     if (!is_page) {
       // Give the compiler a clue to store advance_divisor in registers for what follows
-      const uint32_t advance_divisor_cached = advance_divisor;
+      const uint64_t advance_divisor_cached = advance_divisor;
 
       // Determine if pulses are needed
       #if HAS_X_STEP
@@ -2227,14 +2227,14 @@ void Stepper::pulse_phase_isr() {
 #endif // HAS_ZV_SHAPING
 
 // Calculate timer interval, with all limits applied.
-hal_timer_t Stepper::calc_timer_interval(uint32_t step_rate) {
+hal_timer_t Stepper::calc_timer_interval(uint64_t step_rate) {
 
-  constexpr uint32_t min_step_rate = MINIMAL_STEP_RATE;
+  constexpr uint64_t min_step_rate = MINIMAL_STEP_RATE;
 
   #ifdef CPU_32_BIT
 
     // A fast processor can just do integer division
-    return step_rate > min_step_rate ? uint32_t(STEPPER_TIMER_RATE) / step_rate : HAL_TIMER_TYPE_MAX;
+    return step_rate > min_step_rate ? uint64_t(STEPPER_TIMER_RATE) / step_rate : HAL_TIMER_TYPE_MAX;
 
   #else
 
@@ -2244,7 +2244,7 @@ hal_timer_t Stepper::calc_timer_interval(uint32_t step_rate) {
       // Handle it as quickly as possible. i.e., assume highest byte is zero
       // because non-zero would represent a step rate far beyond AVR capabilities.
       if (uint8_t(step_rate >> 16))
-        return uint32_t(STEPPER_TIMER_RATE) / 0x10000;
+        return uint64_t(STEPPER_TIMER_RATE) / 0x10000;
 
       const uintptr_t table_address = uintptr_t(&speed_lookuptable_fast[uint8_t(step_rate >> 8)]);
       const uint16_t base = uint16_t(pgm_read_word(table_address));
@@ -2264,8 +2264,8 @@ hal_timer_t Stepper::calc_timer_interval(uint32_t step_rate) {
 }
 
 #if ENABLED(NONLINEAR_EXTRUSION)
-  void Stepper::calc_nonlinear_e(uint32_t step_rate) {
-    const uint32_t velocity = ne_scale * step_rate; // Scale step_rate first so all intermediate values stay in range of 8.24 fixed point math
+  void Stepper::calc_nonlinear_e(uint64_t step_rate) {
+    const uint64_t velocity = ne_scale * step_rate; // Scale step_rate first so all intermediate values stay in range of 8.24 fixed point math
     int32_t vd = (((int64_t)ne_fix.A * velocity) >> 24) + (((((int64_t)ne_fix.B * velocity) >> 24) * velocity) >> 24);
     NOLESS(vd, 0);
 
@@ -2274,19 +2274,19 @@ hal_timer_t Stepper::calc_timer_interval(uint32_t step_rate) {
 #endif
 
 // Get the timer interval and the number of loops to perform per tick
-hal_timer_t Stepper::calc_multistep_timer_interval(uint32_t step_rate) {
+hal_timer_t Stepper::calc_multistep_timer_interval(uint64_t step_rate) {
 
   #if ENABLED(OLD_ADAPTIVE_MULTISTEPPING)
 
     #if MULTISTEPPING_LIMIT == 1
 
       // Just make sure the step rate is doable
-      NOMORE(step_rate, uint32_t(MAX_STEP_ISR_FREQUENCY_1X));
+      NOMORE(step_rate, uint64_t(MAX_STEP_ISR_FREQUENCY_1X));
 
     #else
 
       // The stepping frequency limits for each multistepping rate
-      static const uint32_t limit[] PROGMEM = {
+      static const uint64_t limit[] PROGMEM = {
             (  MAX_STEP_ISR_FREQUENCY_1X     )
           , (((F_CPU) / ISR_EXECUTION_CYCLES(1)) >> 1)
         #if MULTISTEPPING_LIMIT >= 4
@@ -2311,7 +2311,7 @@ hal_timer_t Stepper::calc_multistep_timer_interval(uint32_t step_rate) {
 
       // Find a doable step rate using multistepping
       uint8_t multistep = 1;
-      for (uint8_t i = 0; i < COUNT(limit) && step_rate > uint32_t(pgm_read_dword(&limit[i])); ++i) {
+      for (uint8_t i = 0; i < COUNT(limit) && step_rate > uint64_t(pgm_read_dword(&limit[i])); ++i) {
         step_rate >>= 1;
         multistep <<= 1;
       }
@@ -2470,7 +2470,7 @@ hal_timer_t Stepper::block_phase_isr() {
 
         #if ENABLED(S_CURVE_ACCELERATION)
           // Get the next speed to use (Jerk limited!)
-          uint32_t acc_step_rate = acceleration_time < current_block->acceleration_time
+          uint64_t acc_step_rate = acceleration_time < current_block->acceleration_time
                                    ? _eval_bezier_curve(acceleration_time)
                                    : current_block->cruise_rate;
         #else
@@ -2491,7 +2491,7 @@ hal_timer_t Stepper::block_phase_isr() {
 
         #if ENABLED(LIN_ADVANCE)
           if (la_active) {
-            const uint32_t la_step_rate = la_advance_steps < current_block->max_adv_steps ? current_block->la_advance_rate : 0;
+            const uint64_t la_step_rate = la_advance_steps < current_block->max_adv_steps ? current_block->la_advance_rate : 0;
             la_interval = calc_timer_interval((acc_step_rate + la_step_rate) >> current_block->la_scaling);
           }
         #endif
@@ -2521,7 +2521,7 @@ hal_timer_t Stepper::block_phase_isr() {
       }
       // Are we in Deceleration phase ?
       else if (step_events_completed >= decelerate_start) {
-        uint32_t step_rate;
+        uint64_t step_rate;
 
         #if ENABLED(S_CURVE_ACCELERATION)
           // If this is the 1st time we process the 2nd half of the trapezoid...
@@ -2556,7 +2556,7 @@ hal_timer_t Stepper::block_phase_isr() {
 
         #if ENABLED(LIN_ADVANCE)
           if (la_active) {
-            const uint32_t la_step_rate = la_advance_steps > current_block->final_adv_steps ? current_block->la_advance_rate : 0;
+            const uint64_t la_step_rate = la_advance_steps > current_block->final_adv_steps ? current_block->la_advance_rate : 0;
             if (la_step_rate != step_rate) {
               const bool forward_e = la_step_rate < step_rate;
               la_interval = calc_timer_interval((forward_e ? step_rate - la_step_rate : la_step_rate - step_rate) >> current_block->la_scaling);
@@ -2828,7 +2828,7 @@ hal_timer_t Stepper::block_phase_isr() {
 
         // Decide if axis smoothing is possible
         if (stepper.adaptive_step_smoothing_enabled) {
-          uint32_t max_rate = current_block->nominal_rate;  // Get the step event rate
+          uint64_t max_rate = current_block->nominal_rate;  // Get the step event rate
           while (max_rate < MIN_STEP_ISR_FREQUENCY) {       // As long as more ISRs are possible...
             max_rate <<= 1;                                 // Try to double the rate
             if (max_rate < MIN_STEP_ISR_FREQUENCY)          // Don't exceed the estimated ISR limit
@@ -2979,7 +2979,7 @@ hal_timer_t Stepper::block_phase_isr() {
 
       #if ENABLED(LIN_ADVANCE)
         if (la_active) {
-          const uint32_t la_step_rate = la_advance_steps < current_block->max_adv_steps ? current_block->la_advance_rate : 0;
+          const uint64_t la_step_rate = la_advance_steps < current_block->max_adv_steps ? current_block->la_advance_rate : 0;
           la_interval = calc_timer_interval((current_block->initial_rate + la_step_rate) >> current_block->la_scaling);
         }
       #endif
@@ -3399,7 +3399,7 @@ void Stepper::init() {
     const bool was_on = hal.isr_state();
     hal.isr_off();
 
-    const shaping_time_t delay = freq ? float(uint32_t(STEPPER_TIMER_RATE) / 2) / freq : shaping_time_t(-1);
+    const shaping_time_t delay = freq ? float(uint64_t(STEPPER_TIMER_RATE) / 2) / freq : shaping_time_t(-1);
     #define SHAPING_SET_FREQ_FOR_AXIS(AXISN, AXISL)                                 \
       if (axis == AXISN) {                                                          \
         ShapingQueue::set_delay(AXISN, delay);                                      \
@@ -3884,7 +3884,7 @@ void Stepper::report_positions() {
 
   #if EXTRA_CYCLES_BABYSTEP > 20
     #define _SAVE_START() const hal_timer_t pulse_start = HAL_timer_get_count(MF_TIMER_PULSE)
-    #define _PULSE_WAIT() while (EXTRA_CYCLES_BABYSTEP > uint32_t(HAL_timer_get_count(MF_TIMER_PULSE) - pulse_start) * (PULSE_TIMER_PRESCALE)) { /* nada */ }
+    #define _PULSE_WAIT() while (EXTRA_CYCLES_BABYSTEP > uint64_t(HAL_timer_get_count(MF_TIMER_PULSE) - pulse_start) * (PULSE_TIMER_PRESCALE)) { /* nada */ }
   #else
     #define _SAVE_START() NOOP
     #if EXTRA_CYCLES_BABYSTEP > 0
