@@ -414,6 +414,15 @@
   #define PS_ON1_EDM_PIN            P1_17
   #define PS_EDM_RESPONSE       1000     // Time in MS to allow for relay action
 
+  #define PSU_OFF_REDUNDANT             // Second pin for redundant power control
+  //#define PSU_OFF_REDUNDANT_OPPOSING    // Redundant pin works opposite standard pin
+  #define PS_ON_PIN                  P4_28  // Redundant Pin
+  #define PS_ON1_PIN                 P1_03  // Redundant Pin
+
+  #define PS_ON_EDM_PIN             P4_29    // EDM Pins to monitor feedback on external power control relay. Fault on mismatch.
+  #define PS_ON1_EDM_PIN            P1_17
+  #define PS_EDM_RESPONSE       1000     // Time in MS to allow for relay action
+
   //#define POWER_OFF_TIMER               // Enable M81 D<seconds> to power off after a delay
   //#define POWER_OFF_WAIT_FOR_COOLDOWN   // Enable M81 S to power off only after cooldown
 
