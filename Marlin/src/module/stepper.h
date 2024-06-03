@@ -478,21 +478,21 @@ class Stepper {
     }
 
     // The ISR scheduler
-    static void isr();
+    FORCE_INLINE static void isr();
 
     // The stepper pulse ISR phase
-    static void pulse_phase_isr();
+    FORCE_INLINE static void pulse_phase_isr();
 
     // The stepper block processing ISR phase
-    static hal_timer_t block_phase_isr();
+    FORCE_INLINE static hal_timer_t block_phase_isr();
 
     #if HAS_ZV_SHAPING
-      static void shaping_isr();
+      FORCE_INLINE static void shaping_isr();
     #endif
 
     #if ENABLED(LIN_ADVANCE)
       // The Linear advance ISR phase
-      static void advance_isr();
+      FORCE_INLINE static void advance_isr();
     #endif
 
     #if ENABLED(BABYSTEPPING)

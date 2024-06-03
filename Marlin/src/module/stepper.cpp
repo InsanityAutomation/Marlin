@@ -1525,7 +1525,8 @@ void Stepper::apply_directions() {
  * Directly pulses the stepper motors at high frequency.
  */
 
-HAL_STEP_TIMER_ISR() {
+
+  extern "C" [[gnu::section(".ramcode")]] void TIMER0_IRQHandler() {
   #ifndef __AVR__
     // Disable interrupts, to avoid ISR preemption while we reprogram the period
     // (AVR enters the ISR with global interrupts disabled, so no need to do it here)
