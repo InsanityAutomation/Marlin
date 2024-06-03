@@ -430,7 +430,7 @@
   #if NONE(ABL_NCSW, ABL_EZABL, ABL_BLTOUCH)
     #define ABL_BLTOUCH
   #endif
-  #if NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, Creality422, Creality427)
+  #if NONE(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, Creality422, Creality427)
     #define Y_STOP_PIN 14
     #define X_STOP_PIN 3
   #endif
@@ -462,11 +462,11 @@
   #define lerdgeFilSensor
 #endif
 
-#if ANY(MachineCR10SV2, MachineCR10Max, MachineCR10SProV2) && ANY(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH, ABL_TOUCH_MI) && NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+#if ANY(MachineCR10SV2, MachineCR10Max, MachineCR10SProV2) && ANY(ABL_EZABL, ABL_NCSW, ABL_BLTOUCH, ABL_TOUCH_MI) && NONE(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11)
   #define Z_STOP_PIN 19
 #endif
 
-#if ANY(MachineEnder2, MachineEnder3, MachineEnder5, MachineCR10, MachineMini) &&NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, SKRMiniE3V3, Creality422, Creality427, Melzi_To_SBoardUpgrade)
+#if ANY(MachineEnder2, MachineEnder3, MachineEnder5, MachineCR10, MachineMini) &&NONE(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRE3Turbo, SKRMiniE3V2, SKRMiniE3V3, Creality422, Creality427, Melzi_To_SBoardUpgrade)
   #define MachineCR10Orig
 #endif
 
@@ -637,7 +637,7 @@
   #define BedDC
 #endif
 
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo, SKRMiniE3V3, MachineEnder3V2, MachineEnder3S1, Creality422, Creality427, MachineEnder6, MachineSermoonD1, MachineCR30, MachineCR6, MachineCR6Max, MachineEnder7, MachineCR10Smart, MachineCR10SmartPro)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRE3Turbo, SKRMiniE3V3, MachineEnder3V2, MachineEnder3S1, Creality422, Creality427, MachineEnder6, MachineSermoonD1, MachineCR30, MachineCR6, MachineCR6Max, MachineEnder7, MachineCR10Smart, MachineCR10SmartPro)
   #define MachineLargeROM
 #endif
 
@@ -665,7 +665,7 @@
  */
 #if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo, SKR_CR6)
   #define SERIAL_PORT -1
-#elif ANY(MachineCR10Smart, MachineCR10SmartPro, MachineEnder2Pro)
+#elif ANY(SKR2, SKR3, MachineCR10Smart, MachineCR10SmartPro, MachineEnder2Pro)
   #define SERIAL_PORT 1
 #elif ANY(MachineEnder3V2, MachineEnder3S1, MachineEnder3Max, MachineEnder3Pro422, MachineEnder3Pro427, Creality422, Creality427, MachineEnder6, MachineCR6, MachineCR6Max, MachineSermoonD1, MachineCR30, MachineEnder7)
   #define SERIAL_PORT 1
@@ -682,7 +682,9 @@
   #define LCD_SERIAL_PORT 0
   #define LCD_BAUDRATE 115200
   #define SERIAL_CATCHALL -1
-#elif ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo) && NONE(MachineEnder3V2, MachineEnder3S1, MachineEnder3Touchscreen, FORCEV2DISPLAY)
+#elif ANY(SKR2, SKR3) && NONE(MachineEnder3V2, MachineEnder3S1, MachineEnder3Touchscreen, FORCEV2DISPLAY)
+  #define SERIAL_PORT_2 -1
+#elif ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRE3Turbo) && NONE(MachineEnder3V2, MachineEnder3S1, MachineEnder3Touchscreen, FORCEV2DISPLAY)
   #define SERIAL_PORT_2 0
 #elif ANY(SKRMiniE3V2, SKRMiniE3V3)
   #if ANY(INSANITYAUTOMATION_DWIN, MachineEnder3Touchscreen)
@@ -746,7 +748,9 @@
  * Currently only supported for AVR, DUE, LPC1768/9 and STM32/STM32F1
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-//#define SERIAL_PORT_3 1
+#if ENABLED(SKR3)
+  #define SERIAL_PORT_3 3
+#endif
 //#define BAUDRATE_3 250000   // :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000] Enable to override BAUDRATE
 
 // Enable the Bluetooth serial interface on AT90USB devices
@@ -760,6 +764,12 @@
     #define MOTHERBOARD BOARD_BTT_SKR_V1_4
   #elif ENABLED(SKR13)
     #define MOTHERBOARD BOARD_BTT_SKR_V1_3
+  #elif ENABLED(SKR2B)
+    #define MOTHERBOARD BOARD_BTT_SKR_V2_0_REV_B
+  #elif ENABLED(SKR2)
+    #define MOTHERBOARD BOARD_BTT_SKR_V2_0_REV_A
+  #elif ENABLED(SKR3)
+    #define MOTHERBOARD BOARD_BTT_SKR_V3_0
   #elif ENABLED(SKRPRO11)
     #define MOTHERBOARD BOARD_BTT_SKR_PRO_V1_1
   #elif ENABLED(SKRMiniE3V2)
@@ -826,7 +836,7 @@
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
 
-#if (ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11) || ANY(MachineCR10SV2, MachineEnder3S1, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max, MachineCR5, SKRMiniE3V2, SKRMiniE3V3, MachineCR6, MachineCR6Max, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR10Smart, MachineCR10SmartPro)) && DISABLED(SKR_UART)
+#if (ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11) || ANY(MachineCR10SV2, MachineEnder3S1, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max, MachineCR5, SKRMiniE3V2, SKRMiniE3V3, MachineCR6, MachineCR6Max, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR10Smart, MachineCR10SmartPro)) && DISABLED(SKR_UART)
   #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209_STANDALONE
     #define Y_DRIVER_TYPE  TMC2209_STANDALONE
@@ -858,7 +868,7 @@
       #define E1_DRIVER_TYPE TMC2208_STANDALONE
     #endif
   #endif
-#elif ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && ENABLED(SKR_UART)
+#elif ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && ENABLED(SKR_UART)
   #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209
     #define Y_DRIVER_TYPE  TMC2209
@@ -1337,7 +1347,7 @@
 #elif ENABLED(SlicePT1000)
   #define TEMP_SENSOR_0 1047
 #elif ENABLED(HotendMosquito)
-  #define TEMP_SENSOR_0 67
+  #define TEMP_SENSOR_0 5
 #elif ENABLED(HotendE3D)
   #define TEMP_SENSOR_0 5
 #elif ENABLED(HotendStock)
@@ -2108,7 +2118,7 @@
 
 // Enable this feature if all enabled endstop pins are interrupt-capable.
 // This will remove the need to poll the interrupt pins, saving many CPU cycles.
-#if ANY(MachineEnder3V2, MachineEnder3S1, Creality422, MachineEnder2Pro, MachineCR10SmartPro) && NONE(SKRE3Turbo, SKR14Turbo, SKR14, SKR13)
+#if ANY(MachineEnder3V2, MachineEnder3S1, Creality422, MachineEnder2Pro, MachineCR10SmartPro) && NONE(SKRE3Turbo, SKR14Turbo, SKR14, SKR13, SKR2, SKR3)
   #define ENDSTOP_INTERRUPTS_FEATURE
 #endif
 
@@ -2497,7 +2507,7 @@
     #define PROBING_FANS_OFF          // Turn fans off when probing
   #endif
 
-  #if ENABLED(MachineEnder4) && NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo)
+  #if ENABLED(MachineEnder4) && NONE(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRE3Turbo)
     #define SOLENOID_PROBE PIN_15
   #endif
 #endif
@@ -2618,7 +2628,7 @@
   #if ANY(MachineCR10SPro, MachineCR10Max) && ENABLED(HotendStock)
     #if ENABLED(ABL_EZABL12MM)
       #define NOZZLE_TO_PROBE_OFFSET { -27.625, 0.6, 0 }
-    #elif EITHER(ABL_EZABL, ABL_NCSW)
+    #elif ANY(ABL_EZABL, ABL_NCSW)
       #define NOZZLE_TO_PROBE_OFFSET { -30.625, 0.6, 0 }
     #elif ENABLED(ABL_BLTOUCH)
       #define NOZZLE_TO_PROBE_OFFSET { -27.625, -0.1, 0 }
@@ -2626,7 +2636,7 @@
   #elif ENABLED(HotendStock)
     #if ENABLED(ABL_EZABL12MM)
       #define NOZZLE_TO_PROBE_OFFSET { -27.66, -1.4, 0 }
-    #elif EITHER(ABL_EZABL, ABL_NCSW)
+    #elif ANY(ABL_EZABL, ABL_NCSW)
       #define NOZZLE_TO_PROBE_OFFSET { -30.625, -1.4, 0 }
     #elif ENABLED(ABL_BLTOUCH)
       #define NOZZLE_TO_PROBE_OFFSET { -27.625, -1.9, 0 }
@@ -2634,7 +2644,7 @@
   #else
     #if ENABLED(ABL_EZABL12MM)
       #define NOZZLE_TO_PROBE_OFFSET { -27.625, -0.5, 0 }
-    #elif EITHER(ABL_EZABL, ABL_NCSW)
+    #elif ANY(ABL_EZABL, ABL_NCSW)
       #define NOZZLE_TO_PROBE_OFFSET { -30.625, -0.5, 0 }
     #elif ENABLED(ABL_BLTOUCH)
       #define NOZZLE_TO_PROBE_OFFSET { -27.625, 0.0, 0 }
@@ -2911,7 +2921,7 @@
   #define INVERT_Z_DIR true
   #define INVERT_E0_DIR true
   #define INVERT_E1_DIR false
-#elif ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && DISABLED(SKR_ReverseSteppers)
+#elif ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && DISABLED(SKR_ReverseSteppers)
   #define INVERT_X_DIR true
   #define INVERT_Y_DIR true
   #if ANY(MachineEnder5Plus, MachineCR2020)
@@ -2927,7 +2937,7 @@
     #define INVERT_E1_DIR false
   #endif
 #else
-  #if ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && ENABLED(SKR_ReverseSteppers) && ENABLED(MachineEnder6)
+  #if ANY(MachineCR10Orig, SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && ENABLED(SKR_ReverseSteppers) && ENABLED(MachineEnder6)
     #define INVERT_X_DIR true
     #define INVERT_Y_DIR false
   #else
@@ -3323,7 +3333,7 @@
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
    #if ENABLED(DualFilSensors)
-    #if DISABLED(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRE3Turbo)
+    #if DISABLED(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRE3Turbo)
       #define NUM_RUNOUT_SENSORS   2     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
       #define ENABLED_ADDON , true
       #define DISABLED_ADDON , false

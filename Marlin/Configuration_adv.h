@@ -1024,7 +1024,7 @@
    * differs, a mode set EEPROM write will be completed at initialization.
    * Use the option below to force an EEPROM write to a V3.1 probe regardless.
    */
-  #if NONE(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, MachineEnder3S1, Creality422, Creality427, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR6, MachineCR6Max, MachineCR10SmartPro, MachineEnder2Pro)
+  #if NONE(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, MachineEnder3S1, Creality422, Creality427, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR6, MachineCR6Max, MachineCR10SmartPro, MachineEnder2Pro)
     #define BLTOUCH_SET_5V_MODE
   #endif
   /**
@@ -1336,7 +1336,7 @@
 // Backlash Compensation
 // Adds extra movement to axes on direction-changes to account for backlash.
 //
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, Creality422, Creality427, MachineCR6, MachineCR6Max)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, Creality422, Creality427, MachineCR6, MachineCR6Max)
   #define BACKLASH_COMPENSATION
 #endif
 #if ENABLED(BACKLASH_COMPENSATION)
@@ -1767,7 +1767,7 @@
 
   // The standard SD detect circuit reads LOW when media is inserted and HIGH when empty.
   // Enable this option and set to HIGH if your SD cards are incorrectly detected.
-  #if NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max, MachineEnder3V2, SKR14Turbo, SKR14, , Creality422, Creality427, MachineEnder6)
+  #if NONE(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max, MachineEnder3V2, SKR14Turbo, SKR14, SKR2, SKR3, Creality422, Creality427, MachineEnder6)
     #define SD_DETECT_STATE HIGH
   #endif
 
@@ -1818,7 +1818,7 @@
     #define PLR_ENABLED_DEFAULT       false // Power-Loss Recovery enabled by default. (Set with 'M413 Sn' & M500)
     //#define PLR_BED_THRESHOLD BED_MAXTEMP // (°C) Skip user confirmation at or above this bed temperature (0 to disable)
 
-    #if ANY(SKR14Turbo, SKR14) && DISABLED(SKR14_PowerLossKit)
+    #if ANY(SKR14Turbo, SKR14, SKR2, SKR3) && DISABLED(SKR14_PowerLossKit)
       #define POWER_LOSS_PIN -1
     #endif
     #define POWER_LOSS_STATE         HIGH // State of pin indicating power-loss
@@ -2000,7 +2000,7 @@
    *
    * :[ 'LCD', 'ONBOARD', 'CUSTOM_CABLE' ]
    */
-  #if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+  #if ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11)
     #define SDCARD_CONNECTION ONBOARD
   #endif
 
@@ -2046,7 +2046,7 @@
 
   // A bigger font is available for edit items. Costs 3120 bytes of flash.
   // Western only. Not available for Cyrillic, Kana, Turkish, Greek, or Chinese.
-  #if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+  #if ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11)
     #define USE_BIG_EDIT_FONT
   #endif
 
@@ -2731,7 +2731,7 @@
 // For debug-echo: 128 bytes for the optimal speed.
 // Other output doesn't need to be that speedy.
 // :[0, 2, 4, 8, 16, 32, 64, 128, 256]
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKR2, SKR3)
   #define TX_BUFFER_SIZE 32
 #else
   #define TX_BUFFER_SIZE 0
@@ -4164,7 +4164,7 @@
  * Add G-codes M810-M819 to define and run G-code macros.
  * Macros are not saved to EEPROM.
  */
-#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11)
+#if ANY(SKR13, SKR14, SKR14Turbo, SKRPRO11, SKR2, SKR3)
   #define GCODE_MACROS
 #endif
 #if ENABLED(GCODE_MACROS)
