@@ -40,10 +40,6 @@
 #endif
 
 //#define FILAMENT_RUNOUT_SENSOR_DEBUG
-#ifndef FILAMENT_RUNOUT_THRESHOLD
-  #define FILAMENT_RUNOUT_THRESHOLD 5
-#endif
-
 
 typedef Flags<
           #if NUM_MOTION_SENSORS > NUM_RUNOUT_SENSORS
