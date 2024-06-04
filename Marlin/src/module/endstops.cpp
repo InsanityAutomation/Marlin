@@ -58,6 +58,10 @@
   #include "probe.h"
 #endif
 
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #include "../feature/runout.h"
+#endif
+
 Endstops endstops;
 
 // private:

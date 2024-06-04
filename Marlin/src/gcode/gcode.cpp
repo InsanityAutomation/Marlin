@@ -865,10 +865,6 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 407: M407(); break;                                  // M407: Display measured filament diameter
       #endif
 
-      #if HAS_FILAMENT_SENSOR
-        case 412: M412(); break;                                  // M412: Enable/Disable filament runout detection
-      #endif
-
       #if HAS_MULTI_LANGUAGE
         case 414: M414(); break;                                  // M414: Select multi language menu
       #endif

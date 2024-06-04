@@ -60,7 +60,6 @@ template<class RESPONSE_T, class SENSOR_T>
 class TFilamentMonitor;
 class FilamentSensorCore;
 class RunoutResponseDelayed;
-class RunoutResponseDebounced;
 
 /********************************* TEMPLATE SPECIALIZATION *********************************/
 
@@ -249,14 +248,14 @@ class FilamentSensorCore : public FilamentSensorBase {
                       change    = old_state ^ new_state;
         old_state = new_state;
 
-      #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
-        if (change) {
-          SERIAL_ECHOPGM("Motion detected:");
-          for(uint8_t e = 0; e < NUM_RUNOUT_SENSORS; ++e)
-            if (TEST(change, e)) SERIAL_CHAR(' ', '0' + e);
-          SERIAL_EOL();
-        }
-      #endif
+        #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
+          if (change) {
+            SERIAL_ECHOPGM("Motion detected:");
+            for (uint8_t e = 0; e < TERN(FILAMENT_SWITCH_AND_MOTION, NUM_MOTION_SENSORS, NUM_RUNOUT_SENSORS); ++e)
+              if (TEST(change, e)) SERIAL_CHAR(' ', '0' + e);
+            SERIAL_EOL();
+          }
+        #endif
 
         motion_detected |= change;
       }
@@ -304,12 +303,12 @@ typedef struct {
     #endif
   } countdown_t;
 
-// RunoutResponseDelayed triggers a runout event only if the length
-// of filament specified by FIL_RUNOUT_DISTANCE_MM has been fed
-// during a runout condition.
-class RunoutResponseDelayed {
-  private:
-    static countdown_t mm_countdown;
+  // RunoutResponseDelayed triggers a runout event only if the length
+  // of filament specified by FILAMENT_RUNOUT_DISTANCE_MM has been fed
+  // during a runout condition.
+  class RunoutResponseDelayed {
+    private:
+      static countdown_t mm_countdown;
 
   public:
     static float runout_distance_mm[NUM_RUNOUT_SENSORS];
@@ -322,33 +321,83 @@ class RunoutResponseDelayed {
         #endif
       }
 
-    static void run() {
-      #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
-        static millis_t t = 0;
-        const millis_t ms = millis();
-        if (ELAPSED(ms, t)) {
-          t = millis() + 1000UL;
-          for(uint8_t i; i < NUM_RUNOUT_SENSORS; ++i)
-            SERIAL_ECHO(i ? F(", ") : F("Remaining mm: "), mm_countdown[i]);
+      static void run() {
+        #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
+          static millis_t t = 0;
+          const millis_t ms = millis();
+          if (ELAPSED(ms, t)) {
+            t = millis() + 1000UL;
+            for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i)
+              SERIAL_ECHO(i ? F(", ") : F("Runout remaining mm: "), mm_countdown.runout[i]);
             #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
               for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i)
                 SERIAL_ECHO(i ? F(", ") : F("Motion remaining mm: "), mm_countdown.motion[i]);
             #endif
-          SERIAL_EOL();
-        }
-      #endif
-    }
+            SERIAL_EOL();
+          }
+        #endif
+      }
 
-    static runout_flags_t has_run_out() {
-      runout_flags_t runout_flags{0};
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) if (runout_count[i] < 0) runout_flags.set(i);
+      static runout_flags_t has_run_out() {
+        runout_flags_t runout_flags{0};
+        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) if (mm_countdown.runout[i] < 0) runout_flags.set(i);
+        #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+          for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i) if (mm_countdown.motion[i] < 0) runout_flags.set(i);
+        #endif
         return runout_flags;
-    }
-
-      static void block_completed(const block_t * const) { }
+      }
 
       static void filament_present(const uint8_t extruder) {
-        runout_count[extruder] = runout_distance_mm[extruder];
+        if (mm_countdown.runout[extruder] < runout_distance_mm[extruder] || did_pause_print) {
+          // Reset runout only if it is smaller than runout_distance or printing is paused.
+          // On Bowden systems retract may be larger than runout_distance_mm, so if retract
+          // was added leave it in place, or the following unretract will cause runout event.
+          mm_countdown.runout[extruder] = runout_distance_mm[extruder];
+          mm_countdown.runout_reset.clear(extruder);
+        }
+        else {
+          // If runout is larger than runout distance, we cannot reset right now, as Bowden and retract
+          // distance larger than runout_distance_mm leads to negative runout right after unretract.
+          // But we cannot ignore filament_present event. After unretract, runout will become smaller
+          // than runout_distance_mm and should be reset after that. So activate delayed reset.
+          mm_countdown.runout_reset.set(extruder);
+        }
+      }
+
+      #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+        static void filament_motion_present(const uint8_t extruder) {
+          // Same logic as filament_present
+          if (mm_countdown.motion[extruder] < runout_distance_mm || did_pause_print) {
+            mm_countdown.motion[extruder] = runout_distance_mm;
+            mm_countdown.motion_reset.clear(extruder);
+          }
+          else
+            mm_countdown.motion_reset.set(extruder);
+        }
+      #endif
+
+      static void block_completed(const block_t * const b) {
+        const int32_t esteps = b->steps.e;
+        if (!esteps) return;
+
+        // No calculation unless paused or printing
+        if (!should_monitor_runout()) return;
+
+        // No need to ignore retract/unretract movement since they complement each other
+        const uint8_t e = b->extruder;
+        const float mm = (b->direction_bits.e ? esteps : -esteps) * planner.mm_per_step[E_AXIS_N(e)];
+
+        if (e < NUM_RUNOUT_SENSORS) {
+          mm_countdown.runout[e] -= mm;
+          if (mm_countdown.runout_reset[e]) filament_present(e);          // Reset pending. Try to reset.
+        }
+
+        #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+          if (e < NUM_MOTION_SENSORS) {
+            mm_countdown.motion[e] -= mm;
+            if (mm_countdown.motion_reset[e]) filament_motion_present(e); // Reset pending. Try to reset.
+          }
+        #endif
       }
   };
 
