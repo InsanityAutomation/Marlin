@@ -52,20 +52,6 @@ typedef Flags<
 void event_filament_runout(const uint8_t extruder);
 inline bool should_monitor_runout() { return did_pause_print || printingIsActive(); }
 
-template<class RESPONSE_T, class SENSOR_T>
-class TFilamentMonitor;
-class FilamentSensorCore;
-class RunoutResponseDelayed;
-
-/********************************* TEMPLATE SPECIALIZATION *********************************/
-
-typedef TFilamentMonitor<
-          RunoutResponseDelayed,
-          FilamentSensorCore
-        > FilamentMonitor;
-
-extern FilamentMonitor runout;
-
 /*******************************************************************************************/
 
 enum RunoutMode : uint8_t {
@@ -79,7 +65,7 @@ enum RunoutMode : uint8_t {
   RM_MOTION_SENSOR
 };
 
-class FilamentMonitorBase {
+class FilamentSensor {
   public:
     static bool enabled[NUM_RUNOUT_SENSORS], filament_ran_out;
     static RunoutMode mode[NUM_RUNOUT_SENSORS];
@@ -91,32 +77,35 @@ class FilamentMonitorBase {
     #else
       static constexpr bool host_handling = false;
     #endif
-};
 
-template<class RESPONSE_T, class SENSOR_T>
-class TFilamentMonitor : public FilamentMonitorBase {
-  private:
-    typedef RESPONSE_T response_t;
-    typedef SENSOR_T   sensor_t;
-    static  response_t response;
-    static  sensor_t   sensor;
-
-  public:
     static void setup() {
-      sensor.setup();
+      #define _INIT_RUNOUT_PIN(P,S,U,D) do{ if (ENABLED(U)) SET_INPUT_PULLUP(P); else if (ENABLED(D)) SET_INPUT_PULLDOWN(P); else SET_INPUT(P); }while(0);
+      #define  INIT_RUNOUT_PIN(N) _INIT_RUNOUT_PIN(FIL_RUNOUT##N##_PIN, FIL_RUNOUT##N##_STATE, FIL_RUNOUT##N##_PULLUP, FIL_RUNOUT##N##_PULLDOWN);
+      REPEAT_1(NUM_RUNOUT_SENSORS, INIT_RUNOUT_PIN)
+      #undef INIT_RUNOUT_PIN
+
+      #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+        #define INIT_MOTION_PIN(N) _INIT_RUNOUT_PIN(FIL_MOTION##N##_PIN, FIL_MOTION##N##_STATE, FIL_MOTION##N##_PULLUP, FIL_MOTION##N##_PULLDOWN);
+        REPEAT_1(NUM_MOTION_SENSORS, INIT_MOTION_PIN)
+        #undef  INIT_MOTION_PIN
+      #endif
+      #undef _INIT_RUNOUT_PIN
       reset();
     }
 
     static void reset() {
       filament_ran_out = false;
-      response.reset();
+      for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) filament_present(i);
+        #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+          for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i) filament_motion_present(i);
+        #endif
     }
 
     // Call this method when filament is present,
     // so the response can reset its counter.
-    static void filament_present(const uint8_t e) { response.filament_present(e); }
-    static float& runout_distance(const uint8_t e=0) { return response.runout_distance_mm[e]; }
-    static void set_runout_distance(const_float_t mm, const uint8_t e=0) { response.runout_distance_mm[e] = mm; }
+    static void filament_present(const uint8_t e) { filament_present(e); }
+    static float& runout_distance(const uint8_t e=0) { return runout_distance_mm[e]; }
+    static void set_runout_distance(const_float_t mm, const uint8_t e=0) { runout_distance_mm[e] = mm; }
 
     // Handle a block completion. RunoutResponseDelayed uses this to
     // add up the length of filament moved while the filament is out.
@@ -162,11 +151,7 @@ class TFilamentMonitor : public FilamentMonitorBase {
         }
       }
     }
-};
 
-/*************************** FILAMENT PRESENCE SENSORS ***************************/
-
-class FilamentSensorBase {
   protected:
     /**
      * Called by FilamentSensorSwitch::run when filament is detected.
@@ -177,19 +162,6 @@ class FilamentSensorBase {
     }
 
   public:
-    static void setup() {
-      #define _INIT_RUNOUT_PIN(P,S,U,D) do{ if (ENABLED(U)) SET_INPUT_PULLUP(P); else if (ENABLED(D)) SET_INPUT_PULLDOWN(P); else SET_INPUT(P); }while(0);
-      #define  INIT_RUNOUT_PIN(N) _INIT_RUNOUT_PIN(FIL_RUNOUT##N##_PIN, FIL_RUNOUT##N##_STATE, FIL_RUNOUT##N##_PULLUP, FIL_RUNOUT##N##_PULLDOWN);
-      REPEAT_1(NUM_RUNOUT_SENSORS, INIT_RUNOUT_PIN)
-      #undef INIT_RUNOUT_PIN
-
-      #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-        #define INIT_MOTION_PIN(N) _INIT_RUNOUT_PIN(FIL_MOTION##N##_PIN, FIL_MOTION##N##_STATE, FIL_MOTION##N##_PULLUP, FIL_MOTION##N##_PULLDOWN);
-        REPEAT_1(NUM_MOTION_SENSORS, INIT_MOTION_PIN)
-        #undef  INIT_MOTION_PIN
-      #endif
-      #undef _INIT_RUNOUT_PIN
-    }
 
     // Return a bitmask of runout pin states
     static uint8_t poll_runout_pins() {
@@ -205,7 +177,6 @@ class FilamentSensorBase {
       #undef _INVERT_BIT
     }
 
-    #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
       // Return a bitmask of motion pin states
       static uint8_t poll_motion_pins() {
         #define _OR_MOTION(N) | (READ(FIL_MOTION##N##_PIN) ? _BV((N) - 1) : 0)
@@ -219,7 +190,6 @@ class FilamentSensorBase {
         return poll_motion_pins() ^ uint8_t(0 REPEAT_1(NUM_MOTION_SENSORS, _OR_MOTION));
         #undef _OR_MOTION
       }
-    #endif
 };
 
 class FilamentSensorCore : public FilamentSensorBase {
@@ -268,10 +238,10 @@ class FilamentSensorCore : public FilamentSensorBase {
       }
 
     static void run() {
-      if (runout.mode[active_extruder] == RM_MOTION_SENSOR) {
+      if (mode[active_extruder] == RM_MOTION_SENSOR) {
         poll_motion_sensor();
       }
-      else if (runout.mode[active_extruder] != RM_NONE) {
+      else if (mode[active_extruder] != RM_NONE) {
         for(uint8_t s = 0; s < NUM_RUNOUT_SENSORS; ++s) {
           const bool out = poll_runout_state(s);
           if (!out) filament_present(s);
@@ -309,13 +279,6 @@ typedef struct {
   public:
     static float runout_distance_mm[NUM_RUNOUT_SENSORS];
     static int8_t runout_count[NUM_RUNOUT_SENSORS];
-
-      static void reset() {
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) filament_present(i);
-        #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-          for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i) filament_motion_present(i);
-        #endif
-      }
 
       static void run() {
         #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
