@@ -543,7 +543,7 @@ if(idleThrottling == 1800) {
 }
 
 if(idleThrottling == 1900) {
-  if(isMediaInserted())
+  if(isMediaMounted())
   {
     uint16_t currPage, maxPageAdd;
     if(fileIndex == 0)
@@ -790,7 +790,7 @@ void RTSSHOW::RTS_SndData(const char *str, unsigned long addr, unsigned char cmd
     uint8_t expected_tx = 6 + len; // 6 bytes header + payload.
     const millis_t try_until = ExtUI::safe_millis() + 1000;
 
-    while (expected_tx > DWIN_SERIAL.get_tx_buffer_free()) {
+    while (expected_tx > LCD_SERIAL_TX_BUFFER_FREE()) {
       if (ELAPSED(ExtUI::safe_millis(), try_until)) return; // Stop trying after 1 second
 
       #ifdef ARDUINO_ARCH_STM32
@@ -920,7 +920,7 @@ void RTSSHOW::WriteVariable(uint16_t adr, const void* values, uint8_t valueslen,
   uint8_t expected_tx = 6 + valueslen; // 6 bytes header + payload.
     const millis_t try_until = ExtUI::safe_millis() + 1000;
 
-    while (expected_tx > DWIN_SERIAL.get_tx_buffer_free()) {
+    while (expected_tx > LCD_SERIAL_TX_BUFFER_FREE()) {
       if (ELAPSED(ExtUI::safe_millis(), try_until)) return; // Stop trying after 1 second
 
       #ifdef ARDUINO_ARCH_STM32
@@ -1215,7 +1215,7 @@ void RTSSHOW::RTS_HandleData()
         tmp_zprobe_offset = ((float)recdat.data[0]) / 100;
       }
       SERIAL_ECHOLNPGM("Requested Offset ", tmp_zprobe_offset);
-      if (WITHIN((tmp_zprobe_offset), PROBE_OFFSET_Z_MIN, PROBE_OFFSET_Z_MAX))
+      if (WITHIN((tmp_zprobe_offset), PROBE_OFFSET_ZMIN, PROBE_OFFSET_ZMAX))
       {
         int16_t tmpSteps = mmToWholeSteps(getZOffset_mm() - tmp_zprobe_offset, (axis_t)Z);
         if(tmpSteps==0)
@@ -1672,7 +1672,7 @@ void RTSSHOW::RTS_HandleData()
         case 2: // Z-axis to Up
         {
           SERIAL_ECHOLNPGM("Requested Offset ", tmp_zprobe_offset);
-          if (WITHIN((getZOffset_mm()+tmp_zprobe_adjust), PROBE_OFFSET_Z_MIN, PROBE_OFFSET_Z_MAX))
+          if (WITHIN((getZOffset_mm()+tmp_zprobe_adjust), PROBE_OFFSET_ZMIN, PROBE_OFFSET_ZMAX))
           {
             int16_t tmpSteps = mmToWholeSteps(tmp_zprobe_adjust, (axis_t)Z);
             if(tmpSteps==0)
@@ -1697,7 +1697,7 @@ void RTSSHOW::RTS_HandleData()
         case 3: // Z-axis to Down
         {
           SERIAL_ECHOLNPGM("Requested Offset ", tmp_zprobe_offset);
-          if (WITHIN((getZOffset_mm()-tmp_zprobe_adjust), PROBE_OFFSET_Z_MIN, PROBE_OFFSET_Z_MAX))
+          if (WITHIN((getZOffset_mm()-tmp_zprobe_adjust), PROBE_OFFSET_ZMIN, PROBE_OFFSET_ZMAX))
           {
             int16_t tmpSteps = mmToWholeSteps((tmp_zprobe_adjust), (axis_t)Z);
             if(tmpSteps==0)
@@ -2218,7 +2218,7 @@ void RTSSHOW::RTS_HandleData()
 
     case Filename:
       //SERIAL_ECHOLNPGM_P(PSTR("Filename Selected"));
-      if (isMediaInserted() && recdat.addr == FilenameChs)
+      if (isMediaMounted() && recdat.addr == FilenameChs)
       {
         //SERIAL_ECHOLNPGM_P(PSTR("Has Media"));
 
@@ -2258,7 +2258,7 @@ void RTSSHOW::RTS_HandleData()
       }
       else if (recdat.addr == FilenamePlay)
       {
-        if (recdat.data[0] == 1 && isMediaInserted()) //for sure
+        if (recdat.data[0] == 1 && isMediaMounted()) //for sure
         {
           printFile(filenavigator.getIndexName(fileIndex + recordcount));
 
@@ -2493,7 +2493,7 @@ void onPrinterKilled(FSTR_P const error, FSTR_P const component) {
   delay_ms(10);
 }
 
-void onMediaInserted()
+void onMediaMounted()
 {
 	//SERIAL_ECHOLNPGM_P(PSTR("***Initing card is OK***"));
   filenavigator.reset();
@@ -2967,6 +2967,14 @@ void onMinTempError(signed char){}
 void onMaxTempError(signed char){}
 
 void onPauseMode(PauseMessage, PauseMode, unsigned char) {}
+
+void onSetMinExtrusionTemp(short){}
+void onFirmwareFlash(){};
+void onMaxTempError(int){};
+void onMinTempError(int){};
+void onHeatingError(int){};
+void onStartM303(int, int, short){};
+
 
 } // namespace ExtUI
 
