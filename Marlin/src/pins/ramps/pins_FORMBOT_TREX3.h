@@ -182,7 +182,14 @@
 #endif
 
 #if HAS_MARLINUI_U8GLIB
-  #define BOARD_ST7920_DELAY_1               125
-  #define BOARD_ST7920_DELAY_2               125
-  #define BOARD_ST7920_DELAY_3               125
+  #ifndef BOARD_ST7920_DELAY_1
+    #define BOARD_ST7920_DELAY_1 125
+  #endif
+  #ifndef BOARD_ST7920_DELAY_2
+    #define BOARD_ST7920_DELAY_2 125
+  #endif
+  #ifndef BOARD_ST7920_DELAY_3
+    #define BOARD_ST7920_DELAY_3 125
+  #endif
 #endif
+

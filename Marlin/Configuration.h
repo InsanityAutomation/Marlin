@@ -1770,6 +1770,11 @@
   //#define PROBE_TOOLCHANGE_NO_MOVE  // Suppress motion on probe tool-change
 #endif
 
+#if ENABLED(TREX3)
+  #define NOZZLE_TO_PROBE_OFFSET { -3, 31, 0 }
+#else
+  #define NOZZLE_TO_PROBE_OFFSET { -7, 29, 0 }
+#endif
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
 #define PROBING_MARGIN 10
@@ -2223,6 +2228,34 @@
       #endif
     #endif
   #endif
+
+  #define FIL_RUNOUT_PULLUP           // Use internal pullup for filament runout pins.
+  //#define FIL_RUNOUT_PULLDOWN       // Use internal pulldown for filament runout pins.
+
+  // Override individually if the runout sensors vary
+  //#define FIL_RUNOUT1_PULLUP
+  //#define FIL_RUNOUT1_PULLDOWN
+
+  //#define FIL_RUNOUT2_PULLUP
+  //#define FIL_RUNOUT2_PULLDOWN
+
+  //#define FIL_RUNOUT3_PULLUP
+  //#define FIL_RUNOUT3_PULLDOWN
+
+  //#define FIL_RUNOUT4_PULLUP
+  //#define FIL_RUNOUT4_PULLDOWN
+
+  //#define FIL_RUNOUT5_PULLUP
+  //#define FIL_RUNOUT5_PULLDOWN
+
+  //#define FIL_RUNOUT6_PULLUP
+  //#define FIL_RUNOUT6_PULLDOWN
+
+  //#define FIL_RUNOUT7_PULLUP
+  //#define FIL_RUNOUT7_PULLDOWN
+
+  //#define FIL_RUNOUT8_PULLUP
+  //#define FIL_RUNOUT8_PULLDOWN
 #endif
 
 //===========================================================================

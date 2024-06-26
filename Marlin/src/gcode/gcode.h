@@ -234,7 +234,6 @@
  * M406 - Disable Filament Sensor flow control. (Requires FILAMENT_WIDTH_SENSOR)
  * M407 - Display measured filament diameter in millimeters. (Requires FILAMENT_WIDTH_SENSOR)
  * M410 - Quickstop. Abort all planned moves.
- * M412 - Enable / Disable Filament Runout Detection. (Requires FILAMENT_RUNOUT_SENSOR)
  * M413 - Enable / Disable Power-Loss Recovery. (Requires POWER_LOSS_RECOVERY)
  * M414 - Set language by index. (Requires LCD_LANGUAGE_2...)
  * M420 - Enable/Disable Leveling (with current values) S1=enable S0=disable (Requires MESH_BED_LEVELING or ABL)
@@ -261,6 +260,7 @@
  * M575 - Change the serial baud rate. (Requires BAUD_RATE_GCODE)
  * M592 - Get or set nonlinear extrusion parameters. (Requires NONLINEAR_EXTRUSION)
  * M593 - Get or set input shaping parameters. (Requires INPUT_SHAPING_[XY])
+ * M591 - Configure Filament Runout Detection. (Requires FILAMENT_RUNOUT_SENSOR)
  * M600 - Pause for filament change: "M600 X<pos> Y<pos> Z<raise> E<first_retract> L<later_retract>". (Requires ADVANCED_PAUSE_FEATURE)
  * M603 - Configure filament change: "M603 T<tool> U<unload_length> L<load_length>". (Requires ADVANCED_PAUSE_FEATURE)
  * M605 - Set Dual X-Carriage movement mode: "M605 S<mode> [X<x_offset>] [R<temp_offset>]". (Requires DUAL_X_CARRIAGE)
@@ -1035,8 +1035,9 @@ private:
   #endif
 
   #if HAS_FILAMENT_SENSOR
-    static void M412();
-    static void M412_report(const bool forReplay=true);
+    static void M412() { M591(); }
+    static void M591();
+    static void M591_report(const bool forReplay=true);
   #endif
 
   #if HAS_MULTI_LANGUAGE
