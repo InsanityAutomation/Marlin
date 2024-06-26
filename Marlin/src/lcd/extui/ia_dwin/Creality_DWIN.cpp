@@ -543,7 +543,7 @@ if(idleThrottling == 1800) {
 }
 
 if(idleThrottling == 1900) {
-  if(isMediaMounted())
+  if(isMediaInserted())
   {
     uint16_t currPage, maxPageAdd;
     if(fileIndex == 0)
@@ -1052,7 +1052,7 @@ void RTSSHOW::RTS_HandleData()
   #endif
 
   //SERIAL_ECHOLNPGM_P(PSTR("BeginSwitch"));
-
+  float tmp_zprobe_offset = 0.0f;
 	switch (Checkkey)
 	{
     case Printfile:
@@ -1205,7 +1205,6 @@ void RTSSHOW::RTS_HandleData()
       break;
 
     case Zoffset:
-      float tmp_zprobe_offset;
       if (recdat.data[0] >= 32768)
       {
         tmp_zprobe_offset = ((float)recdat.data[0] - 65536) / 100;
@@ -2002,7 +2001,7 @@ void RTSSHOW::RTS_HandleData()
     case Filement:
       if (recdat.addr == Exchfilement)
       {
-        extruder_t tmpTool;
+        extruder_t tmpTool = E0;
         if (recdat.data[0]<=2)
           tmpTool = E0;
         else if (recdat.data[0]<=4)
@@ -2218,7 +2217,7 @@ void RTSSHOW::RTS_HandleData()
 
     case Filename:
       //SERIAL_ECHOLNPGM_P(PSTR("Filename Selected"));
-      if (isMediaMounted() && recdat.addr == FilenameChs)
+      if (isMediaInserted() && recdat.addr == FilenameChs)
       {
         //SERIAL_ECHOLNPGM_P(PSTR("Has Media"));
 
@@ -2258,7 +2257,7 @@ void RTSSHOW::RTS_HandleData()
       }
       else if (recdat.addr == FilenamePlay)
       {
-        if (recdat.data[0] == 1 && isMediaMounted()) //for sure
+        if (recdat.data[0] == 1 && isMediaInserted()) //for sure
         {
           printFile(filenavigator.getIndexName(fileIndex + recordcount));
 
@@ -2493,7 +2492,7 @@ void onPrinterKilled(FSTR_P const error, FSTR_P const component) {
   delay_ms(10);
 }
 
-void onMediaMounted()
+void onMediaInserted()
 {
 	//SERIAL_ECHOLNPGM_P(PSTR("***Initing card is OK***"));
   filenavigator.reset();

@@ -333,7 +333,7 @@
 // @section info
 
 // Author info of this build printed to the host during boot and M115
-#define STRING_CONFIG_H_AUTHOR "TinyMachines3D" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Insanity Automation" // Who made the changes.
 #define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
 
 /**
@@ -365,7 +365,7 @@
   #define ABL_BLTOUCH
 #endif
 
-#if ANY(SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo)
+#if ANY(SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo, SKR_CR6)
   #define SKR_2209
   #define SKR_UART
   #if NONE(INSANITYAUTOMATION_DWIN, MachineEnder3Touchscreen, FORCEV2DISPLAY)
@@ -511,17 +511,17 @@
   #endif
 #endif
 
-#if ANY(MachineCRX, MachineCRXPro, MachineEnder5Plus, MachineCR10SPro, MachineCR5, MachineCR10Max, MachineEnder6, MachineSermoonD1, MachineEnder7, MachineCR10Smart, MachineCR10SmartPro)
+#if ANY(MachineCRX, MachineCRXPro, MachineEnder5Plus, MachineCR10SPro, MachineCR5, MachineCR6, MachineCR10Max, MachineEnder6, MachineSermoonD1, MachineEnder7, MachineCR10Smart, MachineCR10SmartPro)
   #if NONE(GraphicLCD, OrigLCD, INSANITYAUTOMATION_DWIN)
     #define INSANITYAUTOMATION_DWIN
   #endif
 #endif
 
-#if ANY(MachineEnder7, MachineSermoonD1, MachineCR10Smart, MachineCR5, MachineCR10SmartPro)
+#if ANY(MachineEnder7, MachineSermoonD1, MachineCR10Smart, MachineCR5, MachineCR10SmartPro, MachineCR6)
   #define DWINOS_4
 #endif
 
-#if NONE(MachineCR10Smart, MachineCR10SmartPro)
+#if NONE(MachineCR10Smart, MachineCR10SmartPro, MachineCR6)
   #define LOWRES_DWIN
 #endif
 
@@ -698,7 +698,7 @@
   #define LCD_SERIAL_PORT 1
   #define LCD_BAUDRATE 115200
   //#define SERIAL_CATCHALL -1
-#elif ANY(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max, MachineCR5) && NONE(GraphicLCD, OrigLCD, MachineEnder3V2, MachineEnder3S1, Creality422, Creality427, MachineEnder6, FORCEV2DISPLAY)
+#elif ANY(MachineCR10SPro, MachineCRX, MachineEnder5Plus, MachineCR10Max, MachineCR5, SKR_CR6) && NONE(GraphicLCD, OrigLCD, MachineEnder3V2, MachineEnder3S1, Creality422, Creality427, MachineEnder6, FORCEV2DISPLAY)
   #define LCD_SERIAL_PORT 2
   #define LCD_BAUDRATE 115200
   #define SERIAL_CATCHALL 0
@@ -836,7 +836,7 @@
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
 
-#if (ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11) || ANY(MachineCR10SV2, MachineEnder3S1, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max, MachineCR5, SKRMiniE3V2, SKRMiniE3V3, MachineCR6, MachineCR6Max, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR10Smart, MachineCR10SmartPro)) && DISABLED(SKR_UART)
+#if (ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKR_CR6) || ANY(MachineCR10SV2, MachineEnder3S1, MachineCR10SPro, MachineCR10SProV2, MachineCR10Max, MachineCR5, SKRMiniE3V2, SKRMiniE3V3, MachineCR6, MachineCR6Max, MachineEnder6, MachineEnder7, MachineSermoonD1, MachineCR30, MachineCR10Smart, MachineCR10SmartPro)) && DISABLED(SKR_UART)
   #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209_STANDALONE
     #define Y_DRIVER_TYPE  TMC2209_STANDALONE
@@ -868,7 +868,7 @@
       #define E1_DRIVER_TYPE TMC2208_STANDALONE
     #endif
   #endif
-#elif ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo) && ENABLED(SKR_UART)
+#elif ANY(SKR13, SKR14, SKR14Turbo, SKR2, SKR3, SKRPRO11, SKRMiniE3V2, SKRMiniE3V3, SKRE3Turbo, SKR_CR6) && ENABLED(SKR_UART)
   #if ENABLED(SKR_2209)
     #define X_DRIVER_TYPE  TMC2209
     #define Y_DRIVER_TYPE  TMC2209
@@ -3543,11 +3543,7 @@
 #if ENABLED(MeshFast)
   #define GRID_MAX_POINTS_X 3
 #elif ENABLED(MeshStd)
-  #if ANY(MachineCR6, MachineEnder3Touchscreen)
-     #define GRID_MAX_POINTS_X 4
-  #elif ENABLED(MachineCR6Max)
-    #define GRID_MAX_POINTS_X 7
-  #elif ENABLED(ABL_UBL)
+  #if ENABLED(ABL_UBL)
     #define GRID_MAX_POINTS_X 6
   #else
     #define GRID_MAX_POINTS_X 5

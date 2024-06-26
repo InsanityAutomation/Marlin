@@ -192,6 +192,10 @@
   #define CUSTOM_MACHINE_NAME "SermoonD1"
 #elif ENABLED(MachineCR5)
   #define CUSTOM_MACHINE_NAME "CR5 Pro"
+#elif ENABLED(MachineCR6)
+  #define CUSTOM_MACHINE_NAME "CR6"
+#elif ENABLED(MachineCR6Max)
+  #define CUSTOM_MACHINE_NAME "CR6 Max"
 #elif ENABLED(MachineCR30)
   #define CUSTOM_MACHINE_NAME "CR30 Printmill"
 #endif

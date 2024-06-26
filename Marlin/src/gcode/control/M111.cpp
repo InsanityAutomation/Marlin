@@ -66,7 +66,7 @@ void GcodeSuite::M111() {
     SERIAL_ECHOPGM(STR_DEBUG_OFF);
     #if !(defined(__AVR__) && defined(USBCON))
       #if ENABLED(SERIAL_STATS_RX_BUFFER_OVERRUNS)
-        SERIAL_ECHOPGM("\nBuffer Overruns: ", MYSERIAL1.buffer_overruns());
+        //SERIAL_ECHOPGM("\nBuffer Overruns: ", MYSERIAL1.buffer_overruns());
       #endif
       #if ENABLED(SERIAL_STATS_RX_FRAMING_ERRORS)
         SERIAL_ECHOPGM("\nFraming Errors: ", MYSERIAL1.framing_errors());
