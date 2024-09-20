@@ -35,6 +35,10 @@
 #include "../../../module/probe.h"
 #include "../../queue.h"
 
+#if HAS_MULTI_HOTEND
+  #include "../../../module/tool_change.h"
+#endif
+
 #if ENABLED(AUTO_BED_LEVELING_LINEAR)
   #include "../../../libs/least_squares_fit.h"
 #endif
