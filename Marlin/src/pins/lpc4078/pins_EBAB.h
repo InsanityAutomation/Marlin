@@ -32,7 +32,7 @@
 #define LED_PIN                                P3_18 // PWM0_3
 
 // EXTRA PINS
-#define FIL_RUNOUT_PIN P1_12
+//#define FIL_RUNOUT_PIN P1_12
 
 // DRIVERS EXTRA PINS
 #define DRIVERS_SCK                            P1_20
@@ -99,29 +99,29 @@
 #define E1_CS_PIN                             P1_18
 #define E1_DIAG_PIN                           P2_19
 
-#define E2_STEP_PIN                           P3_26
-#define E2_DIR_PIN                            P2_25
-#define E2_ENABLE_PIN                         P3_25
-#define E2_CS_PIN                             P3_24
-#define E2_DIAG_PIN                           P2_26
+#define X2_STEP_PIN                           P3_26
+#define X2_DIR_PIN                            P2_25
+#define X2_ENABLE_PIN                         P3_25
+#define X2_CS_PIN                             P3_24
+#define X2_DIAG_PIN                           P2_26
 
-#define E3_STEP_PIN                           P4_19
-#define E3_DIR_PIN                            P4_20
-#define E3_ENABLE_PIN                         P4_26
-#define E3_CS_PIN                             P4_21
-#define E3_DIAG_PIN                           P0_22
+#define Y2_STEP_PIN                           P4_19
+#define Y2_DIR_PIN                            P4_20
+#define Y2_ENABLE_PIN                         P4_26
+#define Y2_CS_PIN                             P4_21
+#define Y2_DIAG_PIN                           P0_22
 
-#define E4_STEP_PIN                           P4_17
-#define E4_DIR_PIN                            P4_18
-#define E4_ENABLE_PIN                         P4_05
-#define E4_CS_PIN                             P2_12
-#define E4_DIAG_PIN                           P2_11
+#define Z2_STEP_PIN                           P4_17
+#define Z2_DIR_PIN                            P4_18
+#define Z2_ENABLE_PIN                         P4_05
+#define Z2_CS_PIN                             P2_12
+#define Z2_DIAG_PIN                           P2_11
 
-#define E5_STEP_PIN                           P0_11
-#define E5_DIR_PIN                            P2_15
-#define E5_ENABLE_PIN                         P4_04
-#define E5_CS_PIN                             P4_16
-#define E5_DIAG_PIN                           P2_13
+#define Z3_STEP_PIN                           P0_11
+#define Z3_DIR_PIN                            P2_15
+#define Z3_ENABLE_PIN                         P4_04
+#define Z3_CS_PIN                             P4_16
+#define Z3_DIAG_PIN                           P2_13
 
 #define E6_STEP_PIN                           P2_28
 #define E6_DIR_PIN                            P0_28
@@ -153,14 +153,14 @@
   #define E0_SERIAL_RX_PIN P4_00
   #define E1_SERIAL_TX_PIN P1_18
   #define E1_SERIAL_RX_PIN P1_18
-  #define E2_SERIAL_TX_PIN P3_24
-  #define E2_SERIAL_RX_PIN P3_24
-  #define E3_SERIAL_TX_PIN P4_21
-  #define E3_SERIAL_RX_PIN P4_21
-  #define E4_SERIAL_TX_PIN P2_12
-  #define E4_SERIAL_RX_PIN P2_12
-  #define E5_SERIAL_TX_PIN P4_16
-  #define E5_SERIAL_RX_PIN P4_16
+  #define X2_SERIAL_TX_PIN P3_24
+  #define X2_SERIAL_RX_PIN P3_24
+  #define Y2_SERIAL_TX_PIN P4_21
+  #define Y2_SERIAL_RX_PIN P4_21
+  #define Z2_SERIAL_TX_PIN P2_12
+  #define Z2_SERIAL_RX_PIN P2_12
+  #define Z3_SERIAL_TX_PIN P4_16
+  #define Z3_SERIAL_RX_PIN P4_16
   #define E6_SERIAL_TX_PIN P0_27
   #define E6_SERIAL_RX_PIN P0_27
   #define E7_SERIAL_TX_PIN P2_29
@@ -181,6 +181,7 @@
 #define TEMP_3_PIN                            P0_26
 #define TEMP_BED_PIN                          P1_31
 
+#define TEMP_CHAMBER_PIN                      TEMP_2_PIN
 //
 // Heaters / Fans
 //
@@ -190,6 +191,8 @@
 #define HEATER_2_PIN                          P4_30
 #define HEATER_3_PIN                          P1_09
 #define HEATER_BED_PIN                        P4_23
+
+#define HEATER_CHAMBER_PIN                      HEATER_2_PIN
 
 #define FAN0_PIN                              P3_08
 #define FAN1_PIN                              P3_00
