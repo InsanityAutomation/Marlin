@@ -392,7 +392,7 @@
  * Enable and connect the power supply to the PS_ON_PIN.
  * Specify whether the power supply is active HIGH or active LOW.
  */
-//#define PSU_CONTROL
+#define PSU_CONTROL
 //#define PSU_NAME "Power Supply"
 
 #if ENABLED(PSU_CONTROL)
@@ -408,7 +408,7 @@
   //#define PSU_OFF_REDUNDANT           // Second pin for redundant power control
   //#define PSU_OFF_REDUNDANT_INVERTED  // Redundant pin state is the inverse of PSU_ACTIVE_STATE
 
-  //#define PS_ON1_PIN               6  // Redundant pin required to enable power in combination with PS_ON_PIN
+  #define PS_ON_PIN               P4_29  // Redundant pin required to enable power in combination with PS_ON_PIN
 
   //#define PS_ON_EDM_PIN            8  // External Device Monitoring pins for external power control relay feedback. Fault on mismatch.
   //#define PS_ON1_EDM_PIN           9
@@ -429,7 +429,7 @@
     #define AUTO_POWER_COOLER_FAN     // Turn on PSU for Cooler Fan
     #define AUTO_POWER_SPINDLE_LASER  // Turn on PSU for Spindle/Laser
     #define POWER_TIMEOUT              30 // (s) Turn off power if the machine is idle for this duration
-    //#define POWER_OFF_DELAY          60 // (s) Delay of poweroff after M81 command. Useful to let fans run for extra time.
+    #define POWER_OFF_DELAY          120 // (s) Delay of poweroff after M81 command. Useful to let fans run for extra time.
   #endif
   #if ANY(AUTO_POWER_CONTROL, POWER_OFF_WAIT_FOR_COOLDOWN)
     //#define AUTO_POWER_E_TEMP        50 // (°C) PSU on if any extruder is over this temperature
@@ -906,7 +906,7 @@
 // MarkForged Kinematics
 // See https://reprap.org/forum/read.php?152,504042
 //
-//#define MARKFORGED_XY
+#define MARKFORGED_XY
 //#define MARKFORGED_YX
 #if ANY(MARKFORGED_XY, MARKFORGED_YX)
   //#define MARKFORGED_INVERSE  // Enable for an inverted Markforged kinematics belt path
@@ -1236,7 +1236,7 @@
  * Override with M92 (when enabled below)
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 40, 40, 200, 425 }
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 413, 413 }
 
 /**
  * Enable support for M92. Disable to save at least ~530 bytes of flash.
@@ -1826,11 +1826,11 @@
 // @section geometry
 
 // The size of the printable area
-#define X_BED_SIZE 400
-#define Y_BED_SIZE 400
+#define X_BED_SIZE 355
+#define Y_BED_SIZE 350
 
 // Travel limits (linear=mm, rotational=°) after homing, corresponding to endstop positions.
-#define X_MIN_POS 0
+#define X_MIN_POS -20.93
 #define Y_MIN_POS 0
 #define Z_MIN_POS 0
 #define X_MAX_POS X_BED_SIZE
