@@ -1966,10 +1966,15 @@ bool Planner::_populate_block(
     dm.x  = (dist.a > 0);                       // Axis  X direction
     dm.b  = (dist.b + dist.c > 0);              // Motor B direction
     dm.c  = (CORESIGN(dist.b - dist.c) > 0);    // Motor C direction
-  #elif ENABLED(MARKFORGED_XY)
-    dm.a = (dist.a TERN(MARKFORGED_INVERSE, -, +) dist.b > 0); // Motor A direction
-    dm.b = (dist.b > 0);                        // Motor B direction
-    TERN_(HAS_Z_AXIS, dm.z = (dist.c > 0));     // Axis  Z direction
+    #elif ENABLED(MARKFORGED_XY)
+		if (extruder == 0) {
+			dm.a = (dist.a + dist.b > 0);               // Motor A direction
+			dm.b = (dist.b > 0);                        // Motor B direction
+		}
+		else {
+			dm.a = (dist.a - dist.b > 0);               // Motor A direction
+			dm.b = (dist.b> 0);                         // Motor B direction
+		}
   #elif ENABLED(MARKFORGED_YX)
     dm.a = (dist.a > 0);                        // Motor A direction
     dm.b = (dist.b TERN(MARKFORGED_INVERSE, -, +) dist.a > 0); // Motor B direction

@@ -423,9 +423,22 @@ xyze_int8_t Stepper::count_direction{0};
 #endif
 
 #if HAS_SYNCED_Y_STEPPERS
-  #define Y_APPLY_DIR(FWD,Q) do{ Y_DIR_WRITE(FWD); Y2_DIR_WRITE(INVERT_DIR(Y2_VS_Y, FWD)); }while(0)
+  #define Y_APPLY_DIR(FWD,Q) do{ Y_DIR_WRITE(FWD); Y2_DIR_WRITE(INVERT_DIR(Y2_VS_Y, FWD)); \
+	if (!extruder_duplication_enabled) { \
+		if (last_moved_extruder) \
+			X_DIR_WRITE(FWD); \
+		else X2_DIR_WRITE((FWD) ^ 1); \
+	}; \
+  }while(0)
   #if ENABLED(Y_DUAL_ENDSTOPS)
-    #define Y_APPLY_STEP(FWD,Q) DUAL_ENDSTOP_APPLY_STEP(Y,FWD)
+    #define Y_APPLY_STEP(FWD,Q) do { \
+		DUAL_ENDSTOP_APPLY_STEP(Y,FWD); \
+		if (!extruder_duplication_enabled) { \
+			if (last_moved_extruder) \
+				X_STEP_WRITE(FWD); \
+			else X2_STEP_WRITE(FWD); \
+		}; \
+	}while(0)
   #else
     #define Y_APPLY_STEP(FWD,Q) do{ Y_STEP_WRITE(FWD); Y2_STEP_WRITE(FWD); }while(0)
   #endif
